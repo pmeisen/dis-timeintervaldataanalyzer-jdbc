@@ -1,0 +1,7 @@
+/_*
+/override.properties
+/.classpath
+/.project
+/.settings/com.google.gdt.eclipse.core.prefs
+/.settings/com.google.gwt.eclipse.core.prefs
+/test/net/meisen/dissertation/performance/paper/**/*.tidamodel
