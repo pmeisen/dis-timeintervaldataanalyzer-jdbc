@@ -6,6 +6,12 @@ import net.meisen.dissertation.jdbc.version.Manifest;
 import net.meisen.dissertation.jdbc.version.ManifestInfo;
 import net.meisen.dissertation.jdbc.version.Version;
 
+/**
+ * Some constants used by the driver.
+ * 
+ * @author pmeisen
+ * 
+ */
 public class Constants {
 	/**
 	 * Placeholder used within the {@link #URL_FULL_SYNTAX} and
