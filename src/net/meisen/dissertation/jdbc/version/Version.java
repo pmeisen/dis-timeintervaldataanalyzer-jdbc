@@ -24,12 +24,6 @@ public class Version implements Serializable, Cloneable, Comparable<Version> {
 			+ Pattern.quote("-SNAPSHOT") + "$");
 
 	/**
-	 * Initialize a new Version object that is set to "0.0.0.0".
-	 */
-	public Version() {
-	}
-
-	/**
 	 * Everything before the version in the string that was parsed.
 	 */
 	private String prefix;
@@ -61,6 +55,12 @@ public class Version implements Serializable, Cloneable, Comparable<Version> {
 	 */
 	private String revision = "0";
 
+	/**
+	 * Initialize a new Version object that is set to "0.0.0.0".
+	 */
+	public Version() {
+	}
+	
 	/**
 	 * Gets the string that was parsed to create this Version object. This
 	 * string may not accurately reflect the current values of the Version's

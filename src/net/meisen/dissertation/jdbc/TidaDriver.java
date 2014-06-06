@@ -1,7 +1,6 @@
 package net.meisen.dissertation.jdbc;
 
 import java.io.IOException;
-import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.DriverPropertyInfo;
@@ -19,19 +18,10 @@ import net.meisen.dissertation.jdbc.version.Version;
  * 
  */
 public class TidaDriver implements Driver {
-	/**
-	 * The url-prefix used to mark a url to be a tida-url.
-	 */
-	public static final String URL_PREFIX = "jdbc:tida://";
-	/**
-	 * The complete syntax of a tida-url.
-	 */
-	public static final String URL_SYNTAX = URL_PREFIX + "[host]:[port]";
-
 	private static final String PROPERTY_PORT = "port";
 	private static final String PROPERTY_HOST = "host";
-
-	private Version version = null;
+	private static final String PROPERTY_USER = "user";
+	private static final String PROPERTY_PASSWORD = "password";
 
 	static {
 		try {
@@ -48,24 +38,24 @@ public class TidaDriver implements Driver {
 	}
 
 	@Override
-	public Connection connect(final String url, final Properties info)
+	public TidaConnection connect(final String url, final Properties info)
 			throws SQLException {
 
 		// return null if the driver cannot handle the url
-		parseURL(url, info);
+		final ServerProperties properties = parseURL(url, info);
 
-		// TODO Auto-generated method stub
-		return null;
+		// create the connection
+		return new TidaConnection(properties);
 	}
 
 	@Override
 	public int getMajorVersion() {
-		return getVersion().getMajorAsInt();
+		return Constants.getVersion().getMajorAsInt();
 	}
 
 	@Override
 	public int getMinorVersion() {
-		return getVersion().getMinorAsInt();
+		return Constants.getVersion().getMinorAsInt();
 	}
 
 	@Override
@@ -83,31 +73,24 @@ public class TidaDriver implements Driver {
 		portProp.required = true;
 		portProp.description = "the port of the tida-server to connect to";
 
+		final DriverPropertyInfo userProp = new DriverPropertyInfo(
+				PROPERTY_USER, p == null ? null : p.getUser());
+		portProp.required = true;
+		portProp.description = "the user used to connect to the tida-server";
+
+		final DriverPropertyInfo passwordProp = new DriverPropertyInfo(
+				PROPERTY_PASSWORD, p == null ? null : p.getPassword());
+		portProp.required = true;
+		portProp.description = "the password used to connect to the tida-server";
+
 		// create the array and return it
-		return new DriverPropertyInfo[] { hostProp, portProp };
+		return new DriverPropertyInfo[] { hostProp, portProp, userProp,
+				passwordProp };
 	}
 
 	@Override
 	public boolean jdbcCompliant() {
 		return false;
-	}
-
-	/**
-	 * Gets the version of the driver read from it's manifest.
-	 * 
-	 * @return the version
-	 */
-	public Version getVersion() {
-		if (version == null) {
-			try {
-				final ManifestInfo info = Manifest
-						.getManifestInfo(TidaDriver.class);
-				version = Version.parse(info.getImplementationVersion());
-			} catch (IOException e) {
-				version = null;
-			}
-		}
-		return version;
 	}
 
 	/**
@@ -133,55 +116,86 @@ public class TidaDriver implements Driver {
 		final StringBuilder sb = new StringBuilder(rawUrl);
 
 		// make sure we have the correct prefix
-		if (!rawUrl.startsWith(URL_PREFIX)) {
+		if (!rawUrl.startsWith(Constants.URL_PREFIX)) {
 			return null;
 		} else {
-			sb.delete(0, URL_PREFIX.length());
+			sb.delete(0, Constants.URL_PREFIX.length());
+		}
+
+		// check available data
+		final int atSeparator = sb.lastIndexOf("@");
+		final StringBuilder credentials;
+		final StringBuilder server;
+		if (atSeparator < 0) {
+			credentials = null;
+			server = sb;
+		} else {
+			credentials = new StringBuilder(sb.substring(0, atSeparator));
+			server = new StringBuilder(sb.substring(atSeparator + 1));
+		}
+
+		// check credentials
+		String user;
+		String password;
+		if (credentials != null) {
+			final int userSeparator = credentials.indexOf(":");
+			if (userSeparator < 0) {
+				user = credentials.toString();
+				password = "";
+			} else {
+				user = credentials.substring(0, userSeparator);
+				password = credentials.substring(userSeparator + 1);
+			}
+		} else {
+			user = null;
+			password = null;
 		}
 
 		// check for a portSeparator
-		final int portSeparator = sb.indexOf(":");
-		final String host;
-		final String port;
+		final int portSeparator = server.lastIndexOf(":");
+		String host;
+		String port;
 		if (portSeparator < 0) {
-			host = sb.toString();
+			host = server.toString();
+			port = null;
+		} else {
+			host = server.substring(0, portSeparator);
+			port = server.substring(portSeparator + 1);
+		}
+
+		// check for defaults
+		if (host == null || host.trim().isEmpty()) {
+			host = defaults == null ? null : defaults
+					.getProperty(PROPERTY_HOST);
+		}
+		if (port == null || port.trim().isEmpty()) {
 			port = defaults == null ? null : defaults
 					.getProperty(PROPERTY_PORT);
-			if (port == null) {
-				throw new SQLException(
-						"The url does not specify any port, please use: "
-								+ URL_SYNTAX);
-			}
-		} else {
-			host = sb.substring(0, portSeparator);
-			port = sb.substring(portSeparator + 1);
+		}
+		if (user == null || user.trim().isEmpty()) {
+			user = defaults == null ? null : defaults
+					.getProperty(PROPERTY_USER);
+		}
+		if (password == null || password.trim().isEmpty()) {
+			password = defaults == null ? null : defaults
+					.getProperty(PROPERTY_PASSWORD);
 		}
 
-		// check if the port is a valid number
+		// throw exception if invalid
 		final int portNr;
-		try {
-			portNr = Integer.parseInt(port);
-		} catch (final NumberFormatException e) {
-			throw new SQLException("The specified port '" + port
-					+ "' is not a valid number, please use: " + URL_SYNTAX);
-		}
-
-		// check the host
-		final String hostName;
-		if (host == null || host.trim().isEmpty()) {
-			hostName = defaults == null ? null : defaults
-					.getProperty(PROPERTY_HOST);
-
-			if (hostName == null || hostName.trim().isEmpty()) {
-				throw new SQLException(
-						"The url must define a valid host, please use: "
-								+ URL_SYNTAX);
-			}
+		if (port == null) {
+			throw TidaSqlExceptions.createException(2000);
+		} else if (host == null || host.trim().isEmpty()) {
+			throw TidaSqlExceptions.createException(2001);
 		} else {
-			hostName = host;
+			try {
+				portNr = Integer.parseInt(port);
+			} catch (final NumberFormatException e) {
+				throw TidaSqlExceptions.createException(2002, e, port);
+			}
 		}
 
 		// create the properties
-		return new ServerProperties(portNr, hostName);
+		return new ServerProperties(user, password, host, portNr);
 	}
 }

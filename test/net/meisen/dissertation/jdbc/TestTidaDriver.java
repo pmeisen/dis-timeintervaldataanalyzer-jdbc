@@ -6,6 +6,7 @@ import static org.junit.Assert.assertNull;
 
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Properties;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -33,16 +34,37 @@ public class TestTidaDriver {
 	 */
 	@Test
 	public void testParsingWithNullProperties() throws SQLException {
+		ServerProperties p;
+
 		final TidaDriver driver = new TidaDriver();
 
 		assertNull(driver.parseURL("jdbc:invalid://localhost", null));
 		assertNotNull(driver.parseURL("jdbc:tida://localhost:7000", null));
 
 		// get the properties and check those
-		final ServerProperties p = driver.parseURL(
-				"jdbc:tida://localhost:7000", null);
+		p = driver.parseURL("jdbc:tida://localhost:7000", null);
 		assertEquals(7000, p.getPort());
 		assertEquals("localhost", p.getHost());
+		assertNull(p.getUser());
+		assertNull(p.getPassword());
+
+		p = driver.parseURL("jdbc:tida://philipp@meisen.net:7001", null);
+		assertEquals(7001, p.getPort());
+		assertEquals("meisen.net", p.getHost());
+		assertEquals("philipp", p.getUser());
+		assertNull(p.getPassword());
+
+		p = driver.parseURL("jdbc:tida://philipp:secret@lalalala:7002", null);
+		assertEquals(7002, p.getPort());
+		assertEquals("lalalala", p.getHost());
+		assertEquals("philipp", p.getUser());
+		assertEquals("secret", p.getPassword());
+
+		p = driver.parseURL("jdbc:tida://philipp:s@cr:et@lalalala:7002", null);
+		assertEquals(7002, p.getPort());
+		assertEquals("lalalala", p.getHost());
+		assertEquals("philipp", p.getUser());
+		assertEquals("s@cr:et", p.getPassword());
 	}
 
 	/**
@@ -90,22 +112,62 @@ public class TestTidaDriver {
 		driver.parseURL("jdbc:tida://  :7000", null);
 	}
 
+	/**
+	 * Tests the parsing using pre-defined default properties.
+	 * 
+	 * @throws SQLException
+	 *             if the parsing fails
+	 */
 	@Test
 	public void testParsingWithProperties() throws SQLException {
+		ServerProperties p;
+
 		final TidaDriver driver = new TidaDriver();
 
-		assertNull(driver.parseURL("jdbc:invalid://localhost", null));
-		assertNotNull(driver.parseURL("jdbc:tida://localhost:7000", null));
+		// create properties with a port
+		final Properties portProperties = new Properties();
+		portProperties.setProperty("port", "8080");
 
 		// get the properties and check those
-		final ServerProperties p = driver.parseURL(
-				"jdbc:tida://localhost:7000", null);
-		assertEquals(7000, p.getPort());
+		p = driver.parseURL("jdbc:tida://localhost", portProperties);
+		assertEquals(8080, p.getPort());
 		assertEquals("localhost", p.getHost());
+
+		// create properties with a host
+		final Properties hostProperties = new Properties();
+		hostProperties.setProperty("host", "myWorld");
+
+		p = driver.parseURL("jdbc:tida://:6000", hostProperties);
+		assertEquals(6000, p.getPort());
+		assertEquals("myWorld", p.getHost());
+
+		// create properties with a port & host
+		final Properties portHostProperties = new Properties();
+		portHostProperties.setProperty("host", "im");
+		portHostProperties.setProperty("port", "666");
+
+		p = driver.parseURL("jdbc:tida://", portHostProperties);
+		assertEquals(666, p.getPort());
+		assertEquals("im", p.getHost());
+
+		// create properties with a port, host, username and password
+		final Properties fullProperties = new Properties();
+		fullProperties.setProperty("user", "philipp");
+		fullProperties.setProperty("password", "secret");
+		fullProperties.setProperty("host", "im");
+		fullProperties.setProperty("port", "666");
+
+		p = driver.parseURL("jdbc:tida://", fullProperties);
+		assertEquals(666, p.getPort());
+		assertEquals("im", p.getHost());
+		assertEquals("philipp", p.getUser());
+		assertEquals("secret", p.getPassword());
 	}
 
 	@Test
 	public void testUsageOfDriverManager() throws SQLException {
+		assertNotNull(DriverManager.getConnection("jdbc:tida://localhost:7001",
+				"user", "pw"));
 		assertNotNull(DriverManager.getConnection("jdbc:tida://localhost:7001"));
 	}
 }
