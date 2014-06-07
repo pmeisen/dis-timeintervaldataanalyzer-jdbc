@@ -1,15 +1,10 @@
 package net.meisen.dissertation.jdbc;
 
-import java.io.IOException;
 import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.DriverPropertyInfo;
 import java.sql.SQLException;
 import java.util.Properties;
-
-import net.meisen.dissertation.jdbc.version.Manifest;
-import net.meisen.dissertation.jdbc.version.ManifestInfo;
-import net.meisen.dissertation.jdbc.version.Version;
 
 /**
  * The driver of a JDBC for a tida-server.
@@ -43,9 +38,11 @@ public class TidaDriver implements Driver {
 
 		// return null if the driver cannot handle the url
 		final ServerProperties properties = parseURL(url, info);
-
-		// create the connection
-		return new TidaConnection(properties);
+		if (properties == null) {
+			return null;
+		} else {
+			return new TidaConnection(properties);
+		}
 	}
 
 	@Override
@@ -107,7 +104,7 @@ public class TidaDriver implements Driver {
 	 * @return the parsed {@code ServerProperties}, returns {@code null} if the
 	 *         specified {@code rawUrl} is not a valid url for a tida
 	 *         implementation (i.e. if the protocol is not equal to
-	 *         {@link #URL_PREFIX}).
+	 *         {@link Constants#URL_PREFIX}).
 	 * 
 	 * @throws SQLException
 	 */
