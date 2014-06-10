@@ -13,11 +13,6 @@ import java.util.Properties;
  * 
  */
 public class TidaDriver implements Driver {
-	private static final String PROPERTY_PORT = "port";
-	private static final String PROPERTY_HOST = "host";
-	private static final String PROPERTY_USER = "user";
-	private static final String PROPERTY_PASSWORD = "password";
-
 	static {
 		try {
 			DriverManager.registerDriver(new TidaDriver());
@@ -61,22 +56,24 @@ public class TidaDriver implements Driver {
 		final ServerProperties p = parseURL(url, info);
 
 		final DriverPropertyInfo hostProp = new DriverPropertyInfo(
-				PROPERTY_HOST, p == null ? null : p.getHost());
+				ServerProperties.PROPERTY_HOST, p == null ? null : p.getHost());
 		hostProp.required = true;
 		hostProp.description = "the host of the tida-server to connect to";
 
 		final DriverPropertyInfo portProp = new DriverPropertyInfo(
-				PROPERTY_PORT, p == null ? null : "" + p.getPort());
+				ServerProperties.PROPERTY_PORT, p == null ? null : ""
+						+ p.getPort());
 		portProp.required = true;
 		portProp.description = "the port of the tida-server to connect to";
 
 		final DriverPropertyInfo userProp = new DriverPropertyInfo(
-				PROPERTY_USER, p == null ? null : p.getUser());
+				ServerProperties.PROPERTY_USER, p == null ? null : p.getUser());
 		portProp.required = true;
 		portProp.description = "the user used to connect to the tida-server";
 
 		final DriverPropertyInfo passwordProp = new DriverPropertyInfo(
-				PROPERTY_PASSWORD, p == null ? null : p.getPassword());
+				ServerProperties.PROPERTY_PASSWORD, p == null ? null
+						: p.getPassword());
 		portProp.required = true;
 		portProp.description = "the password used to connect to the tida-server";
 
@@ -163,19 +160,19 @@ public class TidaDriver implements Driver {
 		// check for defaults
 		if (host == null || host.trim().isEmpty()) {
 			host = defaults == null ? null : defaults
-					.getProperty(PROPERTY_HOST);
+					.getProperty(ServerProperties.PROPERTY_HOST);
 		}
 		if (port == null || port.trim().isEmpty()) {
 			port = defaults == null ? null : defaults
-					.getProperty(PROPERTY_PORT);
+					.getProperty(ServerProperties.PROPERTY_PORT);
 		}
 		if (user == null || user.trim().isEmpty()) {
 			user = defaults == null ? null : defaults
-					.getProperty(PROPERTY_USER);
+					.getProperty(ServerProperties.PROPERTY_USER);
 		}
 		if (password == null || password.trim().isEmpty()) {
 			password = defaults == null ? null : defaults
-					.getProperty(PROPERTY_PASSWORD);
+					.getProperty(ServerProperties.PROPERTY_PASSWORD);
 		}
 
 		// throw exception if invalid
@@ -193,6 +190,6 @@ public class TidaDriver implements Driver {
 		}
 
 		// create the properties
-		return new ServerProperties(user, password, host, portNr);
+		return new ServerProperties(rawUrl, user, password, host, portNr);
 	}
 }

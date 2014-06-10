@@ -2,6 +2,7 @@ package net.meisen.dissertation.jdbc.protocol;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.DataInputStream;
@@ -216,20 +217,33 @@ public class Protocol implements Closeable {
 		os.flush();
 	}
 
+	public synchronized void writeAndHandle(final String msg,
+			final IResponseHandler handler) throws IOException {
+		write(msg);
+		handleResponse(handler);
+	}
+
 	public void handleResponse(final IResponseHandler handler)
 			throws IOException {
 
 		boolean read = true;
 		while (read) {
 			final RetrievedValue value = read();
-
 			if (value.isEOR()) {
 				read = false;
 			} else if (value.is(ResponseType.RESOURCE_DEMAND)) {
 				final String resource = value.getResourceDemand();
-				writeResource(handler.getResourceStream(resource));
+
+				if (handler == null) {
+					// write nothing as resource
+					writeResource(new ByteArrayInputStream(new byte[0]));
+				} else {
+					writeResource(handler.getResourceStream(resource));
+				}
 			} else {
-				handler.handleResult(value.getResult());
+				if (handler != null) {
+					handler.handleResult(value.getResult());
+				}
 			}
 		}
 	}

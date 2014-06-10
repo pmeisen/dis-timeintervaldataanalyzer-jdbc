@@ -892,17 +892,17 @@ public class TidaDatabaseMetaData extends BaseWrapper implements
 	}
 
 	@Override
-	public boolean supportsResultSetHoldability(int holdability)
+	public boolean supportsResultSetHoldability(final int holdability)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		return false;
+		return holdability == ResultSet.HOLD_CURSORS_OVER_COMMIT
+				|| holdability == ResultSet.CLOSE_CURSORS_AT_COMMIT;
 	}
 
 	@Override
 	public int getResultSetHoldability() throws SQLException {
 		return ResultSet.HOLD_CURSORS_OVER_COMMIT;
 	}
-
+	
 	@Override
 	public int getDatabaseMajorVersion() throws SQLException {
 		// TODO Auto-generated method stub

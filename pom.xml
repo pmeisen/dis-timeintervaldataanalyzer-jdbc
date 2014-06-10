@@ -18,6 +18,14 @@
       <artifactId>net-meisen-dissertation-dis-timeintervaldataanalyzer</artifactId>
       <version>TRUNK-SNAPSHOT</version>
       <scope>test</scope>
+      
+      <!-- exclude the project itself from the dependencies -->
+      <exclusions>
+        <exclusion>
+          <groupId>net.meisen.dissertation</groupId>
+          <artifactId>net-meisen-dissertation-dis-timeintervaldataanalyzer-jdbc</artifactId>
+        </exclusion>
+      </exclusions> 
     </dependency>
   </dependencies>
 </project>

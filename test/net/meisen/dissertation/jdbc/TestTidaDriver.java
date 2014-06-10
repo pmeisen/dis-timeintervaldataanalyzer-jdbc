@@ -8,6 +8,8 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Properties;
 
+import net.meisen.dissertation.server.TidaServer;
+
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -164,10 +166,34 @@ public class TestTidaDriver {
 		assertEquals("secret", p.getPassword());
 	}
 
+	/**
+	 * Tests the usage of
+	 * {@code DriverManager#getConnection(String, Properties)}.
+	 * 
+	 * @throws SQLException
+	 *             if an sql problem occures
+	 * @throws InterruptedException
+	 *             if waiting for the server failed
+	 */
 	@Test
-	public void testUsageOfDriverManager() throws SQLException {
-		assertNotNull(DriverManager.getConnection("jdbc:tida://localhost:7001",
-				"user", "pw"));
-		assertNotNull(DriverManager.getConnection("jdbc:tida://localhost:7001"));
+	public void testUsageOfDriverManager() throws SQLException,
+			InterruptedException {
+		final TidaServer server = TidaServer.create();
+		server.startAsync();
+
+		// wait for the server to start
+		while (!server.isRunning()) {
+			Thread.sleep(50);
+		}
+
+		// check if the connections can be established
+		try {
+			assertNotNull(DriverManager.getConnection(
+					"jdbc:tida://localhost:7001", "user", "pw"));
+			assertNotNull(DriverManager
+					.getConnection("jdbc:tida://localhost:7001"));
+		} finally {
+			server.shutdown();
+		}
 	}
 }
