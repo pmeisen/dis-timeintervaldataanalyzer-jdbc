@@ -386,7 +386,7 @@ public class Protocol implements Closeable {
 		return value.getResult();
 	}
 
-	public String readString() throws IOException {
+	public String readMessage() throws IOException {
 		final RetrievedValue value = _read();
 		checkException(value);
 		return value.getMessage();
