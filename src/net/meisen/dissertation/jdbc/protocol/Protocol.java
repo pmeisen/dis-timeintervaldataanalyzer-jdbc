@@ -116,21 +116,35 @@ public class Protocol implements Closeable {
 
 		EXCEPTION((byte) 1), RESULT((byte) 2), MESSAGE((byte) 3), RESOURCE_DEMAND(
 				(byte) 4), RESOURCE((byte) 5), EOR((byte) 6, false, false), HEADER(
-				(byte) 7), HEADERNAMES((byte) 8, true, true);
+				(byte) 7), HEADERNAMES((byte) 8, true, true), INT((byte) 9,
+				true, Integer.SIZE / 8);
 
 		private final byte id;
 		private final boolean hasData;
 		private final boolean chunked;
+		private final boolean fixed;
+		private final int size;
 
 		private ResponseType(final byte id) {
-			this(id, true, false);
+			this(id, true, false, false, -1);
+		}
+
+		private ResponseType(final byte id, final boolean fixed, final int size) {
+			this(id, true, false, fixed, size);
 		}
 
 		private ResponseType(final byte id, final boolean hasData,
 				final boolean chunked) {
+			this(id, hasData, chunked, false, -1);
+		}
+
+		private ResponseType(final byte id, final boolean hasData,
+				final boolean chunked, final boolean fixed, final int size) {
 			this.id = id;
 			this.hasData = hasData;
 			this.chunked = chunked;
+			this.fixed = fixed;
+			this.size = fixed ? size : -1;
 		}
 
 		public byte getId() {
@@ -154,6 +168,14 @@ public class Protocol implements Closeable {
 		public boolean isChunked() {
 			return chunked;
 		}
+
+		public boolean isFixed() {
+			return fixed;
+		}
+
+		public int getSize() {
+			return size;
+		}
 	}
 
 	public static class RetrievedValue {
@@ -175,6 +197,13 @@ public class Protocol implements Closeable {
 		public byte[] getResult() throws IOException {
 			checkType(ResponseType.RESULT);
 			return bytes;
+		}
+
+		public int getInt() throws IOException {
+			checkType(ResponseType.INT);
+
+			final DataInputStream dis = getDataInputStream();
+			return dis.readInt();
 		}
 
 		public Class<?>[] getHeader() throws IOException {
@@ -289,6 +318,11 @@ public class Protocol implements Closeable {
 	public Protocol(final InputStream is, final OutputStream os) {
 		this.is = new DataInputStream(new BufferedInputStream(is));
 		this.os = new DataOutputStream(new BufferedOutputStream(os));
+	}
+
+	public void writeInt(final int value) throws IOException {
+		os.writeByte(ResponseType.INT.getId());
+		os.writeInt(value);
 	}
 
 	public void writeException(final Exception exception) throws IOException {
@@ -506,6 +540,11 @@ public class Protocol implements Closeable {
 				}
 
 				return new ChunkedRetrievedValue(type, chunks);
+			} else if (type.isFixed()) {
+				final byte[] bytes = new byte[type.getSize()];
+				is.read(bytes);
+
+				return new RetrievedValue(type, bytes);
 			} else {
 				final int size = is.readInt();
 				final byte[] bytes = new byte[size];

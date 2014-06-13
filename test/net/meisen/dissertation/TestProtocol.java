@@ -15,6 +15,7 @@ import java.util.UUID;
 
 import net.meisen.dissertation.jdbc.protocol.Protocol;
 import net.meisen.dissertation.jdbc.protocol.Protocol.IResponseHandler;
+import net.meisen.dissertation.jdbc.protocol.Protocol.ResponseType;
 import net.meisen.dissertation.jdbc.protocol.Protocol.RetrievedValue;
 import net.meisen.dissertation.jdbc.protocol.Protocol.WrappedException;
 
@@ -217,6 +218,54 @@ public class TestProtocol {
 			assertTrue(exception);
 			testCounter++;
 		}
+	}
+
+	/**
+	 * Tests the sending and receiving of the int-values.
+	 * 
+	 * @throws Exception
+	 *             if an unexpected problem occurs
+	 */
+	@Test
+	public void testProtocolInt() throws Exception {
+		serverHandler = new ITestHandler() {
+
+			@Override
+			public void answer(final int msgNr, final RetrievedValue val,
+					final Protocol serverSideProtocol) throws IOException {
+
+				for (int i = 0; i < 1000; i++) {
+					serverSideProtocol.writeInt(i);
+				}
+				serverSideProtocol.writeEndOfResult();
+			}
+		};
+
+		// let's read some headers
+		final IResponseHandler clientHandler = new TestResponseHandler() {
+
+			int nr = 0;
+
+			@Override
+			public boolean handleResult(final RetrievedValue value) {
+
+				assertTrue(value.type.equals(ResponseType.INT));
+				try {
+					assertEquals(nr, value.getInt());
+				} catch (final IOException e) {
+					fail(e.getMessage());
+				}
+
+				testCounter = nr;
+				nr++;
+
+				// keep reading
+				return true;
+			}
+		};
+
+		clientSideProtocol.writeAndHandle("0", clientHandler);
+		assertEquals(999, testCounter);
 	}
 
 	/**
