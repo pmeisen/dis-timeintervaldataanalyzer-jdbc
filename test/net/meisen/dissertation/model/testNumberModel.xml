@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+
+<model xmlns="http://dev.meisen.net/xsd/dissertation/model"
+       xmlns:advDes="http://dev.meisen.net/xsd/dissertation/model/advancedDescriptors"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       
+       xsi:schemaLocation="http://dev.meisen.net/xsd/dissertation/model  http://dev.meisen.net/xsd/dissertation/tidaModel.xsd"
+       
+       id="testNumberModel">
+  
+  <time>
+    <timeline start="1" end="5" granularity="DAY" />
+  </time>
+  
+  <meta>
+    <descriptors>
+      <integer id="NUMBER" />
+    </descriptors>
+
+    <entries />
+  </meta>
+  
+  <structure>   
+    <meta position="1" descriptor="NUMBER" />
+    <interval position="2" type="start" />
+    <interval position="3" type="end" />
+  </structure>
+  
+  <data metahandling="create" intervalhandling="boundariesWhenNull">
+    <dataset><entry class="int" value="110" /><entry class="int" value="1" /><entry class="int" value="2" /></dataset>
+    <dataset><entry class="int" value="100" /><entry class="int" value="1" /><entry class="int" value="2" /></dataset>
+    <dataset><entry class="int" value="130" /><entry class="int" value="2" /><entry class="int" value="4" /></dataset>
+    <dataset><entry class="int" value="110" /><entry class="int" value="3" /><entry class="int" value="5" /></dataset>
+    <dataset><entry class="int" value="110" /><entry class="int" value="3" /><entry class="int" value="5" /></dataset>
+  </data>
+</model>

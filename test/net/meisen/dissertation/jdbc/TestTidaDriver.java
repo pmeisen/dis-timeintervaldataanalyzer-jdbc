@@ -36,7 +36,7 @@ public class TestTidaDriver {
 	 */
 	@Test
 	public void testParsingWithNullProperties() throws SQLException {
-		ServerProperties p;
+		DriverProperties p;
 
 		final TidaDriver driver = new TidaDriver();
 
@@ -122,7 +122,7 @@ public class TestTidaDriver {
 	 */
 	@Test
 	public void testParsingWithProperties() throws SQLException {
-		ServerProperties p;
+		DriverProperties p;
 
 		final TidaDriver driver = new TidaDriver();
 

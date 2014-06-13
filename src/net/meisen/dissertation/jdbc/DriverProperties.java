@@ -1,15 +1,20 @@
 package net.meisen.dissertation.jdbc;
 
+import java.sql.DriverPropertyInfo;
 import java.util.Properties;
 
+import net.meisen.dissertation.jdbc.protocol.Protocol.IResponseHandler;
+
 /**
- * The {@code ServerProperties} contain the set properties for the server, i.e.
+ * The {@code DriverProperties} contain the set properties for the server, i.e.
  * {@code host} and {@code port}.
  * 
  * @author pmeisen
  * 
  */
-public class ServerProperties {
+public class DriverProperties {
+	public static final String PROPERTY_TIMEOUT = "timeout";
+	public static final String PROPERTY_HANDLERCLASS = "handlerclass";
 	public static final String PROPERTY_PORT = "port";
 	public static final String PROPERTY_HOST = "host";
 	public static final String PROPERTY_USER = "user";
@@ -23,7 +28,10 @@ public class ServerProperties {
 
 	private final String rawJdbc;
 
+	private String handlerClass = QueryResponseHandler.class.getName();
 	private int timeout = 0;
+
+	private IResponseHandler handler = null;
 
 	/**
 	 * Constructor defining the port and host of the server.
@@ -35,7 +43,7 @@ public class ServerProperties {
 	 * @param host
 	 *            the host of the server
 	 */
-	public ServerProperties(final String rawJdbc, final String host,
+	public DriverProperties(final String rawJdbc, final String host,
 			final int port) {
 		this(rawJdbc, null, null, host, port);
 	}
@@ -54,7 +62,7 @@ public class ServerProperties {
 	 * @param host
 	 *            the host of the server
 	 */
-	public ServerProperties(final String rawJdbc, final String user,
+	public DriverProperties(final String rawJdbc, final String user,
 			final String password, final String host, final int port) {
 		this.rawJdbc = rawJdbc;
 		this.port = port;
@@ -114,12 +122,56 @@ public class ServerProperties {
 		return timeout;
 	}
 
-	public void setTimeout(int timeout) {
+	public void setTimeout(final int timeout) {
 		this.timeout = timeout;
+	}
+
+	public String getHandlerClass() {
+		return handlerClass;
+	}
+
+	public void setHandlerClass(final String handlerClass) {
+		this.handlerClass = handlerClass;
 	}
 
 	public String getRawJdbc() {
 		return rawJdbc;
+	}
+
+	public DriverPropertyInfo[] getDriverPropertyInfo() {
+		final DriverPropertyInfo hostProp = new DriverPropertyInfo(
+				DriverProperties.PROPERTY_HOST, getHost());
+		hostProp.required = true;
+		hostProp.description = "the host of the tida-server to connect to";
+
+		final DriverPropertyInfo portProp = new DriverPropertyInfo(
+				DriverProperties.PROPERTY_PORT, "" + getPort());
+		portProp.required = true;
+		portProp.description = "the port of the tida-server to connect to";
+
+		final DriverPropertyInfo userProp = new DriverPropertyInfo(
+				DriverProperties.PROPERTY_USER, getUser());
+		portProp.required = true;
+		portProp.description = "the user used to connect to the tida-server";
+
+		final DriverPropertyInfo passwordProp = new DriverPropertyInfo(
+				DriverProperties.PROPERTY_PASSWORD, getPassword());
+		portProp.required = true;
+		portProp.description = "the password used to connect to the tida-server";
+
+		final DriverPropertyInfo timeoutProp = new DriverPropertyInfo(
+				DriverProperties.PROPERTY_TIMEOUT, "" + getTimeout());
+		portProp.required = false;
+		portProp.description = "the timeout of the client-connection";
+
+		final DriverPropertyInfo handlerProp = new DriverPropertyInfo(
+				DriverProperties.PROPERTY_HANDLERCLASS, getHandlerClass());
+		portProp.required = false;
+		portProp.description = "handler class used to handle resource requests";
+
+		// create the array and return it
+		return new DriverPropertyInfo[] { hostProp, portProp, userProp,
+				passwordProp, timeoutProp, handlerProp };
 	}
 
 	public String get(final String name) {
@@ -133,6 +185,10 @@ public class ServerProperties {
 			return getRawJdbc();
 		} else if (PROPERTY_PASSWORD.equals(name)) {
 			return "*";
+		} else if (PROPERTY_TIMEOUT.equals(name)) {
+			return "" + getTimeout();
+		} else if (PROPERTY_HANDLERCLASS.equals(name)) {
+			return getHandlerClass();
 		} else {
 			return null;
 		}
@@ -145,8 +201,31 @@ public class ServerProperties {
 		prop.setProperty(PROPERTY_USER, getUser());
 		prop.setProperty(PROPERTY_PASSWORD, get(PROPERTY_PASSWORD));
 		prop.setProperty(PROPERTY_RAWURL, getRawJdbc());
+		prop.setProperty(PROPERTY_TIMEOUT, "" + getTimeout());
+		prop.setProperty(PROPERTY_HANDLERCLASS, getHandlerClass());
 
 		return prop;
 	}
 
+	public void applyDefaults(final Properties defaults) {
+		if (defaults == null) {
+			return;
+		}
+
+		// get the timeout
+		final String defTimeout = defaults.getProperty(PROPERTY_TIMEOUT);
+		if (defTimeout != null) {
+			try {
+				this.setTimeout(Integer.parseInt(defTimeout));
+			} catch (final NumberFormatException e) {
+				// ignore the value
+			}
+		}
+
+		// get the handler
+		final String defHandler = defaults.getProperty(PROPERTY_HANDLERCLASS);
+		if (defHandler != null) {
+			this.setHandlerClass(defHandler);
+		}
+	}
 }

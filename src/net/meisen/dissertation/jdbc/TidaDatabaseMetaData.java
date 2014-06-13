@@ -26,12 +26,12 @@ public class TidaDatabaseMetaData extends BaseWrapper implements
 
 	@Override
 	public String getURL() throws SQLException {
-		return connection.getServerProperties().getURL();
+		return connection.getDriverProperties().getURL();
 	}
 
 	@Override
 	public String getUserName() throws SQLException {
-		return connection.getServerProperties().getUser();
+		return connection.getDriverProperties().getUser();
 	}
 
 	@Override

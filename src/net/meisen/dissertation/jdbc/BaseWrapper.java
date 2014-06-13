@@ -17,7 +17,8 @@ public class BaseWrapper implements Wrapper {
 		if (isWrapperFor(iface)) {
 			return (T) this;
 		} else {
-			throw TidaSqlExceptions.createException(9000, iface.toString());
+			throw TidaSqlExceptions.createNotSupportedException(9000,
+					iface.toString());
 		}
 	}
 
