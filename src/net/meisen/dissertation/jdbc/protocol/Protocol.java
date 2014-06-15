@@ -467,6 +467,10 @@ public class Protocol implements Closeable {
 		os.writeInt(value);
 	}
 
+	public void writeInts(final int value) throws IOException {
+		writeInts(new int[] { value });
+	}
+
 	public void writeInts(final int[] values) throws IOException {
 		os.writeByte(ResponseType.INT_ARRAY.getId());
 		os.writeInt(values.length);
