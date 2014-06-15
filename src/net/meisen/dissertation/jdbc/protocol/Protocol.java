@@ -114,37 +114,131 @@ public class Protocol implements Closeable {
 
 	public static enum ResponseType {
 
-		EXCEPTION((byte) 1), RESULT((byte) 2), MESSAGE((byte) 3), RESOURCE_DEMAND(
-				(byte) 4), RESOURCE((byte) 5), EOR((byte) 6, false, false), HEADER(
-				(byte) 7), HEADERNAMES((byte) 8, true, true), INT((byte) 9,
-				true, Integer.SIZE / 8);
+		/**
+		 * An exception was thrown while retrieving the value on the other side.
+		 */
+		EXCEPTION((byte) 1),
+		/**
+		 * A result was produced on the other side, the interpretation is
+		 * content dependent-
+		 */
+		RESULT((byte) 2),
+		/**
+		 * A message, i.e. a string, was produced.
+		 */
+		MESSAGE((byte) 3),
+		/**
+		 * To further process, a resource has to be send which is specified by a
+		 * string.
+		 */
+		RESOURCE_DEMAND((byte) 4),
+		/**
+		 * A resource, as byte-stream, is send as answer to a
+		 * {@code RESOURCE_DEMAND}.
+		 */
+		RESOURCE((byte) 5),
+		/**
+		 * The end of results is reached.
+		 */
+		EOR((byte) 6, false, false),
+		/**
+		 * A header is send, i.e. an array of {@code Class} instances
+		 * represented by an byte-identifier (see {@link DataType}).
+		 */
+		HEADER((byte) 7),
+		/**
+		 * An array of strings is send specifying names for each header.
+		 */
+		HEADERNAMES((byte) 8, true, true),
+		/**
+		 * A single integer is send.
+		 */
+		INT((byte) 9, false, Integer.SIZE / 8),
+		/**
+		 * An array of integers is send.
+		 */
+		INT_ARRAY((byte) 10, true, Integer.SIZE / 8);
 
 		private final byte id;
 		private final boolean hasData;
 		private final boolean chunked;
-		private final boolean fixed;
-		private final int size;
+		private final int fixedSize;
 
+		/**
+		 * Constructor to create a {@code ResponseType} representing a
+		 * {@code ResponseType} which is defined by bytes.
+		 * 
+		 * @param id
+		 *            the identifier of the {@code ResponseType} to be created
+		 */
 		private ResponseType(final byte id) {
-			this(id, true, false, false, -1);
+			this(id, true, false, -1);
 		}
 
-		private ResponseType(final byte id, final boolean fixed, final int size) {
-			this(id, true, false, fixed, size);
+		/**
+		 * Constructor to create a {@code ResponseType} which having the
+		 * specified fixed-size and might be chunked or not (i.e. might be a
+		 * single value or an array).
+		 * 
+		 * @param id
+		 *            the identifier of the {@code ResponseType} to be created
+		 * @param chunked
+		 *            {@code true} if an array of the fixed-sized element is
+		 *            expected, otherwise {@code false}
+		 * @param fixedSize
+		 *            the fixed size of the element
+		 */
+		private ResponseType(final byte id, final boolean chunked,
+				final int fixedSize) {
+			this(id, true, chunked, fixedSize);
 		}
 
+		/**
+		 * COnstructor to create a {@code ResponseType} which might or might not
+		 * have data and might or might not be chunked. The created
+		 * {@code ResponseType} is not fixed in size.
+		 * 
+		 * @param id
+		 *            the identifier of the {@code ResponseType} to be created
+		 * @param hasData
+		 *            {@code true} if the {@code ResponseType} has data,
+		 *            otherwise {@code false}; later means it just sends an
+		 *            identification byte
+		 * @param chunked
+		 *            {@code true} if an array of the fixed-sized element is
+		 *            expected, otherwise {@code false}
+		 */
 		private ResponseType(final byte id, final boolean hasData,
 				final boolean chunked) {
-			this(id, hasData, chunked, false, -1);
+			this(id, hasData, chunked, -1);
 		}
 
+		/**
+		 * Constructor to specify each an every single value needed by a
+		 * {@code ResponseType}.
+		 * 
+		 * @param id
+		 *            the identifier used for the type of the
+		 *            {@code ResponseType}
+		 * @param hasData
+		 *            {@code true} if the {@code ResponseType} has additional
+		 *            data send with it, otherwise {@code false}
+		 * @param chunked
+		 *            {@code true} if the data is chunked into several
+		 *            byte-arrays, i.e. cannot be read just with one byte-array
+		 *            and instead needs several retrievals, otherwise
+		 *            {@code false}
+		 * @param fixed
+		 *            if the size of bytes to be read is pre-defined (by the
+		 *            {@code fixedSize})
+		 * @param fixedSize
+		 */
 		private ResponseType(final byte id, final boolean hasData,
-				final boolean chunked, final boolean fixed, final int size) {
+				final boolean chunked, final int fixedSize) {
 			this.id = id;
 			this.hasData = hasData;
 			this.chunked = chunked;
-			this.fixed = fixed;
-			this.size = fixed ? size : -1;
+			this.fixedSize = fixedSize;
 		}
 
 		public byte getId() {
@@ -170,11 +264,11 @@ public class Protocol implements Closeable {
 		}
 
 		public boolean isFixed() {
-			return fixed;
+			return fixedSize > 0;
 		}
 
-		public int getSize() {
-			return size;
+		public int getFixedSize() {
+			return fixedSize;
 		}
 	}
 
@@ -190,8 +284,13 @@ public class Protocol implements Closeable {
 			this.bytes = bytes;
 		}
 
-		public boolean is(final ResponseType type) {
-			return this.type.equals(type);
+		public boolean is(final ResponseType... types) {
+			for (final ResponseType type : types) {
+				if (this.type.equals(type)) {
+					return true;
+				}
+			}
+			return false;
 		}
 
 		public byte[] getResult() throws IOException {
@@ -203,7 +302,10 @@ public class Protocol implements Closeable {
 			checkType(ResponseType.INT);
 
 			final DataInputStream dis = getDataInputStream();
-			return dis.readInt();
+			final int res = dis.readInt();
+			dis.close();
+
+			return res;
 		}
 
 		public Class<?>[] getHeader() throws IOException {
@@ -238,7 +340,7 @@ public class Protocol implements Closeable {
 			return is(ResponseType.EOR);
 		}
 
-		public void checkType(final ResponseType expected) {
+		public void checkType(final ResponseType... expected) {
 			if (!is(expected)) {
 				throw new IllegalStateException("Expected to read a '"
 						+ expected + "', but got a '" + type + "'.");
@@ -250,6 +352,7 @@ public class Protocol implements Closeable {
 			final int length = dis.readInt();
 			final byte[] b = new byte[length];
 			dis.read(b);
+			dis.close();
 
 			return new String(b, "UTF8");
 		}
@@ -271,6 +374,24 @@ public class Protocol implements Closeable {
 			super(type, bytes == null || bytes.length == 0 ? new byte[0]
 					: bytes[0]);
 			chunks = bytes;
+		}
+
+		public int[] getInts() throws IOException {
+			checkType(ResponseType.INT, ResponseType.INT_ARRAY);
+
+			if (this.type.equals(ResponseType.INT)) {
+				return new int[] { getInt() };
+			} else {
+				final int[] ints = new int[chunks.length];
+				for (int i = 0; i < chunks.length; i++) {
+					final DataInputStream dis = new DataInputStream(
+							new ByteArrayInputStream(chunks[i]));
+					ints[i] = dis.readInt();
+					dis.close();
+				}
+
+				return ints;
+			}
 		}
 
 		public String[] getHeaderNames() throws IOException {
@@ -323,6 +444,14 @@ public class Protocol implements Closeable {
 	public void writeInt(final int value) throws IOException {
 		os.writeByte(ResponseType.INT.getId());
 		os.writeInt(value);
+	}
+
+	public void writeInts(final int[] values) throws IOException {
+		os.writeByte(ResponseType.INT_ARRAY.getId());
+		os.writeInt(values.length);
+		for (int i = 0; i < values.length; i++) {
+			os.writeInt(values[i]);
+		}
 	}
 
 	public void writeException(final Exception exception) throws IOException {
@@ -533,15 +662,24 @@ public class Protocol implements Closeable {
 			if (type.isChunked()) {
 				final int chunkSize = is.readInt();
 				final byte[][] chunks = new byte[chunkSize][];
-				for (int i = 0; i < chunkSize; i++) {
-					final int size = is.readInt();
-					chunks[i] = new byte[size];
-					is.read(chunks[i]);
+
+				if (type.isFixed()) {
+					for (int i = 0; i < chunkSize; i++) {
+						chunks[i] = new byte[type.getFixedSize()];
+						is.read(chunks[i]);
+					}
+
+				} else {
+					for (int i = 0; i < chunkSize; i++) {
+						final int size = is.readInt();
+						chunks[i] = new byte[size];
+						is.read(chunks[i]);
+					}
 				}
 
 				return new ChunkedRetrievedValue(type, chunks);
 			} else if (type.isFixed()) {
-				final byte[] bytes = new byte[type.getSize()];
+				final byte[] bytes = new byte[type.getFixedSize()];
 				is.read(bytes);
 
 				return new RetrievedValue(type, bytes);

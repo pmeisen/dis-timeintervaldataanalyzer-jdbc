@@ -11,9 +11,11 @@ import java.io.UnsupportedEncodingException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Date;
+import java.util.Random;
 import java.util.UUID;
 
 import net.meisen.dissertation.jdbc.protocol.Protocol;
+import net.meisen.dissertation.jdbc.protocol.Protocol.ChunkedRetrievedValue;
 import net.meisen.dissertation.jdbc.protocol.Protocol.IResponseHandler;
 import net.meisen.dissertation.jdbc.protocol.Protocol.ResponseType;
 import net.meisen.dissertation.jdbc.protocol.Protocol.RetrievedValue;
@@ -233,6 +235,9 @@ public class TestProtocol {
 			@Override
 			public void answer(final int msgNr, final RetrievedValue val,
 					final Protocol serverSideProtocol) throws IOException {
+				if (msgNr > 0 && "END".equals(val.getMessage())) {
+					return;
+				}
 
 				for (int i = 0; i < 1000; i++) {
 					serverSideProtocol.writeInt(i);
@@ -252,6 +257,59 @@ public class TestProtocol {
 				assertTrue(value.type.equals(ResponseType.INT));
 				try {
 					assertEquals(nr, value.getInt());
+				} catch (final IOException e) {
+					fail(e.getMessage());
+				}
+
+				testCounter = nr;
+				nr++;
+
+				// keep reading
+				return true;
+			}
+		};
+
+		clientSideProtocol.writeAndHandle("0", clientHandler);
+		assertEquals(999, testCounter);
+	}
+
+	@Test
+	public void testProtocolInts() throws Exception {
+		serverHandler = new ITestHandler() {
+
+			@Override
+			public void answer(final int msgNr, final RetrievedValue val,
+					final Protocol serverSideProtocol) throws IOException {
+				if (msgNr > 0 && "END".equals(val.getMessage())) {
+					return;
+				}
+
+				final Random rnd = new Random();
+
+				for (int i = 0; i < 1000; i++) {
+					final int[] values = new int[i];
+					for (int k = 0; k < i; k++) {
+						values[k] = rnd.nextInt();
+					}
+					serverSideProtocol.writeInts(values);
+				}
+				serverSideProtocol.writeEndOfResult();
+			}
+		};
+
+		// let's read some headers
+		final IResponseHandler clientHandler = new TestResponseHandler() {
+
+			int nr = 0;
+
+			@Override
+			public boolean handleResult(final RetrievedValue value) {
+
+				assertTrue(value.type.equals(ResponseType.INT_ARRAY));
+				assertTrue(value instanceof ChunkedRetrievedValue);
+				final ChunkedRetrievedValue chunks = (ChunkedRetrievedValue) value;
+				try {
+					assertEquals(nr, chunks.getInts().length);
 				} catch (final IOException e) {
 					fail(e.getMessage());
 				}
