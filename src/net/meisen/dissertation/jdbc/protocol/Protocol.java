@@ -298,6 +298,14 @@ public class Protocol implements Closeable {
 			return bytes;
 		}
 
+		/**
+		 * Tries to read the {@code RetrievedValue} as a single integer
+		 * 
+		 * @return the integer represented by {@code this}
+		 * 
+		 * @throws IOException
+		 *             if the {@code RetrievedValue} cannot be read as integer
+		 */
 		public int getInt() throws IOException {
 			checkType(ResponseType.INT);
 
@@ -306,6 +314,18 @@ public class Protocol implements Closeable {
 			dis.close();
 
 			return res;
+		}
+
+		/**
+		 * Gets the integer retrieved from {@link #getInt()} as array.
+		 * 
+		 * @return the integer retrieved from {@link #getInt()} as array
+		 * 
+		 * @throws IOException
+		 *             if the {@code RetrievedValue} cannot be read as integer
+		 */
+		public int[] getInts() throws IOException {
+			return new int[] { getInt() };
 		}
 
 		public Class<?>[] getHeader() throws IOException {
@@ -376,6 +396,7 @@ public class Protocol implements Closeable {
 			chunks = bytes;
 		}
 
+		@Override
 		public int[] getInts() throws IOException {
 			checkType(ResponseType.INT, ResponseType.INT_ARRAY);
 

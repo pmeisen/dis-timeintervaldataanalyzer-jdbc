@@ -307,9 +307,8 @@ public class TestProtocol {
 
 				assertTrue(value.type.equals(ResponseType.INT_ARRAY));
 				assertTrue(value instanceof ChunkedRetrievedValue);
-				final ChunkedRetrievedValue chunks = (ChunkedRetrievedValue) value;
 				try {
-					assertEquals(nr, chunks.getInts().length);
+					assertEquals(nr, value.getInts().length);
 				} catch (final IOException e) {
 					fail(e.getMessage());
 				}
