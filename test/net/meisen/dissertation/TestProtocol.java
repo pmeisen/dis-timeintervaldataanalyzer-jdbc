@@ -14,12 +14,12 @@ import java.util.Date;
 import java.util.Random;
 import java.util.UUID;
 
+import net.meisen.dissertation.jdbc.protocol.ChunkedRetrievedValue;
+import net.meisen.dissertation.jdbc.protocol.IResponseHandler;
 import net.meisen.dissertation.jdbc.protocol.Protocol;
-import net.meisen.dissertation.jdbc.protocol.Protocol.ChunkedRetrievedValue;
-import net.meisen.dissertation.jdbc.protocol.Protocol.IResponseHandler;
-import net.meisen.dissertation.jdbc.protocol.Protocol.ResponseType;
-import net.meisen.dissertation.jdbc.protocol.Protocol.RetrievedValue;
-import net.meisen.dissertation.jdbc.protocol.Protocol.WrappedException;
+import net.meisen.dissertation.jdbc.protocol.ResponseType;
+import net.meisen.dissertation.jdbc.protocol.RetrievedValue;
+import net.meisen.dissertation.jdbc.protocol.WrappedException;
 
 import org.junit.After;
 import org.junit.Before;

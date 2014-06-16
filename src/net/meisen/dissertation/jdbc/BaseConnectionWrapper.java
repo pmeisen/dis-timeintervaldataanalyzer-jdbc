@@ -4,9 +4,9 @@ import java.io.IOException;
 import java.net.SocketException;
 import java.sql.SQLException;
 
+import net.meisen.dissertation.jdbc.protocol.IResponseHandler;
 import net.meisen.dissertation.jdbc.protocol.Protocol;
-import net.meisen.dissertation.jdbc.protocol.Protocol.IResponseHandler;
-import net.meisen.dissertation.jdbc.protocol.Protocol.WrappedException;
+import net.meisen.dissertation.jdbc.protocol.WrappedException;
 
 public abstract class BaseConnectionWrapper extends BaseWrapper {
 

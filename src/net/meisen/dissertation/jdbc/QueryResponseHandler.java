@@ -5,8 +5,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 
-import net.meisen.dissertation.jdbc.protocol.Protocol.IResponseHandler;
-import net.meisen.dissertation.jdbc.protocol.Protocol.RetrievedValue;
+import net.meisen.dissertation.jdbc.protocol.IResponseHandler;
+import net.meisen.dissertation.jdbc.protocol.RetrievedValue;
 
 public class QueryResponseHandler implements IResponseHandler {
 	public final static String PREFIX_CLASSPATH = "classpath";

@@ -3,7 +3,7 @@ package net.meisen.dissertation.jdbc;
 import java.sql.DriverPropertyInfo;
 import java.util.Properties;
 
-import net.meisen.dissertation.jdbc.protocol.Protocol.IResponseHandler;
+import net.meisen.dissertation.jdbc.protocol.IResponseHandler;
 
 /**
  * The {@code DriverProperties} contain the set properties for the server, i.e.
