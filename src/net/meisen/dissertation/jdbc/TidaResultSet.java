@@ -1498,4 +1498,8 @@ public class TidaResultSet extends BaseConnectionWrapper implements ResultSet {
 	public TidaResultSetType getResultSetType() {
 		return handler.getResultSetType();
 	}
+
+	public Integer getCountValue() {
+		return handler.getCountValue();
+	}
 }

@@ -16,14 +16,18 @@ public class QueryResponseHandler implements IResponseHandler {
 	public final static String PREFIX_FILE = "file";
 
 	private boolean eor = false;
-	private TidaResultSetType resultSetType = null;
-	private TidaResultSetType expectedResultSetType = TidaResultSetType.UNKNOWN;
-	private QueryStatus queryStatus = QueryStatus.PROCESS;
-	private Object[] lastResult = null;
-	private ResponseType lastType = null;
 
-	private String[] headerNames = null;
+	private TidaResultSetType expectedResultSetType = TidaResultSetType.UNKNOWN;
+	private TidaResultSetType resultSetType = null;
+	private QueryStatus queryStatus = QueryStatus.PROCESS;
+
 	private DataType[] header = null;
+	private String[] headerNames = null;
+
+	private Integer[] generatedIds = null;
+	private Integer countValue = -1;
+
+	private Object[] lastResult = null;
 
 	@Override
 	public QueryStatus doHandleQueryType(final QueryType queryType) {
@@ -157,13 +161,19 @@ public class QueryResponseHandler implements IResponseHandler {
 		if (value == null) {
 			throw new NullPointerException(
 					"The retrieved value cannot be null.");
+		} else if (ResponseType.INT_ARRAY.equals(type)) {
+			this.generatedIds = (Integer[]) value;
+		} else if (ResponseType.INT.equals(type)) {
+			this.countValue = (Integer) value[0];
+		} else if (ResponseType.RESULT.equals(type)) {
+			this.lastResult = value;
 		} else {
-			lastResult = value;
-			lastType = type;
+			throw new IllegalArgumentException(
+					"Unexpected values retrieved from type '" + type + "'.");
 		}
 
-		// disable auto-read
-		return false;
+		// auto-read everything as long as we don't receive any results
+		return !ResponseType.RESULT.equals(type);
 	}
 
 	public boolean reachedEOR() {
@@ -179,15 +189,15 @@ public class QueryResponseHandler implements IResponseHandler {
 		return lastResult;
 	}
 
-	public ResponseType getLastType() {
-		return lastType;
-	}
-
 	public QueryStatus getQueryStatus() {
 		return queryStatus;
 	}
 
 	public void setQueryStatus(final QueryStatus queryStatus) {
 		this.queryStatus = queryStatus;
+	}
+
+	public Integer getCountValue() {
+		return countValue;
 	}
 }
