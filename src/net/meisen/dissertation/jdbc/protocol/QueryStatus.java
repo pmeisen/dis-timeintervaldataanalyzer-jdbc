@@ -1,7 +1,7 @@
 package net.meisen.dissertation.jdbc.protocol;
 
 public enum QueryStatus {
-	PROCESS((byte) 126), CANCEL((byte) 127);
+	PROCESS((byte) 125), PROCESSANDGETIDS((byte) 126), CANCEL((byte) 127);
 
 	private final byte id;
 

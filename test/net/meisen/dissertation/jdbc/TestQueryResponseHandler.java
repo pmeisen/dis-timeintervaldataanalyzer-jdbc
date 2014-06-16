@@ -9,6 +9,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.UUID;
 
+import net.meisen.dissertation.jdbc.protocol.QueryStatus;
+import net.meisen.dissertation.jdbc.protocol.QueryType;
 import net.meisen.general.genmisc.types.Files;
 import net.meisen.general.genmisc.types.Streams;
 
@@ -87,5 +89,84 @@ public class TestQueryResponseHandler {
 		} finally {
 			assertTrue(file.delete());
 		}
+	}
+
+	/**
+	 * Tests the implementation of
+	 * {@code QueryResponseHandler#doHandleQueryType(QueryType)}.
+	 */
+	@Test
+	public void testDoHandleQueryType() {
+		final QueryResponseHandler handler = new QueryResponseHandler();
+
+		// check the valid retrieval of identifiers with modify
+		handler.setExpectedResultSetType(TidaResultSetType.MODIFY);
+		handler.setQueryStatus(QueryStatus.PROCESSANDGETIDS);
+		assertEquals(QueryStatus.PROCESSANDGETIDS,
+				handler.doHandleQueryType(QueryType.MANIPULATION));
+		assertEquals(TidaResultSetType.MODIFY, handler.getResultSetType());
+
+		// check the valid processing with a manipulation
+		handler.setExpectedResultSetType(TidaResultSetType.MODIFY);
+		handler.setQueryStatus(QueryStatus.PROCESS);
+		assertEquals(QueryStatus.PROCESS,
+				handler.doHandleQueryType(QueryType.MANIPULATION));
+		assertEquals(TidaResultSetType.MODIFY, handler.getResultSetType());
+
+		// check the valid processing with a query
+		handler.setExpectedResultSetType(TidaResultSetType.QUERY);
+		handler.setQueryStatus(QueryStatus.PROCESS);
+		assertEquals(QueryStatus.PROCESS,
+				handler.doHandleQueryType(QueryType.QUERY));
+		assertEquals(TidaResultSetType.QUERY, handler.getResultSetType());
+
+		// check invalid processing with identifiers with a query
+		handler.setExpectedResultSetType(TidaResultSetType.QUERY);
+		handler.setQueryStatus(QueryStatus.PROCESSANDGETIDS);
+		assertEquals(QueryStatus.CANCEL,
+				handler.doHandleQueryType(QueryType.QUERY));
+		assertEquals(TidaResultSetType.QUERY, handler.getResultSetType());
+
+		// check default invalidation with query
+		handler.setExpectedResultSetType(TidaResultSetType.QUERY);
+		handler.setQueryStatus(QueryStatus.CANCEL);
+		assertEquals(QueryStatus.CANCEL,
+				handler.doHandleQueryType(QueryType.QUERY));
+		assertEquals(TidaResultSetType.QUERY, handler.getResultSetType());
+
+		// check default invalidation with manipulation
+		handler.setExpectedResultSetType(TidaResultSetType.UNKNOWN);
+		handler.setQueryStatus(QueryStatus.CANCEL);
+		assertEquals(QueryStatus.CANCEL,
+				handler.doHandleQueryType(QueryType.MANIPULATION));
+		assertEquals(TidaResultSetType.MODIFY, handler.getResultSetType());
+
+		// check unknown expectation and valid result with manipulation
+		handler.setExpectedResultSetType(TidaResultSetType.UNKNOWN);
+		handler.setQueryStatus(QueryStatus.PROCESS);
+		assertEquals(QueryStatus.PROCESS,
+				handler.doHandleQueryType(QueryType.MANIPULATION));
+		assertEquals(TidaResultSetType.MODIFY, handler.getResultSetType());
+
+		// check unknown expectation and valid result with manipulation
+		handler.setExpectedResultSetType(TidaResultSetType.UNKNOWN);
+		handler.setQueryStatus(QueryStatus.PROCESSANDGETIDS);
+		assertEquals(QueryStatus.PROCESSANDGETIDS,
+				handler.doHandleQueryType(QueryType.MANIPULATION));
+		assertEquals(TidaResultSetType.MODIFY, handler.getResultSetType());
+
+		// check unknown expectation and valid result with query
+		handler.setExpectedResultSetType(TidaResultSetType.UNKNOWN);
+		handler.setQueryStatus(QueryStatus.PROCESS);
+		assertEquals(QueryStatus.PROCESS,
+				handler.doHandleQueryType(QueryType.QUERY));
+		assertEquals(TidaResultSetType.QUERY, handler.getResultSetType());
+
+		// check unknown expectation and invalid result with query
+		handler.setExpectedResultSetType(TidaResultSetType.UNKNOWN);
+		handler.setQueryStatus(QueryStatus.PROCESSANDGETIDS);
+		assertEquals(QueryStatus.CANCEL,
+				handler.doHandleQueryType(QueryType.QUERY));
+		assertEquals(TidaResultSetType.QUERY, handler.getResultSetType());
 	}
 }

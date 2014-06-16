@@ -7,9 +7,9 @@ import java.io.InputStream;
 
 import net.meisen.dissertation.jdbc.protocol.DataType;
 import net.meisen.dissertation.jdbc.protocol.IResponseHandler;
+import net.meisen.dissertation.jdbc.protocol.QueryStatus;
 import net.meisen.dissertation.jdbc.protocol.QueryType;
 import net.meisen.dissertation.jdbc.protocol.ResponseType;
-import net.meisen.dissertation.jdbc.protocol.RetrievedValue;
 
 public class QueryResponseHandler implements IResponseHandler {
 	public final static String PREFIX_CLASSPATH = "classpath";
@@ -18,6 +18,7 @@ public class QueryResponseHandler implements IResponseHandler {
 	private boolean eor = false;
 	private TidaResultSetType resultSetType = null;
 	private TidaResultSetType expectedResultSetType = TidaResultSetType.UNKNOWN;
+	private QueryStatus queryStatus = QueryStatus.PROCESS;
 	private Object[] lastResult = null;
 	private ResponseType lastType = null;
 
@@ -25,7 +26,7 @@ public class QueryResponseHandler implements IResponseHandler {
 	private DataType[] header = null;
 
 	@Override
-	public boolean doHandleQueryType(final QueryType queryType) {
+	public QueryStatus doHandleQueryType(final QueryType queryType) {
 
 		// determine the type of the resultSet
 		if (QueryType.MANIPULATION.equals(queryType)) {
@@ -38,13 +39,39 @@ public class QueryResponseHandler implements IResponseHandler {
 		}
 
 		// determine if the type should be handled
+		final QueryStatus status;
 		if (TidaResultSetType.UNKNOWN.equals(expectedResultSetType)) {
-			return true;
+			if (QueryType.QUERY.equals(queryType)
+					&& QueryStatus.PROCESSANDGETIDS.equals(queryStatus)) {
+				status = QueryStatus.CANCEL;
+			} else {
+				status = queryStatus;
+			}
 		} else if (TidaResultSetType.MODIFY.equals(expectedResultSetType)) {
-			return QueryType.MANIPULATION.equals(queryType);
+			if (QueryType.MANIPULATION.equals(queryType)) {
+				status = queryStatus;
+			} else {
+				status = QueryStatus.CANCEL;
+			}
+		} else if (TidaResultSetType.QUERY.equals(expectedResultSetType)) {
+			if (QueryType.QUERY.equals(queryType)) {
+
+				// impossible to retrieve processed identifiers when we query
+				// data
+				if (QueryStatus.PROCESSANDGETIDS.equals(queryStatus)) {
+					status = QueryStatus.CANCEL;
+				} else {
+					status = queryStatus;
+				}
+			} else {
+				status = QueryStatus.CANCEL;
+			}
 		} else {
-			return QueryType.QUERY.equals(queryType);
+			throw new IllegalStateException("The queryType '" + queryType
+					+ "' is not supported by the handler.");
 		}
+
+		return status;
 	}
 
 	public void setExpectedResultSetType(
@@ -154,5 +181,13 @@ public class QueryResponseHandler implements IResponseHandler {
 
 	public ResponseType getLastType() {
 		return lastType;
+	}
+
+	public QueryStatus getQueryStatus() {
+		return queryStatus;
+	}
+
+	public void setQueryStatus(final QueryStatus queryStatus) {
+		this.queryStatus = queryStatus;
 	}
 }

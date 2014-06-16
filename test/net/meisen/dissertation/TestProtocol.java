@@ -76,8 +76,8 @@ public class TestProtocol {
 		}
 
 		@Override
-		public boolean doHandleQueryType(final QueryType queryType) {
-			return true;
+		public QueryStatus doHandleQueryType(final QueryType queryType) {
+			return QueryStatus.PROCESS;
 		}
 	}
 

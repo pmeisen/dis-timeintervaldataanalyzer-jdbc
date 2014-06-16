@@ -13,7 +13,7 @@ public interface IResponseHandler {
 
 	public void signalEORReached();
 
-	public boolean doHandleQueryType(QueryType queryType);
+	public QueryStatus doHandleQueryType(QueryType queryType);
 
 	public DataType[] getHeader();
 }

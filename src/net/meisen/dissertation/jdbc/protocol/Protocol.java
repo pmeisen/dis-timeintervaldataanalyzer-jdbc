@@ -253,18 +253,23 @@ public class Protocol implements Closeable {
 		if (queryType == null) {
 			throw new IllegalStateException(
 					"Expected a queryType to be send, got something else.");
-		} else if (handler.doHandleQueryType(queryType)) {
-			writeQueryStatus(QueryStatus.PROCESS);
+		}
 
-			return true;
-		} else {
-			writeQueryStatus(QueryStatus.CANCEL);
+		// get the status and send it
+		final QueryStatus status = handler.doHandleQueryType(queryType);
+		writeQueryStatus(status);
 
+		// check the status
+		if (QueryStatus.CANCEL.equals(status)) {
 			while (!handleResponse(null)) {
-				// do nothing but clear everything on the socket
+				/*
+				 * do nothing, but clear everything on the socket, until an end
+				 * is read
+				 */
 			}
-
 			return false;
+		} else {
+			return true;
 		}
 	}
 
