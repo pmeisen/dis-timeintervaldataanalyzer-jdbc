@@ -25,11 +25,6 @@ public class RetrievedValue {
 		return false;
 	}
 
-	public byte[] getResult() throws IOException {
-		checkType(ResponseType.RESULT);
-		return bytes;
-	}
-
 	/**
 	 * Tries to read the {@code RetrievedValue} as a single integer
 	 * 
@@ -60,17 +55,29 @@ public class RetrievedValue {
 		return new int[] { getInt() };
 	}
 
-	public Class<?>[] getHeader() throws IOException {
+	/**
+	 * Gets the integer retrieved from {@link #getInt()} as array.
+	 * 
+	 * @return the integer retrieved from {@link #getInt()} as array
+	 * 
+	 * @throws IOException
+	 *             if the {@code RetrievedValue} cannot be read as integer
+	 */
+	public Integer[] getIntegers() throws IOException {
+		return new Integer[] { getInt() };
+	}
+
+	public DataType[] getHeader() throws IOException {
 		checkType(ResponseType.HEADER);
 
-		final Class<?>[] clazzes = new Class<?>[bytes.length];
+		final DataType[] dts = new DataType[bytes.length];
 		for (int i = 0; i < bytes.length; i++) {
 			final byte id = bytes[i];
 			final DataType dt = DataType.find(id);
-			clazzes[i] = dt.getRepresentorClass();
+			dts[i] = dt;
 		}
 
-		return clazzes;
+		return dts;
 	}
 
 	public String getMessage() throws IOException {
@@ -99,7 +106,7 @@ public class RetrievedValue {
 		}
 	}
 
-	protected String getString() throws IOException {
+	public String getString() throws IOException {
 		final DataInputStream dis = getDataInputStream();
 		final int length = dis.readInt();
 		final byte[] b = new byte[length];
@@ -114,5 +121,9 @@ public class RetrievedValue {
 			dis = new DataInputStream(new ByteArrayInputStream(bytes));
 		}
 		return dis;
+	}
+
+	public ResponseType getType() {
+		return type;
 	}
 }

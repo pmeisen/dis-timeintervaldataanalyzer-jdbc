@@ -5,20 +5,60 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 
+import net.meisen.dissertation.jdbc.protocol.DataType;
 import net.meisen.dissertation.jdbc.protocol.IResponseHandler;
+import net.meisen.dissertation.jdbc.protocol.QueryType;
+import net.meisen.dissertation.jdbc.protocol.ResponseType;
 import net.meisen.dissertation.jdbc.protocol.RetrievedValue;
 
 public class QueryResponseHandler implements IResponseHandler {
 	public final static String PREFIX_CLASSPATH = "classpath";
 	public final static String PREFIX_FILE = "file";
 
-	private boolean singleResultExpected = false;
 	private boolean eor = false;
-
-	private RetrievedValue lastResult = null;
+	private TidaResultSetType resultSetType = null;
+	private TidaResultSetType expectedResultSetType = TidaResultSetType.UNKNOWN;
+	private Object[] lastResult = null;
+	private ResponseType lastType = null;
 
 	private String[] headerNames = null;
-	private Class<?>[] header = null;
+	private DataType[] header = null;
+
+	@Override
+	public boolean doHandleQueryType(final QueryType queryType) {
+
+		// determine the type of the resultSet
+		if (QueryType.MANIPULATION.equals(queryType)) {
+			resultSetType = TidaResultSetType.MODIFY;
+		} else if (QueryType.QUERY.equals(queryType)) {
+			resultSetType = TidaResultSetType.QUERY;
+		} else {
+			throw new IllegalArgumentException("The queryType '" + queryType
+					+ "' is not supported.");
+		}
+
+		// determine if the type should be handled
+		if (TidaResultSetType.UNKNOWN.equals(expectedResultSetType)) {
+			return true;
+		} else if (TidaResultSetType.MODIFY.equals(expectedResultSetType)) {
+			return QueryType.MANIPULATION.equals(queryType);
+		} else {
+			return QueryType.QUERY.equals(queryType);
+		}
+	}
+
+	public void setExpectedResultSetType(
+			final TidaResultSetType expectedResultSetType) {
+		this.expectedResultSetType = expectedResultSetType;
+	}
+
+	public TidaResultSetType getExpectedResultSetType() {
+		return expectedResultSetType;
+	}
+
+	public TidaResultSetType getResultSetType() {
+		return resultSetType;
+	}
 
 	@Override
 	public InputStream getResourceStream(final String resource) {
@@ -71,8 +111,13 @@ public class QueryResponseHandler implements IResponseHandler {
 	}
 
 	@Override
-	public void setHeader(final Class<?>[] header) {
+	public void setHeader(final DataType[] header) {
 		this.header = header;
+	}
+
+	@Override
+	public DataType[] getHeader() {
+		return header;
 	}
 
 	@Override
@@ -80,34 +125,18 @@ public class QueryResponseHandler implements IResponseHandler {
 		this.headerNames = header;
 	}
 
-	public boolean hasHeader() {
-		return this.header != null || this.headerNames != null;
-	}
-
 	@Override
-	public boolean handleResult(final RetrievedValue value) {
+	public boolean handleResult(final ResponseType type, final Object[] value) {
 		if (value == null) {
 			throw new NullPointerException(
 					"The retrieved value cannot be null.");
-		} else if (isSingleResultExpected() && lastResult != null) {
-			lastResult = null;
 		} else {
 			lastResult = value;
+			lastType = type;
 		}
 
-		return isSingleResultExpected();
-	}
-
-	public boolean isSingleResultExpected() {
-		return singleResultExpected;
-	}
-
-	public void setSingleResultExpected(final boolean singleResultExpected) {
-		this.singleResultExpected = singleResultExpected;
-	}
-
-	public boolean isSingleResult() {
-		return (eor && isSingleResultExpected() && lastResult != null);
+		// disable auto-read
+		return false;
 	}
 
 	public boolean reachedEOR() {
@@ -119,7 +148,11 @@ public class QueryResponseHandler implements IResponseHandler {
 		eor = true;
 	}
 
-	public byte[] getLastResult() {
-		return lastResult == null ? null : lastResult.bytes;
+	public Object[] getLastResult() {
+		return lastResult;
+	}
+
+	public ResponseType getLastType() {
+		return lastType;
 	}
 }

@@ -116,7 +116,7 @@ public class TidaStatement extends BaseConnectionWrapper implements Statement,
 				getResultSetType(), getResultSetConcurrency(),
 				getResultSetHoldability());
 
-		if (rs.isResultSetType(TidaResultSetType.INTVALUE)) {
+		if (rs.isResultSetType(TidaResultSetType.MODIFY)) {
 			return new RequestResult(null, 0);
 		} else {
 			return new RequestResult(rs, -1);
@@ -125,7 +125,7 @@ public class TidaStatement extends BaseConnectionWrapper implements Statement,
 
 	@Override
 	public ResultSet executeQuery(final String sql) throws SQLException {
-		final RequestResult res = execute(sql, TidaResultSetType.RESULTSET);
+		final RequestResult res = execute(sql, TidaResultSetType.QUERY);
 		return res.resultSet;
 	}
 
@@ -169,7 +169,7 @@ public class TidaStatement extends BaseConnectionWrapper implements Statement,
 
 	@Override
 	public int executeUpdate(final String sql) throws SQLException {
-		final RequestResult res = execute(sql, TidaResultSetType.INTVALUE);
+		final RequestResult res = execute(sql, TidaResultSetType.MODIFY);
 
 		return res.updateCount;
 	}

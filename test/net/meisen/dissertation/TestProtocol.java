@@ -7,16 +7,17 @@ import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Date;
 import java.util.Random;
 import java.util.UUID;
 
-import net.meisen.dissertation.jdbc.protocol.ChunkedRetrievedValue;
+import net.meisen.dissertation.jdbc.protocol.DataType;
 import net.meisen.dissertation.jdbc.protocol.IResponseHandler;
 import net.meisen.dissertation.jdbc.protocol.Protocol;
+import net.meisen.dissertation.jdbc.protocol.QueryStatus;
+import net.meisen.dissertation.jdbc.protocol.QueryType;
 import net.meisen.dissertation.jdbc.protocol.ResponseType;
 import net.meisen.dissertation.jdbc.protocol.RetrievedValue;
 import net.meisen.dissertation.jdbc.protocol.WrappedException;
@@ -46,7 +47,8 @@ public class TestProtocol {
 		}
 
 		@Override
-		public boolean handleResult(RetrievedValue value) {
+		public boolean handleResult(final ResponseType type,
+				final Object[] result) {
 			fail("Not expected!");
 
 			return false;
@@ -58,13 +60,24 @@ public class TestProtocol {
 		}
 
 		@Override
-		public void setHeader(final Class<?>[] header) {
+		public void setHeader(final DataType[] header) {
 			fail("Not expected!");
+		}
+
+		@Override
+		public DataType[] getHeader() {
+			fail("Not expected!");
+			return null;
 		}
 
 		@Override
 		public void signalEORReached() {
 			// nothing to do
+		}
+
+		@Override
+		public boolean doHandleQueryType(final QueryType queryType) {
+			return true;
 		}
 	}
 
@@ -96,8 +109,28 @@ public class TestProtocol {
 
 					int nr = 0;
 					while (!isInterrupted()) {
+
+						// get the message to be handled
 						final RetrievedValue val = serverSideProtocol.read();
-						serverHandler.answer(nr, val, serverSideProtocol);
+						if (val.is(ResponseType.MESSAGE)
+								&& "END".equals(val.getMessage())) {
+							continue;
+						}
+
+						// tell the client what type of message was send
+						serverSideProtocol.writeQueryType(QueryType.QUERY);
+
+						// read the status if we should proceed
+						final QueryStatus status = serverSideProtocol
+								.readQueryStatus();
+						assertNotNull(status);
+
+						// decide
+						if (QueryStatus.PROCESS.equals(status)) {
+							serverHandler.answer(nr, val, serverSideProtocol);
+						} else {
+							serverSideProtocol.writeEndOfResult();
+						}
 						nr++;
 					}
 
@@ -145,10 +178,8 @@ public class TestProtocol {
 					c = new Class<?>[] { UUID.class };
 					break;
 				default:
-					if ("END".equals(val.getMessage())) {
-						return;
-					}
-					c = null;
+					fail("Unexpected message");
+					return;
 				}
 
 				try {
@@ -164,26 +195,26 @@ public class TestProtocol {
 		final IResponseHandler clientHandler = new TestResponseHandler() {
 
 			@Override
-			public void setHeader(final Class<?>[] header) {
+			public void setHeader(final DataType[] header) {
 				switch (testCounter) {
 				case 0:
 					assertEquals(1, header.length);
-					assertEquals(Integer.class, header[0]);
+					assertEquals(Integer.class, header[0].getRepresentorClass());
 					break;
 				case 1:
 					assertEquals(12, header.length);
-					assertEquals(Byte.class, header[0]);
-					assertEquals(Byte.class, header[1]);
-					assertEquals(Short.class, header[2]);
-					assertEquals(Short.class, header[3]);
-					assertEquals(Integer.class, header[4]);
-					assertEquals(Integer.class, header[5]);
-					assertEquals(Long.class, header[6]);
-					assertEquals(Long.class, header[7]);
-					assertEquals(String.class, header[8]);
-					assertEquals(Date.class, header[9]);
-					assertEquals(Double.class, header[10]);
-					assertEquals(Double.class, header[11]);
+					assertEquals(Byte.class, header[0].getRepresentorClass());
+					assertEquals(Byte.class, header[1].getRepresentorClass());
+					assertEquals(Short.class, header[2].getRepresentorClass());
+					assertEquals(Short.class, header[3].getRepresentorClass());
+					assertEquals(Integer.class, header[4].getRepresentorClass());
+					assertEquals(Integer.class, header[5].getRepresentorClass());
+					assertEquals(Long.class, header[6].getRepresentorClass());
+					assertEquals(Long.class, header[7].getRepresentorClass());
+					assertEquals(String.class, header[8].getRepresentorClass());
+					assertEquals(Date.class, header[9].getRepresentorClass());
+					assertEquals(Double.class, header[10].getRepresentorClass());
+					assertEquals(Double.class, header[11].getRepresentorClass());
 					break;
 				default:
 					fail("No test result defined for test: " + testCounter);
@@ -235,9 +266,6 @@ public class TestProtocol {
 			@Override
 			public void answer(final int msgNr, final RetrievedValue val,
 					final Protocol serverSideProtocol) throws IOException {
-				if (msgNr > 0 && "END".equals(val.getMessage())) {
-					return;
-				}
 
 				for (int i = 0; i < 1000; i++) {
 					serverSideProtocol.writeInt(i);
@@ -252,14 +280,13 @@ public class TestProtocol {
 			int nr = 0;
 
 			@Override
-			public boolean handleResult(final RetrievedValue value) {
+			public boolean handleResult(final ResponseType type,
+					final Object[] result) {
 
-				assertTrue(value.type.equals(ResponseType.INT));
-				try {
-					assertEquals(nr, value.getInt());
-				} catch (final IOException e) {
-					fail(e.getMessage());
-				}
+				assertTrue(ResponseType.INT.equals(type));
+				assertEquals(1, result.length);
+				assertTrue(result[0] instanceof Integer);
+				assertEquals(nr, result[0]);
 
 				testCounter = nr;
 				nr++;
@@ -280,9 +307,6 @@ public class TestProtocol {
 			@Override
 			public void answer(final int msgNr, final RetrievedValue val,
 					final Protocol serverSideProtocol) throws IOException {
-				if (msgNr > 0 && "END".equals(val.getMessage())) {
-					return;
-				}
 
 				final Random rnd = new Random();
 
@@ -303,15 +327,11 @@ public class TestProtocol {
 			int nr = 0;
 
 			@Override
-			public boolean handleResult(final RetrievedValue value) {
+			public boolean handleResult(final ResponseType type,
+					final Object[] result) {
 
-				assertTrue(value.type.equals(ResponseType.INT_ARRAY));
-				assertTrue(value instanceof ChunkedRetrievedValue);
-				try {
-					assertEquals(nr, value.getInts().length);
-				} catch (final IOException e) {
-					fail(e.getMessage());
-				}
+				assertTrue(ResponseType.INT_ARRAY.equals(type));
+				assertEquals(nr, result.length);
 
 				testCounter = nr;
 				nr++;
@@ -350,10 +370,8 @@ public class TestProtocol {
 							"What so ever" };
 					break;
 				default:
-					if ("END".equals(val.getMessage())) {
-						return;
-					}
-					headerNames = null;
+					fail("Unexpected message");
+					return;
 				}
 
 				serverSideProtocol.writeHeaderNames(headerNames);
@@ -410,8 +428,9 @@ public class TestProtocol {
 					final Protocol serverSideProtocol) throws IOException {
 
 				for (int i = 0; i < 1000; i++) {
-					serverSideProtocol.writeResult((msgNr + "-" + i)
-							.getBytes("UTF8"));
+					serverSideProtocol.writeResult(
+							new DataType[] { DataType.STRING },
+							new Object[] { (msgNr + "-" + i) });
 				}
 				serverSideProtocol.writeEndOfResult();
 			}
@@ -420,25 +439,70 @@ public class TestProtocol {
 		final IResponseHandler clientHandler = new TestResponseHandler() {
 
 			@Override
-			public boolean handleResult(final RetrievedValue value) {
+			public boolean handleResult(final ResponseType type,
+					final Object[] result) {
 
-				final String msg;
-				try {
-					msg = new String(value.bytes, "UTF8");
-				} catch (final UnsupportedEncodingException e) {
-					fail(e.getMessage());
-					return false;
-				}
-
+				final String msg = (String) result[0];
 				assertNotNull(msg);
 				assertEquals("0-" + testCounter, msg);
 
 				// do not read the next result
 				return false;
 			}
+
+			@Override
+			public DataType[] getHeader() {
+				return new DataType[] { DataType.STRING };
+			}
 		};
 
-		clientSideProtocol.write("0");
+		assertTrue(clientSideProtocol.initializeCommunication("0",
+				clientHandler));
+		for (int i = 0; i < 1000; i++) {
+			testCounter = i;
+			clientSideProtocol.handleResponse(clientHandler);
+		}
+	}
+
+	@Test
+	public void testReadAndWriteResults() throws Exception {
+		serverHandler = new ITestHandler() {
+
+			@Override
+			public void answer(final int msgNr, final RetrievedValue val,
+					final Protocol serverSideProtocol) throws IOException {
+
+				for (int i = 0; i < 1000; i++) {
+					serverSideProtocol.writeResult(
+							new DataType[] { DataType.STRING },
+							new Object[] { (msgNr + "-" + i) });
+				}
+				serverSideProtocol.writeEndOfResult();
+			}
+		};
+
+		final IResponseHandler clientHandler = new TestResponseHandler() {
+
+			@Override
+			public boolean handleResult(final ResponseType type,
+					final Object[] result) {
+
+				final String msg = (String) result[0];
+				assertNotNull(msg);
+				assertEquals("0-" + testCounter, msg);
+
+				// do not read the next result
+				return false;
+			}
+
+			@Override
+			public DataType[] getHeader() {
+				return new DataType[] { DataType.STRING };
+			}
+		};
+
+		assertTrue(clientSideProtocol.initializeCommunication("0",
+				clientHandler));
 		for (int i = 0; i < 1000; i++) {
 			testCounter = i;
 			clientSideProtocol.handleResponse(clientHandler);
@@ -456,7 +520,7 @@ public class TestProtocol {
 
 		// finish the server thread
 		serverThread.interrupt();
-		clientSideProtocol.write("END");
+		clientSideProtocol.writeMessage("END");
 		serverThread.join();
 
 		// cleanUp

@@ -32,6 +32,25 @@ public class ChunkedRetrievedValue extends RetrievedValue {
 		}
 	}
 
+	@Override
+	public Integer[] getIntegers() throws IOException {
+		checkType(ResponseType.INT, ResponseType.INT_ARRAY);
+
+		if (this.type.equals(ResponseType.INT)) {
+			return new Integer[] { getInt() };
+		} else {
+			final Integer[] ints = new Integer[chunks.length];
+			for (int i = 0; i < chunks.length; i++) {
+				final DataInputStream dis = new DataInputStream(
+						new ByteArrayInputStream(chunks[i]));
+				ints[i] = dis.readInt();
+				dis.close();
+			}
+
+			return ints;
+		}
+	}
+
 	public String[] getHeaderNames() throws IOException {
 		final String[] headerNames = new String[chunks.length];
 		for (int i = 0; i < chunks.length; i++) {

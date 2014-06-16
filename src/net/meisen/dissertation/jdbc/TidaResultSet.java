@@ -30,8 +30,6 @@ public class TidaResultSet extends BaseConnectionWrapper implements ResultSet {
 	private final int resultSetType;
 	private final int resultSetConcurrency;
 
-	private final TidaResultSetType type;
-
 	public TidaResultSet(final TidaStatement statement, final String sql,
 			final TidaResultSetType expectedType, final int resultSetType,
 			final int resultSetConcurrency, final int resultSetHoldability)
@@ -85,49 +83,25 @@ public class TidaResultSet extends BaseConnectionWrapper implements ResultSet {
 		// set the SQL statement
 		this.sql = sql;
 
+		// set the handler expectations
+		handler.setExpectedResultSetType(expectedType);
+
 		// fire the query
-		fireQuery(sql);
-		handler.setSingleResultExpected(TidaResultSetType.INTVALUE
-				.equals(expectedType));
-
-		if (handler.hasHeader()) {
-
-			// it's a ResultSet
-			if (handler.isSingleResultExpected()) {
-				close();
-				throw TidaSqlExceptions.createException(4006);
-			}
-			this.type = TidaResultSetType.RESULTSET;
-		} else if (TidaResultSetType.RESULTSET.equals(expectedType)) {
+		if (fireQuery(sql, handler)) {
+			// the query was fired and the handler is ready to provide values
+		}
+		// we have a modifying statement, but an update was expected
+		else if (TidaResultSetType.MODIFY.equals(handler.getResultSetType())) {
+			throw TidaSqlExceptions.createException(4006);
+		}
+		// we have a query-statement, but a modifying was expected
+		else if (TidaResultSetType.QUERY.equals(handler.getResultSetType())) {
 			throw TidaSqlExceptions.createException(4005);
-		} else {
-
-			// handle the response once for the result
-			handleResponse(handler);
-
-			/*
-			 * If the handler expected the singleResult it is done because it
-			 * already read the end or throw an exception, otherwise we have to
-			 * read the end now.
-			 */
-			if (!handler.isSingleResultExpected()) {
-				handleResponse(handler);
-			}
-
-			// validate that the end was really read
-			if (!handler.reachedEOR()) {
-				// close the ResultSet
-				this.close();
-
-				// throw the exception this ResultSet was not for selects
-				throw TidaSqlExceptions.createException(4005);
-			}
-			this.type = TidaResultSetType.INTVALUE;
 		}
 	}
 
 	public boolean isResultSetType(final TidaResultSetType expectedType) {
-		return type.equals(expectedType);
+		return handler.getResultSetType().equals(expectedType);
 	}
 
 	@Override

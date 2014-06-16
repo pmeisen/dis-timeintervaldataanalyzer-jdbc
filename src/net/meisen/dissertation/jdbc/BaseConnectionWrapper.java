@@ -85,9 +85,10 @@ public abstract class BaseConnectionWrapper extends BaseWrapper {
 		return this.protocol;
 	}
 
-	protected void fireQuery(final String sql) throws SQLException {
+	protected boolean fireQuery(final String sql, final IResponseHandler handler)
+			throws SQLException {
 		try {
-			getProtocol().write(sql);
+			return getProtocol().initializeCommunication(sql, handler);
 		} catch (final SocketException e) {
 			// TODO reconnect
 		} catch (final IOException e) {
@@ -96,6 +97,8 @@ public abstract class BaseConnectionWrapper extends BaseWrapper {
 		} catch (final WrappedException e) {
 			throw TidaSqlExceptions.createException(9006, sql, e.getMessage());
 		}
+		
+		return false;
 	}
 
 	protected void handleResponse(final IResponseHandler handler)

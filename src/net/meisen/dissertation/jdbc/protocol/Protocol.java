@@ -20,7 +20,7 @@ public class Protocol implements Closeable {
 
 	/**
 	 * The communication will take place over the {@code socket}. The
-	 * {@code Communication} instance will just use the provided input- and
+	 * {@code Protocol} instance will just use the provided input- and
 	 * output-stream to do so. Therefore the {@code socket} must be closed by
 	 * the creating instance.
 	 * 
@@ -42,6 +42,7 @@ public class Protocol implements Closeable {
 	public void writeInt(final int value) throws IOException {
 		os.writeByte(ResponseType.INT.getId());
 		os.writeInt(value);
+		os.flush();
 	}
 
 	public void writeInts(final int value) throws IOException {
@@ -54,6 +55,7 @@ public class Protocol implements Closeable {
 		for (int i = 0; i < values.length; i++) {
 			os.writeInt(values[i]);
 		}
+		os.flush();
 	}
 
 	public void writeException(final Exception exception) throws IOException {
@@ -63,8 +65,34 @@ public class Protocol implements Closeable {
 		write(ResponseType.EXCEPTION, msg.getBytes("UTF8"));
 	}
 
-	public void writeResult(final byte[] result) throws IOException {
-		write(ResponseType.RESULT, result);
+	public void writeResult(final DataType[] header, final Object[] values)
+			throws IOException {
+
+		// make sure the type is correct
+		if (header.length != values.length) {
+			throw new IllegalArgumentException(
+					"The amount of header does not fit the amount of specified values ('"
+							+ header.length + "' != '" + values.length + "').");
+		}
+
+		// generate the bytes to be written
+		os.writeByte(ResponseType.RESULT.getId());
+		for (int i = 0; i < header.length; i++) {
+			final DataType dt = header[i];
+			dt.write(os, values[i]);
+		}
+		os.flush();
+	}
+
+	public Object[] readResult(final DataType[] header) throws IOException {
+
+		final Object[] result = new Object[header.length];
+		for (int i = 0; i < header.length; i++) {
+			final DataType dt = header[i];
+			result[i] = dt.read(is);
+		}
+
+		return result;
 	}
 
 	public void writeEndOfResult() throws IOException {
@@ -90,12 +118,14 @@ public class Protocol implements Closeable {
 		write(ResponseType.RESOURCE, buffer.toByteArray());
 	}
 
-	public void writeHeader(final Class<?>[] headerTypes) throws IOException {
+	public DataType[] writeHeader(final Class<?>[] headerTypes)
+			throws IOException {
 		if (headerTypes == null) {
 			throw new NullPointerException(
 					"A header of null-types cannot be written.");
 		}
 
+		final DataType[] dts = new DataType[headerTypes.length];
 		final byte[] bytes = new byte[headerTypes.length];
 		for (int i = 0; i < headerTypes.length; i++) {
 			final DataType dt = DataType.find(headerTypes[i]);
@@ -103,11 +133,14 @@ public class Protocol implements Closeable {
 				throw new IllegalArgumentException("Unsupported header-type '"
 						+ headerTypes[i].getName() + "'.");
 			} else {
+				dts[i] = dt;
 				bytes[i] = dt.getId();
 			}
 		}
 
 		write(ResponseType.HEADER, bytes);
+
+		return dts;
 	}
 
 	public void writeHeaderNames(final String[] headerNames) throws IOException {
@@ -134,6 +167,13 @@ public class Protocol implements Closeable {
 		}
 	}
 
+	public void writeMeta(final QueryType queryType, final Class<?>[] header,
+			final String[] headerNames) throws IOException {
+		writeQueryType(queryType);
+		writeHeader(header);
+		writeHeaderNames(headerNames);
+	}
+
 	public void writeResource(final byte[] resource) throws IOException {
 		write(ResponseType.RESOURCE, resource);
 	}
@@ -143,12 +183,6 @@ public class Protocol implements Closeable {
 		checkException(value);
 
 		return value;
-	}
-
-	public byte[] readResult() throws IOException {
-		final RetrievedValue value = _read();
-		checkException(value);
-		return value.getResult();
 	}
 
 	public String readMessage() throws IOException {
@@ -163,7 +197,7 @@ public class Protocol implements Closeable {
 		return value.getResourceDemand();
 	}
 
-	public Class<?>[] readHeader() throws IOException {
+	public DataType[] readHeader() throws IOException {
 		final RetrievedValue value = _read();
 		checkException(value);
 		return value.getHeader();
@@ -175,7 +209,17 @@ public class Protocol implements Closeable {
 		return value.getResource();
 	}
 
-	public void write(final String msg) throws IOException {
+	public QueryType readQueryType() throws IOException {
+		final byte marker = is.readByte();
+		return QueryType.find(marker);
+	}
+
+	public QueryStatus readQueryStatus() throws IOException {
+		final byte marker = is.readByte();
+		return QueryStatus.find(marker);
+	}
+
+	public void writeMessage(final String msg) throws IOException {
 		write(ResponseType.MESSAGE, msg.getBytes("UTF8"));
 	}
 
@@ -191,15 +235,54 @@ public class Protocol implements Closeable {
 		os.flush();
 	}
 
-	public synchronized void writeAndHandle(final String msg,
-			final IResponseHandler handler) throws IOException {
-		write(msg);
-		handleResponse(handler);
+	public void writeQueryType(final QueryType type) throws IOException {
+		os.writeByte(type.getId());
+		os.flush();
 	}
 
-	public void handleResponse(final IResponseHandler handler)
+	public void writeQueryStatus(final QueryStatus status) throws IOException {
+		os.writeByte(status.getId());
+		os.flush();
+	}
+
+	public boolean initializeCommunication(final String msg,
+			final IResponseHandler handler) throws IOException {
+		writeMessage(msg);
+		final QueryType queryType = readQueryType();
+
+		if (queryType == null) {
+			throw new IllegalStateException(
+					"Expected a queryType to be send, got something else.");
+		} else if (handler.doHandleQueryType(queryType)) {
+			writeQueryStatus(QueryStatus.PROCESS);
+
+			return true;
+		} else {
+			writeQueryStatus(QueryStatus.CANCEL);
+
+			while (!handleResponse(null)) {
+				// do nothing but clear everything on the socket
+			}
+
+			return false;
+		}
+	}
+
+	public synchronized boolean writeAndHandle(final String msg,
+			final IResponseHandler handler) throws IOException {
+		if (initializeCommunication(msg, handler)) {
+			handleResponse(handler);
+
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	public boolean handleResponse(final IResponseHandler handler)
 			throws IOException {
 
+		boolean eorReached = false;
 		boolean read = true;
 		while (read) {
 			final RetrievedValue value = read();
@@ -208,6 +291,7 @@ public class Protocol implements Closeable {
 					handler.signalEORReached();
 				}
 				read = false;
+				eorReached = true;
 			} else if (value.is(ResponseType.RESOURCE_DEMAND)) {
 				final String resource = value.getResourceDemand();
 
@@ -228,15 +312,26 @@ public class Protocol implements Closeable {
 					handler.setHeaderNames(((ChunkedRetrievedValue) value)
 							.getHeaderNames());
 				} else {
-					handler.setHeaderNames(new String[] { new String(value
-							.getResult(), "UTF8") });
+					handler.setHeaderNames(new String[] { value.getString() });
+				}
+			} else if (value.is(ResponseType.RESULT)) {
+				if (handler != null) {
+					final Object[] result = readResult(handler.getHeader());
+					read = handler.handleResult(value.getType(), result);
+				}
+			} else if (value.is(ResponseType.INT)
+					|| value.is(ResponseType.INT_ARRAY)) {
+				if (handler != null) {
+					read = handler.handleResult(value.getType(),
+							value.getIntegers());
 				}
 			} else {
-				if (handler != null) {
-					read = handler.handleResult(value);
-				}
+				throw new IllegalStateException("Cannot handle the result '"
+						+ value + "'.");
 			}
 		}
+
+		return eorReached;
 	}
 
 	protected void checkException(final RetrievedValue value)

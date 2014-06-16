@@ -5,11 +5,15 @@ import java.io.InputStream;
 public interface IResponseHandler {
 	public InputStream getResourceStream(final String resource);
 
-	public void setHeader(final Class<?>[] header);
+	public void setHeader(final DataType[] header);
 
 	public void setHeaderNames(final String[] header);
 
-	public boolean handleResult(final RetrievedValue value);
+	public boolean handleResult(final ResponseType type, final Object[] result);
 
 	public void signalEORReached();
+
+	public boolean doHandleQueryType(QueryType queryType);
+
+	public DataType[] getHeader();
 }

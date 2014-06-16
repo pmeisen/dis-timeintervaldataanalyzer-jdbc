@@ -7,10 +7,9 @@ public enum ResponseType {
 	 */
 	EXCEPTION((byte) 1),
 	/**
-	 * A result was produced on the other side, the interpretation is content
-	 * dependent-
+	 * The end of results is reached.
 	 */
-	RESULT((byte) 2),
+	EOR((byte) 2, false, false),
 	/**
 	 * A message, i.e. a string, was produced.
 	 */
@@ -26,26 +25,28 @@ public enum ResponseType {
 	 */
 	RESOURCE((byte) 5),
 	/**
-	 * The end of results is reached.
-	 */
-	EOR((byte) 6, false, false),
-	/**
 	 * A header is send, i.e. an array of {@code Class} instances represented by
 	 * an byte-identifier (see {@link DataType}).
 	 */
-	HEADER((byte) 7),
+	HEADER((byte) 6),
 	/**
 	 * An array of strings is send specifying names for each header.
 	 */
-	HEADERNAMES((byte) 8, true, true),
+	HEADERNAMES((byte) 7, true, true),
 	/**
 	 * A single integer is send.
 	 */
-	INT((byte) 9, false, Integer.SIZE / 8),
+	INT((byte) 8, false, Integer.SIZE / 8),
 	/**
 	 * An array of integers is send.
 	 */
-	INT_ARRAY((byte) 10, true, Integer.SIZE / 8);
+	INT_ARRAY((byte) 9, true, Integer.SIZE / 8),
+	/**
+	 * A marker specifying that a result is coming next, the result has
+	 * additional data, which is not handled by the {@code ResponseType}
+	 * directly, therefore it returns {@code false} for {@link #hasData()}.
+	 */
+	RESULT((byte) 10, false, false);
 
 	private final byte id;
 	private final boolean hasData;
