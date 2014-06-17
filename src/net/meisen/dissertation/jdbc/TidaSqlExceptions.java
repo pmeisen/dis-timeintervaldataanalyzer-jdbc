@@ -102,6 +102,29 @@ public class TidaSqlExceptions {
 			return "The specified port '" + parameter[0]
 					+ "' is not a valid number, please use: "
 					+ Constants.URL_FULL_SYNTAX;
+		case 3000:
+			return "The fetch-direction cannot be changed to '" + parameter[0]
+					+ "'.";
+		case 3001:
+			return "Changing the fetch-size is not supported, therefore the value '"
+					+ parameter[0] + "' is ignored.";
+		case 3002:
+			return "The value '" + parameter[0]
+					+ "' is an invalid value considering the fetch-size.";
+		case 3003:
+			return "Poolable statements are currently not supported, neither for simple statements, nor for prepared or callable once.";
+		case 3004:
+			return "The value '"
+					+ parameter[0]
+					+ "' is an invalid value for the timeout in (milli-)seconds.";
+		case 3005:
+			return "The execution of '" + parameter[0]
+					+ "' exceeded the defined time-out of " + parameter[1]
+					+ ".";
+		case 3006:
+			return "The execution of statement '" + parameter[0]
+					+ "' failed because of an interception: " + parameter[1]
+					+ ".";
 		case 3999:
 			return "The statement is already closed.";
 		case 4000:

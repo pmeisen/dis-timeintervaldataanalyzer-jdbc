@@ -383,15 +383,12 @@ public class TidaResultSet extends BaseConnectionWrapper implements ResultSet {
 	public SQLWarning getWarnings() throws SQLException {
 		checkClosed();
 
-		// TODO Auto-generated method stub
-		return null;
+		return new SQLWarning();
 	}
 
 	@Override
 	public void clearWarnings() throws SQLException {
 		checkClosed();
-
-		// TODO Auto-generated method stub
 	}
 
 	@Override

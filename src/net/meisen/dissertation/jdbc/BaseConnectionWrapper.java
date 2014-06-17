@@ -116,11 +116,8 @@ public abstract class BaseConnectionWrapper extends BaseWrapper {
 			throws SQLException {
 		try {
 			getProtocol().handleResponse(handler);
-		} catch (final SocketException e) {
-			// TODO exception
 		} catch (final IOException e) {
-			// TODO exception
-			e.printStackTrace();
+			throw TidaSqlExceptions.createException(9008, e.getMessage());
 		} catch (final WrappedException e) {
 			throw TidaSqlExceptions.createException(9007, e.getMessage());
 		}

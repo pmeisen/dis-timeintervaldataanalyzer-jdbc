@@ -22,8 +22,6 @@ import java.util.Properties;
 public class TidaConnection extends BaseConnectionWrapper implements Connection {
 	private final DriverProperties driverProperties;
 
-	private SQLWarning rootWarning;
-
 	private boolean readOnly;
 	private int holdability = -1;
 
@@ -157,28 +155,12 @@ public class TidaConnection extends BaseConnectionWrapper implements Connection 
 	public SQLWarning getWarnings() throws SQLException {
 		checkClosed();
 
-		return rootWarning;
-	}
-
-	/**
-	 * Adds a warning to the chain.
-	 * 
-	 * @param warning
-	 *            the warning to be added
-	 */
-	public void addWarning(final SQLWarning warning) {
-		if (rootWarning == null) {
-			rootWarning = warning;
-		} else {
-			rootWarning.setNextWarning(warning);
-		}
+		return new SQLWarning();
 	}
 
 	@Override
 	public void clearWarnings() throws SQLException {
 		checkClosed();
-
-		rootWarning = null;
 	}
 
 	@Override
@@ -264,7 +246,7 @@ public class TidaConnection extends BaseConnectionWrapper implements Connection 
 	@Override
 	public void setHoldability(final int holdability) throws SQLException {
 		checkClosed();
-		
+
 		if (holdability == ResultSet.HOLD_CURSORS_OVER_COMMIT
 				|| holdability == ResultSet.CLOSE_CURSORS_AT_COMMIT) {
 			this.holdability = holdability;
@@ -343,9 +325,7 @@ public class TidaConnection extends BaseConnectionWrapper implements Connection 
 				// nothing to do
 			}
 
-			if (timeout == 0) {
-				flag[0] = flag[0];
-			} else {
+			if (timeout != 0) {
 				flag[0] = flag[0]
 						&& (System.currentTimeMillis() - start) < timeout;
 			}
