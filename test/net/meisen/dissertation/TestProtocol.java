@@ -79,6 +79,11 @@ public class TestProtocol {
 		public QueryStatus doHandleQueryType(final QueryType queryType) {
 			return QueryStatus.PROCESS;
 		}
+
+		@Override
+		public void resetHandler() {
+			// nothing to be reseted
+		}
 	}
 
 	private Thread serverThread;
