@@ -93,8 +93,10 @@ public class TestTidaResultSet extends TestBaseForConnections {
 		stmt.execute("LOAD FROM 'classpath:/net/meisen/dissertation/model/testNumberModel.xml'");
 
 		// create some resultSets
-		final ResultSet rs1 = stmt.executeQuery("SELECT TIMESERIES FROM testNumberModel");
-		final ResultSet rs2 = stmt.executeQuery("SELECT TIMESERIES FROM testNumberModel");
+		final ResultSet rs1 = stmt
+				.executeQuery("SELECT TIMESERIES FROM testNumberModel");
+		final ResultSet rs2 = stmt
+				.executeQuery("SELECT TIMESERIES FROM testNumberModel");
 		assertTrue(rs1 instanceof TidaResultSet);
 		assertTrue(rs2 instanceof TidaResultSet);
 		final TidaResultSet trs1 = (TidaResultSet) rs1;
@@ -129,7 +131,8 @@ public class TestTidaResultSet extends TestBaseForConnections {
 		assertTrue(manager.isOwner(tStmt));
 
 		// create a new ResultSet
-		final ResultSet rs3 = stmt.executeQuery("SELECT TIMESERIES FROM testNumberModel");
+		final ResultSet rs3 = stmt
+				.executeQuery("SELECT TIMESERIES FROM testNumberModel");
 		assertTrue(rs3 instanceof TidaResultSet);
 		final TidaResultSet trs3 = (TidaResultSet) rs3;
 		assertTrue(manager == trs3.getManager());

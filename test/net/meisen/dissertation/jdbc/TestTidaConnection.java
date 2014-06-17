@@ -27,11 +27,11 @@ public class TestTidaConnection extends TestBaseForConnections {
 	/**
 	 * Tests the implementation of {@code TidaConnection#isValid(int)}.
 	 * 
-	 * @throws Exception
+	 * @throws SQLException
 	 *             if a problem occurred
 	 */
 	@Test
-	public void testConnectionValidityWithOpenClose() throws Exception {
+	public void testConnectionValidityWithOpenClose() throws SQLException {
 		Connection conn;
 
 		// just create several connections and close those

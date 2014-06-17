@@ -249,7 +249,9 @@ public class Protocol implements Closeable {
 			final IResponseHandler handler) throws IOException {
 
 		// reset the handler to handle a new communication
-		handler.resetHandler();
+		if (handler != null) {
+			handler.resetHandler();
+		}
 
 		// write the message
 		writeMessage(msg);
@@ -262,7 +264,8 @@ public class Protocol implements Closeable {
 		}
 
 		// determine if the query should be handled and write the status
-		final QueryStatus status = handler.doHandleQueryType(queryType);
+		final QueryStatus status = handler == null ? QueryStatus.PROCESS
+				: handler.doHandleQueryType(queryType);
 		writeQueryStatus(status);
 
 		// depending on the status read the rest or not
@@ -297,6 +300,7 @@ public class Protocol implements Closeable {
 		boolean read = true;
 		while (read) {
 			final RetrievedValue value = read();
+			
 			if (value.isEOR()) {
 				if (handler != null) {
 					handler.signalEORReached();

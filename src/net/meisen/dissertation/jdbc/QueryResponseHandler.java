@@ -209,6 +209,10 @@ public class QueryResponseHandler implements IResponseHandler {
 	public Object[] getLastResult() {
 		return lastResult;
 	}
+	
+	public Integer[] getGeneratedIds() {
+		return generatedIds;
+	}
 
 	public QueryStatus getQueryStatus() {
 		return queryStatus;

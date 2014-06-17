@@ -109,7 +109,19 @@ public class TidaResultSet extends BaseConnectionWrapper implements ResultSet {
 
 		// fire the query
 		if (fireQuery(sql, handler)) {
-			// the query was fired and the handler is ready to provide values
+			if (handler.getResultSetType().equals(TidaResultSetType.MODIFY)) {
+				// a modification send everything in one run, so just let it run
+				while (!handler.isEOR()) {
+					handleResponse(handler);
+				}
+				
+				// we don't need the connection anymore, so just release it
+				release();
+			} else {
+				/*
+				 * A query is handled by the resultSet itself
+				 */
+			}
 		}
 		// check if the
 		else if (TidaResultSetType.QUERY.equals(handler.getResultSetType())
@@ -173,275 +185,275 @@ public class TidaResultSet extends BaseConnectionWrapper implements ResultSet {
 
 	@Override
 	public boolean wasNull() throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
 	public String getString(final int columnIndex) throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public boolean getBoolean(final int columnIndex) throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
 	public byte getByte(final int columnIndex) throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return 0;
 	}
 
 	@Override
 	public short getShort(final int columnIndex) throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return 0;
 	}
 
 	@Override
 	public int getInt(final int columnIndex) throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return 0;
 	}
 
 	@Override
 	public long getLong(final int columnIndex) throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return 0;
 	}
 
 	@Override
 	public float getFloat(final int columnIndex) throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return 0;
 	}
 
 	@Override
 	public double getDouble(final int columnIndex) throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return 0;
 	}
 
 	@Override
 	public BigDecimal getBigDecimal(final int columnIndex, final int scale)
 			throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public byte[] getBytes(final int columnIndex) throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public Date getDate(final int columnIndex) throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public Time getTime(final int columnIndex) throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public Timestamp getTimestamp(final int columnIndex) throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public InputStream getAsciiStream(final int columnIndex)
 			throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public InputStream getUnicodeStream(final int columnIndex)
 			throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public InputStream getBinaryStream(final int columnIndex)
 			throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public String getString(final String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public boolean getBoolean(final String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
 	public byte getByte(final String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return 0;
 	}
 
 	@Override
 	public short getShort(final String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return 0;
 	}
 
 	@Override
 	public int getInt(final String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return 0;
 	}
 
 	@Override
 	public long getLong(final String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return 0;
 	}
 
 	@Override
 	public float getFloat(final String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return 0;
 	}
 
 	@Override
 	public double getDouble(final String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return 0;
 	}
 
 	@Override
 	public BigDecimal getBigDecimal(final String columnLabel, final int scale)
 			throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public byte[] getBytes(final String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public Date getDate(final String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public Time getTime(final String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public Timestamp getTimestamp(final String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public InputStream getAsciiStream(final String columnLabel)
 			throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public InputStream getUnicodeStream(final String columnLabel)
 			throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public InputStream getBinaryStream(final String columnLabel)
 			throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public SQLWarning getWarnings() throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public void clearWarnings() throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 
 	}
 
 	@Override
 	public String getCursorName() throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public ResultSetMetaData getMetaData() throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public Object getObject(final int columnIndex) throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public Object getObject(final String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public int findColumn(final String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return 0;
 	}
 
 	@Override
 	public Reader getCharacterStream(final int columnIndex) throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public Reader getCharacterStream(final String columnLabel)
 			throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public BigDecimal getBigDecimal(final int columnIndex) throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public BigDecimal getBigDecimal(final String columnLabel)
 			throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return null;
 	}
 
@@ -959,116 +971,116 @@ public class TidaResultSet extends BaseConnectionWrapper implements ResultSet {
 	@Override
 	public Object getObject(final int columnIndex,
 			final Map<String, Class<?>> map) throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public Ref getRef(final int columnIndex) throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public Blob getBlob(final int columnIndex) throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public Clob getClob(final int columnIndex) throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public Array getArray(final int columnIndex) throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public Object getObject(final String columnLabel,
 			final Map<String, Class<?>> map) throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public Ref getRef(final String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public Blob getBlob(final String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public Clob getClob(final String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public Array getArray(final String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public Date getDate(final int columnIndex, final Calendar cal)
 			throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public Date getDate(final String columnLabel, final Calendar cal)
 			throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public Time getTime(final int columnIndex, final Calendar cal)
 			throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public Time getTime(final String columnLabel, final Calendar cal)
 			throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public Timestamp getTimestamp(final int columnIndex, final Calendar cal)
 			throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public Timestamp getTimestamp(final String columnLabel, final Calendar cal)
 			throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public URL getURL(final int columnIndex) throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public URL getURL(final String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return null;
 	}
 
@@ -1206,13 +1218,13 @@ public class TidaResultSet extends BaseConnectionWrapper implements ResultSet {
 
 	@Override
 	public NClob getNClob(int columnIndex) throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public NClob getNClob(final String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return null;
 	}
 
@@ -1240,27 +1252,27 @@ public class TidaResultSet extends BaseConnectionWrapper implements ResultSet {
 
 	@Override
 	public String getNString(final int columnIndex) throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public String getNString(final String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public Reader getNCharacterStream(final int columnIndex)
 			throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public Reader getNCharacterStream(final String columnLabel)
 			throws SQLException {
-		// TODO Auto-generated method stub
+		checkClosed(); // TODO Auto-generated method stub
 		return null;
 	}
 
@@ -1501,5 +1513,9 @@ public class TidaResultSet extends BaseConnectionWrapper implements ResultSet {
 
 	public Integer getCountValue() {
 		return handler.getCountValue();
+	}
+
+	public Integer[] getGeneratedKeys() {
+		return handler.getGeneratedIds();
 	}
 }

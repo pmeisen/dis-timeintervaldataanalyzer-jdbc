@@ -97,7 +97,7 @@ public abstract class BaseConnectionWrapper extends BaseWrapper {
 		} catch (final WrappedException e) {
 			throw TidaSqlExceptions.createException(9006, sql, e.getMessage());
 		}
-		
+
 		return false;
 	}
 
