@@ -90,10 +90,12 @@ public abstract class BaseConnectionWrapper extends BaseWrapper {
 		try {
 			return getProtocol().initializeCommunication(sql, handler);
 		} catch (final SocketException e) {
-			// TODO reconnect
+
+			// close this one and re-query
+			close();
+			refireQuery(sql, handler);
 		} catch (final IOException e) {
-			// TODO exception
-			e.printStackTrace();
+			throw TidaSqlExceptions.createException(9008, sql, e.getMessage());
 		} catch (final WrappedException e) {
 			throw TidaSqlExceptions.createException(9006, sql, e.getMessage());
 		}
@@ -101,12 +103,21 @@ public abstract class BaseConnectionWrapper extends BaseWrapper {
 		return false;
 	}
 
+	private boolean refireQuery(final String sql, final IResponseHandler handler)
+			throws SQLException {
+		try {
+			return getProtocol().initializeCommunication(sql, handler);
+		} catch (final IOException e) {
+			throw TidaSqlExceptions.createException(9008, sql, e.getMessage());
+		}
+	}
+
 	protected void handleResponse(final IResponseHandler handler)
 			throws SQLException {
 		try {
 			getProtocol().handleResponse(handler);
 		} catch (final SocketException e) {
-			// TODO reconnect
+			// TODO exception
 		} catch (final IOException e) {
 			// TODO exception
 			e.printStackTrace();

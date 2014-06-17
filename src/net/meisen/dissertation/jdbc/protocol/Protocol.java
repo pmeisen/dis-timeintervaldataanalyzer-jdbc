@@ -15,6 +15,8 @@ import java.net.Socket;
 
 public class Protocol implements Closeable {
 
+	private boolean inCommunication = false;
+
 	private final DataInputStream is;
 	private final DataOutputStream os;
 
@@ -248,6 +250,19 @@ public class Protocol implements Closeable {
 	public boolean initializeCommunication(final String msg,
 			final IResponseHandler handler) throws IOException {
 
+		// finish any old communication
+		if (inCommunication) {
+			System.out.println("START " + msg);
+			while (!handleResponse(null)) {
+				System.out.println("HANDLING");
+				// do nothing keep reading
+			}
+			System.out.println("DONE HANDLING");
+		}
+
+		// start the new communication
+		inCommunication = true;
+
 		// reset the handler to handle a new communication
 		if (handler != null) {
 			handler.resetHandler();
@@ -296,11 +311,12 @@ public class Protocol implements Closeable {
 	public boolean handleResponse(final IResponseHandler handler)
 			throws IOException {
 
+		DataType[] header = null;
 		boolean eorReached = false;
 		boolean read = true;
 		while (read) {
 			final RetrievedValue value = read();
-			
+
 			if (value.isEOR()) {
 				if (handler != null) {
 					handler.signalEORReached();
@@ -319,6 +335,8 @@ public class Protocol implements Closeable {
 			} else if (value.is(ResponseType.HEADER)) {
 				if (handler != null) {
 					handler.setHeader(value.getHeader());
+				} else {
+					header = value.getHeader();
 				}
 			} else if (value.is(ResponseType.HEADERNAMES)) {
 				if (handler == null) {
@@ -333,6 +351,8 @@ public class Protocol implements Closeable {
 				if (handler != null) {
 					final Object[] result = readResult(handler.getHeader());
 					read = handler.handleResult(value.getType(), result);
+				} else {
+					readResult(header);
 				}
 			} else if (value.is(ResponseType.INT)
 					|| value.is(ResponseType.INT_ARRAY)) {
@@ -344,6 +364,10 @@ public class Protocol implements Closeable {
 				throw new IllegalStateException("Cannot handle the result '"
 						+ value + "'.");
 			}
+		}
+
+		if (eorReached) {
+			inCommunication = false;
 		}
 
 		return eorReached;
@@ -363,12 +387,14 @@ public class Protocol implements Closeable {
 	protected RetrievedValue _read() throws IOException {
 
 		// first read the type
-		final ResponseType type = ResponseType.find(is.readByte());
+		final byte typeId = is.readByte();
+		final ResponseType type = ResponseType.find(typeId);
 
 		// make sure the type is valid
 		if (type == null) {
 			throw new IllegalArgumentException(
-					"Invalid protocol used for communication.");
+					"Invalid protocol used for communication (unknown type '"
+							+ typeId + "').");
 		} else if (type.hasData()) {
 
 			if (type.isChunked()) {
@@ -409,6 +435,8 @@ public class Protocol implements Closeable {
 
 	@Override
 	public void close() throws IOException {
+		inCommunication = false;
+		
 		this.is.close();
 		this.os.close();
 	}

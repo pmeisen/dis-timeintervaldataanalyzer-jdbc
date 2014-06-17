@@ -10,7 +10,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class TestTidaResultSet extends TestBaseForConnections {
@@ -72,7 +71,6 @@ public class TestTidaResultSet extends TestBaseForConnections {
 	}
 
 	@Test
-	@Ignore
 	public void testResultSetCloseOfResultSet() throws SQLException {
 		final Connection conn = DriverManager
 				.getConnection("jdbc:tida://localhost:7001");
@@ -132,7 +130,8 @@ public class TestTidaResultSet extends TestBaseForConnections {
 
 		// create a new ResultSet
 		final ResultSet rs3 = stmt
-				.executeQuery("SELECT TIMESERIES FROM testNumberModel");
+				.executeQuery("SELECT TRANSPOSE(TIMESERIES) FROM testNumberModel");
+
 		assertTrue(rs3 instanceof TidaResultSet);
 		final TidaResultSet trs3 = (TidaResultSet) rs3;
 		assertTrue(manager == trs3.getManager());

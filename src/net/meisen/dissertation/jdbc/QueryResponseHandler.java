@@ -155,6 +155,52 @@ public class QueryResponseHandler implements IResponseHandler {
 		return header;
 	}
 
+	public int getHeaderPosition(final String name) {
+		if (headerNames == null) {
+			return -1;
+		}
+
+		for (int i = 0; i < headerNames.length; i++) {
+			final String headerName = headerNames[i];
+			if (headerName.equals(name)) {
+				return i;
+			}
+		}
+
+		return -1;
+	}
+
+	public boolean isValidHeaderType(final int pos, final Class<?> clazz) {
+
+		// no header, nothing is valid
+		if (header == null) {
+			return false;
+		}
+		// check the position
+		else if (pos < 0 || pos >= header.length) {
+			return false;
+		}
+		// check the Class<?>
+		else if (header[pos].isClass(clazz)) {
+			return true;
+		}
+		// invalid result
+		else {
+			return false;
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public <T> T cast(final int pos, final Class<T> clazz) {
+
+		// check the position
+		if (pos < 0 || pos >= header.length) {
+			throw new IllegalArgumentException("Invalid position used.");
+		}
+
+		return (T) lastResult[pos];
+	}
+
 	@Override
 	public void setHeaderNames(final String[] header) {
 		this.headerNames = header;
@@ -209,7 +255,7 @@ public class QueryResponseHandler implements IResponseHandler {
 	public Object[] getLastResult() {
 		return lastResult;
 	}
-	
+
 	public Integer[] getGeneratedIds() {
 		return generatedIds;
 	}
@@ -224,5 +270,9 @@ public class QueryResponseHandler implements IResponseHandler {
 
 	public Integer getCountValue() {
 		return countValue;
+	}
+
+	public String[] getHeaderNames() {
+		return headerNames;
 	}
 }
