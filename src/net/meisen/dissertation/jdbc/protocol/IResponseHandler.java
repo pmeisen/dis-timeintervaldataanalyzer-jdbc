@@ -12,6 +12,8 @@ public interface IResponseHandler {
 	public boolean handleResult(final ResponseType type, final Object[] result);
 
 	public void signalEORReached();
+	
+	public void resetHandler();
 
 	public QueryStatus doHandleQueryType(QueryType queryType);
 

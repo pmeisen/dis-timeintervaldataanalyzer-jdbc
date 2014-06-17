@@ -247,19 +247,25 @@ public class Protocol implements Closeable {
 
 	public boolean initializeCommunication(final String msg,
 			final IResponseHandler handler) throws IOException {
-		writeMessage(msg);
-		final QueryType queryType = readQueryType();
 
+		// reset the handler to handle a new communication
+		handler.resetHandler();
+
+		// write the message
+		writeMessage(msg);
+
+		// get the type of the query
+		final QueryType queryType = readQueryType();
 		if (queryType == null) {
 			throw new IllegalStateException(
 					"Expected a queryType to be send, got something else.");
 		}
 
-		// get the status and send it
+		// determine if the query should be handled and write the status
 		final QueryStatus status = handler.doHandleQueryType(queryType);
 		writeQueryStatus(status);
 
-		// check the status
+		// depending on the status read the rest or not
 		if (QueryStatus.CANCEL.equals(status)) {
 			while (!handleResponse(null)) {
 				/*

@@ -17,17 +17,21 @@ public class QueryResponseHandler implements IResponseHandler {
 
 	private boolean eor = false;
 
-	private TidaResultSetType expectedResultSetType = TidaResultSetType.UNKNOWN;
-	private TidaResultSetType resultSetType = null;
-	private QueryStatus queryStatus = QueryStatus.PROCESS;
+	private TidaResultSetType expectedResultSetType;
+	private TidaResultSetType resultSetType;
+	private QueryStatus queryStatus;
 
-	private DataType[] header = null;
-	private String[] headerNames = null;
+	private DataType[] header;
+	private String[] headerNames;
 
-	private Integer[] generatedIds = null;
-	private Integer countValue = -1;
+	private Integer[] generatedIds;
+	private Integer countValue;
 
-	private Object[] lastResult = null;
+	private Object[] lastResult;
+
+	public QueryResponseHandler() {
+		resetHandler();
+	}
 
 	@Override
 	public QueryStatus doHandleQueryType(final QueryType queryType) {
@@ -180,9 +184,26 @@ public class QueryResponseHandler implements IResponseHandler {
 		return eor;
 	}
 
+	public boolean isEOR() {
+		return eor;
+	}
+
 	@Override
 	public void signalEORReached() {
 		eor = true;
+	}
+
+	@Override
+	public void resetHandler() {
+		eor = false;
+		expectedResultSetType = TidaResultSetType.UNKNOWN;
+		resultSetType = null;
+		queryStatus = QueryStatus.PROCESS;
+		header = null;
+		headerNames = null;
+		generatedIds = null;
+		countValue = -1;
+		lastResult = null;
 	}
 
 	public Object[] getLastResult() {
