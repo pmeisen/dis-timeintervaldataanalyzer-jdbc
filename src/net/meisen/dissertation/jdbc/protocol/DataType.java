@@ -6,6 +6,12 @@ import java.io.IOException;
 import java.sql.Types;
 import java.util.Date;
 
+/**
+ * The {@code DataTypes} available to be transfered by the {@code Protocol}.
+ * 
+ * @author pmeisen
+ * 
+ */
 public enum DataType {
 
 	/**
@@ -61,30 +67,69 @@ public enum DataType {
 		this.scale = scale;
 	}
 
+	/**
+	 * Gets the precision of the data-type.
+	 * 
+	 * @return the precision of the data-type.
+	 */
 	public int getPrecision() {
 		return precision;
 	}
 
+	/**
+	 * Gets the scale of the data-type.
+	 * 
+	 * @return the scale of the data-type.
+	 */
 	public int getScale() {
 		return scale;
 	}
 
+	/**
+	 * Gets the sql-type of the data-type.
+	 * 
+	 * @return the sql-type of the data-type.
+	 */
 	public int getSqlType() {
 		return sqlType;
 	}
 
+	/**
+	 * Checks if the data-type is a numeric, signed value.
+	 * 
+	 * @return {@code true} if the data-type is a numeric value, which is
+	 *         signed, otherwise {@code false}
+	 */
 	public boolean isSigned() {
 		return signed;
 	}
 
+	/**
+	 * Gets the identifier of the data-type.
+	 * 
+	 * @return the identifier of the data-type.
+	 */
 	public byte getId() {
 		return id;
 	}
 
+	/**
+	 * Gets the class used to represent the data-type.
+	 * 
+	 * @return the class used to represent the data-type.
+	 */
 	public Class<?> getRepresentorClass() {
 		return clazzes == null || clazzes.length == 0 ? null : clazzes[0];
 	}
 
+	/**
+	 * Checks if the specified {@code clazz} is supported by the {@code this}.
+	 * 
+	 * @param clazz
+	 *            the class to be checked
+	 * 
+	 * @return {@code true} if it is supported, otherwise {@code false}
+	 */
 	public boolean isClass(final Class<?> clazz) {
 		if (clazzes == null) {
 			return false;
@@ -105,7 +150,17 @@ public enum DataType {
 		return false;
 	}
 
-	@SuppressWarnings("unchecked")
+	/**
+	 * Reads {@code this} data-type from the specified {@code is}.
+	 * 
+	 * @param is
+	 *            the {@code InputStream} to read from
+	 * 
+	 * @return the object read
+	 * 
+	 * @throws IOException
+	 *             if an IO-exception occurs
+	 */
 	public Object read(final DataInputStream is) throws IOException {
 		if (BYTE.equals(this)) {
 			return is.readByte();
@@ -130,6 +185,17 @@ public enum DataType {
 		}
 	}
 
+	/**
+	 * Writes {@code this} data-type from the specified {@code os}.
+	 * 
+	 * @param os
+	 *            the {@code OutputStream} to write to
+	 * @param object
+	 *            the object to be written
+	 * 
+	 * @throws IOException
+	 *             if an IO-exception occurs
+	 */
 	public void write(final DataOutputStream os, final Object object)
 			throws IOException {
 		if (object == null) {
@@ -158,6 +224,15 @@ public enum DataType {
 		}
 	}
 
+	/**
+	 * Finds the {@code DataType} for the specified {@code clazz}.
+	 * 
+	 * @param clazz
+	 *            the class to get the {@code DataType} for
+	 * 
+	 * @return the {@code DataType} for the specified {@code clazz} or
+	 *         {@code null} if no {@code DataType} can be found
+	 */
 	public static DataType find(final Class<?> clazz) {
 		for (final DataType type : DataType.values()) {
 			if (type.isClass(clazz)) {
@@ -167,6 +242,15 @@ public enum DataType {
 		return null;
 	}
 
+	/**
+	 * Finds the {@code DataType} for the specified {@code id}.
+	 * 
+	 * @param id
+	 *            the identifier to get the {@code DataType} for
+	 * 
+	 * @return the {@code DataType} for the specified {@code id} or {@code null}
+	 *         if no {@code DataType} can be found
+	 */
 	public static DataType find(final byte id) {
 		for (final DataType type : DataType.values()) {
 			if (id == type.getId()) {
@@ -176,6 +260,16 @@ public enum DataType {
 		return null;
 	}
 
+	/**
+	 * Checks if the {@code clazz} is supported by any {@code DataType}.
+	 * 
+	 * @param clazz
+	 *            the class to be checked
+	 * 
+	 * @return {@code true} if it is supported, otherwise {@code false}
+	 * 
+	 * @see #find(Class)
+	 */
 	public static boolean isSupported(final Class<?> clazz) {
 		return find(clazz) != null;
 	}
