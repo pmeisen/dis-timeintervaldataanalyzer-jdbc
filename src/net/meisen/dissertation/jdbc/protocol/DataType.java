@@ -3,6 +3,7 @@ package net.meisen.dissertation.jdbc.protocol;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.sql.Types;
 import java.util.Date;
 
 public enum DataType {
@@ -10,38 +11,70 @@ public enum DataType {
 	/**
 	 * The byte data-type.
 	 */
-	BYTE((byte) 1, new Class<?>[] { Byte.class, byte.class }),
+	BYTE((byte) 1, ("" + Byte.MAX_VALUE).length(), 0, true, Types.TINYINT,
+			new Class<?>[] { Byte.class, byte.class }),
 	/**
 	 * The short data-type.
 	 */
-	SHORT((byte) 2, new Class<?>[] { Short.class, short.class }),
+	SHORT((byte) 2, ("" + Short.MAX_VALUE).length(), 0, true, Types.SMALLINT,
+			new Class<?>[] { Short.class, short.class }),
 	/**
 	 * The int data-type.
 	 */
-	INT((byte) 3, new Class<?>[] { Integer.class, int.class }),
+	INT((byte) 3, ("" + Integer.MAX_VALUE).length(), 0, true, Types.INTEGER,
+			new Class<?>[] { Integer.class, int.class }),
 	/**
 	 * The long data-type.
 	 */
-	LONG((byte) 4, new Class<?>[] { Long.class, long.class }),
+	LONG((byte) 4, ("" + Long.MAX_VALUE).length(), 0, true, Types.BIGINT,
+			new Class<?>[] { Long.class, long.class }),
 	/**
 	 * The date data-type.
 	 */
-	DATE((byte) 6, new Class<?>[] { Date.class }),
+	DATE((byte) 6, "##.##.#### ##.##.##,###".length(), 0, false,
+			Types.TIMESTAMP, new Class<?>[] { Date.class }),
 	/**
 	 * The double data-type.
 	 */
-	DOUBLE((byte) 7, new Class<?>[] { Double.class, double.class }),
+	DOUBLE((byte) 7, 15, 15, true, Types.DOUBLE, new Class<?>[] { Double.class,
+			double.class }),
 	/**
 	 * The string data-type.
 	 */
-	STRING((byte) 5, new Class<?>[] { String.class });
+	STRING((byte) 5, 0, 0, false, Types.VARCHAR,
+			new Class<?>[] { String.class });
 
 	private final byte id;
 	private final Class<?>[] clazzes;
+	private final boolean signed;
+	private final int sqlType;
+	private final int precision;
+	private final int scale;
 
-	private DataType(final byte id, final Class<?>[] clazzes) {
+	private DataType(final byte id, final int precision, final int scale,
+			final boolean signed, final int sqlType, final Class<?>[] clazzes) {
 		this.id = id;
 		this.clazzes = clazzes;
+		this.signed = signed;
+		this.sqlType = sqlType;
+		this.precision = precision;
+		this.scale = scale;
+	}
+
+	public int getPrecision() {
+		return precision;
+	}
+
+	public int getScale() {
+		return scale;
+	}
+
+	public int getSqlType() {
+		return sqlType;
+	}
+
+	public boolean isSigned() {
+		return signed;
 	}
 
 	public byte getId() {

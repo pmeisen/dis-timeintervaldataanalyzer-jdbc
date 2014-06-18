@@ -157,17 +157,51 @@ public class QueryResponseHandler implements IResponseHandler {
 
 	public int getHeaderPosition(final String name) {
 		if (headerNames == null) {
+			if (name == null) {
+				return -1;
+			} else if (name.matches("%d+")) {
+				return Integer.parseInt(name);
+			} else {
+				return -1;
+			}
+		} else {
+
+			for (int i = 0; i < headerNames.length; i++) {
+				final String headerName = headerNames[i];
+				if (headerName.equals(name)) {
+					return i;
+				}
+			}
+
 			return -1;
 		}
+	}
 
-		for (int i = 0; i < headerNames.length; i++) {
-			final String headerName = headerNames[i];
-			if (headerName.equals(name)) {
-				return i;
-			}
+	public DataType getHeaderType(final int pos) {
+
+		// no header, nothing is valid
+		if (header == null) {
+			return null;
 		}
+		// check the position
+		else if (pos < 0 || pos >= header.length) {
+			return null;
+		} else {
+			return header[pos];
+		}
+	}
 
-		return -1;
+	public String getHeaderName(final int pos) {
+		// no header, nothing is valid
+		if (headerNames == null) {
+			return "" + pos;
+		}
+		// check the position
+		else if (pos < 0 || pos >= header.length) {
+			return null;
+		} else {
+			return headerNames[pos];
+		}
 	}
 
 	public boolean isValidHeaderType(final int pos, final Class<?> clazz) {

@@ -138,7 +138,7 @@ public class IntResultSet extends BaseWrapper implements ResultSet {
 	 * 
 	 * @param columnLabel
 	 *            the label to get the index for
-	 *            
+	 * 
 	 * @return the index of the column with the specified label
 	 */
 	protected int getColumnIndex(final String columnLabel) {
@@ -452,15 +452,12 @@ public class IntResultSet extends BaseWrapper implements ResultSet {
 	public SQLWarning getWarnings() throws SQLException {
 		checkClosed();
 
-		// TODO Auto-generated method stub
-		return null;
+		return new SQLWarning();
 	}
 
 	@Override
 	public void clearWarnings() throws SQLException {
 		checkClosed();
-
-		// TODO Auto-generated method stub
 	}
 
 	@Override
@@ -472,8 +469,7 @@ public class IntResultSet extends BaseWrapper implements ResultSet {
 
 	@Override
 	public ResultSetMetaData getMetaData() throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		return new IntResultSetMetaData();
 	}
 
 	@Override
