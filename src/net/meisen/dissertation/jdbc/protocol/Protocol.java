@@ -12,7 +12,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.Socket;
-import java.nio.channels.ClosedByInterruptException;
 
 public class Protocol implements Closeable {
 
@@ -262,12 +261,9 @@ public class Protocol implements Closeable {
 
 		// finish any old communication
 		if (inCommunication) {
-			System.out.println("START " + msg);
 			while (!handleResponse(null)) {
-				System.out.println("HANDLING");
 				// do nothing keep reading
 			}
-			System.out.println("DONE HANDLING");
 		}
 
 		// start the new communication
@@ -393,6 +389,14 @@ public class Protocol implements Closeable {
 			// write the cancellation if the thread is interrupted
 			if (Thread.interrupted()) {
 				writeCancellation();
+
+				/*
+				 * skip any resource demand at this point, the cancellation is
+				 * send
+				 */
+				if (value.is(ResponseType.RESOURCE_DEMAND)) {
+					continue;
+				}
 			}
 
 			if (value.isEOR()) {
