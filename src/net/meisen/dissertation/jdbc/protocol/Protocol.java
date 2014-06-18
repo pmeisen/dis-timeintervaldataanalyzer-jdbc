@@ -12,6 +12,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.Socket;
+import java.nio.channels.ClosedByInterruptException;
 
 public class Protocol implements Closeable {
 
@@ -386,7 +387,7 @@ public class Protocol implements Closeable {
 
 			// write the cancellation if the thread is interrupted
 			if (Thread.interrupted()) {
-				writeCancellation();
+//				writeCancellation();
 			}
 
 			if (value.isEOR()) {

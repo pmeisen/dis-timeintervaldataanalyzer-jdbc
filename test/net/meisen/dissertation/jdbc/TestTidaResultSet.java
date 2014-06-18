@@ -10,6 +10,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class TestTidaResultSet extends TestBaseForConnections {
@@ -182,6 +183,7 @@ public class TestTidaResultSet extends TestBaseForConnections {
 	}
 
 	@Test
+//	@Ignore
 	public void testResultSetTimeout() throws SQLException {
 		final Connection conn = DriverManager
 				.getConnection("jdbc:tida://localhost:7001");
@@ -203,25 +205,25 @@ public class TestTidaResultSet extends TestBaseForConnections {
 		} catch (final SQLException e) {
 			e.printStackTrace();
 			
-			tStmt.setQueryTimeoutInMs(0);
-			final ResultSet rs1 = stmt
-					.executeQuery("SELECT TIMESERIES FROM testNumberModel");
-			final ResultSet rs2 = stmt
-					.executeQuery("SELECT TRANSPOSE(TIMESERIES) FROM testNumberModel");
-			assertTrue(rs1 instanceof TidaResultSet);
-			assertTrue(rs2 instanceof TidaResultSet);
-			final TidaResultSet trs1 = (TidaResultSet) rs1;
-			final TidaResultSet trs2 = (TidaResultSet) rs2;
-			
-			// check the manager
-			assertEquals(2, manager.sizeOfOwners());
-			assertEquals(1, manager.sizeOfScopes());
-			assertEquals(2, manager.sizeOfProtocols(tStmt));
-			assertEquals(0, manager.sizeOfProtocols(trs1));
-			assertEquals(0, manager.sizeOfProtocols(trs2));
-			assertFalse(manager.isOwner(trs1));
-			assertTrue(manager.isOwner(trs2));
-			assertTrue(manager.isOwner(tStmt));
+//			tStmt.setQueryTimeoutInMs(0);
+//			final ResultSet rs1 = stmt
+//					.executeQuery("SELECT TIMESERIES FROM testNumberModel");
+//			final ResultSet rs2 = stmt
+//					.executeQuery("SELECT TRANSPOSE(TIMESERIES) FROM testNumberModel");
+//			assertTrue(rs1 instanceof TidaResultSet);
+//			assertTrue(rs2 instanceof TidaResultSet);
+//			final TidaResultSet trs1 = (TidaResultSet) rs1;
+//			final TidaResultSet trs2 = (TidaResultSet) rs2;
+//			
+//			// check the manager
+//			assertEquals(2, manager.sizeOfOwners());
+//			assertEquals(1, manager.sizeOfScopes());
+//			assertEquals(2, manager.sizeOfProtocols(tStmt));
+//			assertEquals(0, manager.sizeOfProtocols(trs1));
+//			assertEquals(0, manager.sizeOfProtocols(trs2));
+//			assertFalse(manager.isOwner(trs1));
+//			assertTrue(manager.isOwner(trs2));
+//			assertTrue(manager.isOwner(tStmt));
 			
 			
 			try {
