@@ -35,6 +35,11 @@ public enum DataType {
 	LONG((byte) 4, ("" + Long.MAX_VALUE).length(), 0, true, Types.BIGINT,
 			new Class<?>[] { Long.class, long.class }),
 	/**
+	 * The string data-type.
+	 */
+	STRING((byte) 5, 0, 0, false, Types.VARCHAR,
+			new Class<?>[] { String.class }),
+	/**
 	 * The date data-type.
 	 */
 	DATE((byte) 6, "##.##.#### ##.##.##,###".length(), 0, false,
@@ -43,12 +48,7 @@ public enum DataType {
 	 * The double data-type.
 	 */
 	DOUBLE((byte) 7, 15, 15, true, Types.DOUBLE, new Class<?>[] { Double.class,
-			double.class }),
-	/**
-	 * The string data-type.
-	 */
-	STRING((byte) 5, 0, 0, false, Types.VARCHAR,
-			new Class<?>[] { String.class });
+			double.class });
 
 	private final byte id;
 	private final Class<?>[] clazzes;

@@ -12,8 +12,28 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.Socket;
+import java.util.HashSet;
+import java.util.Set;
 
 public class Protocol implements Closeable {
+
+	/*
+	 * Do a validation by checking all used byte-identifiers. The identifiers
+	 * have to be unique across all the different kinds, i.e. QueryStatus,
+	 * QueryType and ResponseType.
+	 */
+	static {
+		final Set<Byte> usedBytes = new HashSet<Byte>();
+		for (final QueryStatus status : QueryStatus.values()) {
+			assert usedBytes.add(status.getId());
+		}
+		for (final QueryType type : QueryType.values()) {
+			assert usedBytes.add(type.getId());
+		}
+		for (final ResponseType type : ResponseType.values()) {
+			assert usedBytes.add(type.getId());
+		}
+	}
 
 	private boolean inCommunication = false;
 
@@ -222,12 +242,28 @@ public class Protocol implements Closeable {
 
 	public QueryType readQueryType() throws IOException {
 		final byte marker = is.readByte();
-		return QueryType.find(marker);
+		final QueryType queryType = QueryType.find(marker);
+
+		// check if we got an exception
+		if (queryType == null) {
+			final RetrievedValue value = _read(marker);
+			checkException(value);
+		}
+
+		return queryType;
 	}
 
 	public QueryStatus readQueryStatus() throws IOException {
 		final byte marker = is.readByte();
-		return QueryStatus.find(marker);
+		final QueryStatus queryStatus = QueryStatus.find(marker);
+
+		// check if we got an exception
+		if (queryStatus == null) {
+			final RetrievedValue value = _read(marker);
+			checkException(value);
+		}
+
+		return queryStatus;
 	}
 
 	public void writeMessage(final String msg) throws IOException {
@@ -471,9 +507,10 @@ public class Protocol implements Closeable {
 	}
 
 	protected RetrievedValue _read() throws IOException {
+		return _read(is.readByte());
+	}
 
-		// first read the type
-		final byte typeId = is.readByte();
+	protected RetrievedValue _read(final byte typeId) throws IOException {
 		final ResponseType type = ResponseType.find(typeId);
 
 		// make sure the type is valid

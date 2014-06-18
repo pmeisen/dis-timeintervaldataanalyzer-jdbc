@@ -220,6 +220,7 @@ public class TestTidaResultSet extends TestBaseForConnections {
 
 		// increase the timeout again
 		tStmt.setQueryTimeoutInMs(0);
+		stmt.execute("UNLOAD testNumberModel");
 
 		// get some more Results
 		final ResultSet rs1 = stmt
