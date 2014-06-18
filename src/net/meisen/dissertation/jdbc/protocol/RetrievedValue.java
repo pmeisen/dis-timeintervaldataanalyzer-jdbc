@@ -3,6 +3,7 @@ package net.meisen.dissertation.jdbc.protocol;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.util.Arrays;
 
 public class RetrievedValue {
 
@@ -105,8 +106,8 @@ public class RetrievedValue {
 
 	public void checkType(final ResponseType... expected) {
 		if (!is(expected)) {
-			throw new IllegalStateException("Expected to read a '" + expected
-					+ "', but got a '" + type + "'.");
+			throw new IllegalStateException("Expected to read one of '"
+					+ Arrays.asList(expected) + "', but got a '" + type + "'.");
 		}
 	}
 

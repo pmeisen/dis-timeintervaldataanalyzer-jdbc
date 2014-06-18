@@ -204,16 +204,21 @@ public class Protocol implements Closeable {
 		return value.getResourceDemand();
 	}
 
+	public byte[] readResource() throws IOException {
+		final RetrievedValue value = _read();
+		checkException(value);
+
+		if (value.isCancel()) {
+			return null;
+		} else {
+			return value.getResource();
+		}
+	}
+
 	public DataType[] readHeader() throws IOException {
 		final RetrievedValue value = _read();
 		checkException(value);
 		return value.getHeader();
-	}
-
-	public byte[] readResource() throws IOException {
-		final RetrievedValue value = _read();
-		checkException(value);
-		return value.getResource();
 	}
 
 	public QueryType readQueryType() throws IOException {

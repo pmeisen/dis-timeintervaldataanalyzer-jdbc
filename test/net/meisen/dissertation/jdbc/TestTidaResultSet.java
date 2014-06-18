@@ -225,7 +225,6 @@ public class TestTidaResultSet extends TestBaseForConnections {
 			assertTrue(manager.isOwner(trs2));
 			assertTrue(manager.isOwner(tStmt));
 			
-			
 			try {
 				Thread.sleep(10000);
 			} catch (InterruptedException e1) {
