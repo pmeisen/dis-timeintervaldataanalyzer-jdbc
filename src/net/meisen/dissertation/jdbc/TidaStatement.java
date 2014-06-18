@@ -111,9 +111,6 @@ public class TidaStatement extends BaseConnectionWrapper implements Statement,
 			currentResultSet.close();
 		}
 
-		// cancel all the running statements;
-		cancel();
-
 		// close the rest
 		super.close();
 	}
@@ -183,6 +180,7 @@ public class TidaStatement extends BaseConnectionWrapper implements Statement,
 				throw (RuntimeException) e.getCause();
 			}
 		} catch (final TimeoutException e) {
+			future.cancel(true);
 			throw TidaSqlExceptions.createException(3005, query, ""
 					+ getQueryTimeout());
 		}

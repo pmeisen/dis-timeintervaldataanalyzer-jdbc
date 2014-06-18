@@ -46,7 +46,11 @@ public enum ResponseType {
 	 * additional data, which is not handled by the {@code ResponseType}
 	 * directly, therefore it returns {@code false} for {@link #hasData()}.
 	 */
-	RESULT((byte) 10, false, false);
+	RESULT((byte) 10, false, false),
+	/**
+	 * A {@code ResponseType} which identifies a cancellation.
+	 */
+	CANCEL((byte) 11, false, false);
 
 	private final byte id;
 	private final boolean hasData;

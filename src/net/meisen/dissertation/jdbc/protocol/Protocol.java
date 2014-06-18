@@ -101,6 +101,10 @@ public class Protocol implements Closeable {
 		write(ResponseType.EOR);
 	}
 
+	public void writeCancellation() throws IOException {
+		write(ResponseType.CANCEL);
+	}
+
 	public void writeResourceDemand(final String resource) throws IOException {
 		write(ResponseType.RESOURCE_DEMAND, resource.getBytes("UTF8"));
 	}
@@ -297,7 +301,7 @@ public class Protocol implements Closeable {
 		}
 	}
 
-	public synchronized boolean writeAndHandle(final String msg,
+	public boolean writeAndHandle(final String msg,
 			final IResponseHandler handler) throws IOException {
 		if (initializeCommunication(msg, handler)) {
 			handleResponse(handler);
@@ -305,6 +309,69 @@ public class Protocol implements Closeable {
 			return true;
 		} else {
 			return false;
+		}
+	}
+
+	/**
+	 * This method is only used by the server side which expects a message to
+	 * arrive and nothing else. If something arrived on the input side, this
+	 * method will check if it's a message {@code false} or a cancel statement
+	 * {@code true}. If nothing is available {@code null} is returned. <br/>
+	 * <br/>
+	 * <b>Note:</b> The retrieved message will be discarded if no array of
+	 * length 1 or more is passed
+	 * 
+	 * @param message
+	 *            container to get the message send (if one was send)
+	 * 
+	 * @return {@code true} if the current handling is canceled, the client-side
+	 *         expects to send a {@code ResponseType#EOR} as fast as possible,
+	 *         {@code false} if another message was send (the message can be
+	 *         retrieved by passing an at least 1-length array)
+	 * 
+	 * @throws IOException
+	 */
+	public Boolean peekForCancel(final String[] message) throws IOException {
+
+		if (is.available() > 0) {
+			final RetrievedValue value = read();
+			checkException(value);
+
+			if (value.isCancel()) {
+				return true;
+			} else if (value.is(ResponseType.MESSAGE)) {
+				if (message != null && message.length != 0) {
+					message[0] = value.getMessage();
+				}
+
+				return false;
+			} else {
+				throw new IllegalStateException(
+						"Retrieving anything different from a message or a cancel statement.");
+			}
+		} else {
+			return null;
+		}
+	}
+
+	/**
+	 * Waits for a message to be send on the input. All cancellations are
+	 * ignored and any other retrieval leads to an exception.
+	 * 
+	 * @return the read message
+	 * 
+	 * @throws IOException
+	 *             if an error occurres during the read
+	 */
+	public String waitForMessage() throws IOException {
+		final RetrievedValue value = _read();
+		checkException(value);
+
+		// ignore anything canceling
+		if (value.isCancel()) {
+			return waitForMessage();
+		} else {
+			return value.getMessage();
 		}
 	}
 
@@ -317,12 +384,20 @@ public class Protocol implements Closeable {
 		while (read) {
 			final RetrievedValue value = read();
 
+			// write the cancellation if the thread is interrupted
+			if (Thread.interrupted()) {
+				writeCancellation();
+			}
+
 			if (value.isEOR()) {
 				if (handler != null) {
 					handler.signalEORReached();
 				}
 				read = false;
 				eorReached = true;
+			} else if (value.isCancel()) {
+				throw new IllegalStateException(
+						"Cancellation cannot be used within a query handling, it can only be used by the client-side to interrupt at server-side.");
 			} else if (value.is(ResponseType.RESOURCE_DEMAND)) {
 				final String resource = value.getResourceDemand();
 
@@ -436,7 +511,7 @@ public class Protocol implements Closeable {
 	@Override
 	public void close() throws IOException {
 		inCommunication = false;
-		
+
 		this.is.close();
 		this.os.close();
 	}

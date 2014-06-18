@@ -99,6 +99,10 @@ public class RetrievedValue {
 		return is(ResponseType.EOR);
 	}
 
+	public boolean isCancel() {
+		return is(ResponseType.CANCEL);
+	}
+
 	public void checkType(final ResponseType... expected) {
 		if (!is(expected)) {
 			throw new IllegalStateException("Expected to read a '" + expected
