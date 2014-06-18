@@ -387,7 +387,7 @@ public class Protocol implements Closeable {
 
 			// write the cancellation if the thread is interrupted
 			if (Thread.interrupted()) {
-//				writeCancellation();
+				writeCancellation();
 			}
 
 			if (value.isEOR()) {
