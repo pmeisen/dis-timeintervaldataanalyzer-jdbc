@@ -204,7 +204,7 @@ public class TestTidaResultSet extends TestBaseForConnections {
 			stmt.execute("LOAD FROM 'classpath:/net/meisen/dissertation/model/testNumberModel.xml'");
 		} catch (final SQLException e) {
 			e.printStackTrace();
-			
+
 			tStmt.setQueryTimeoutInMs(0);
 			final ResultSet rs1 = stmt
 					.executeQuery("SELECT TIMESERIES FROM testNumberModel");
@@ -214,7 +214,7 @@ public class TestTidaResultSet extends TestBaseForConnections {
 			assertTrue(rs2 instanceof TidaResultSet);
 			final TidaResultSet trs1 = (TidaResultSet) rs1;
 			final TidaResultSet trs2 = (TidaResultSet) rs2;
-			
+
 			// check the manager
 			assertEquals(2, manager.sizeOfOwners());
 			assertEquals(1, manager.sizeOfScopes());
@@ -224,13 +224,6 @@ public class TestTidaResultSet extends TestBaseForConnections {
 			assertFalse(manager.isOwner(trs1));
 			assertTrue(manager.isOwner(trs2));
 			assertTrue(manager.isOwner(tStmt));
-			
-			try {
-				Thread.sleep(10000);
-			} catch (InterruptedException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
 		}
 
 		stmt.close();

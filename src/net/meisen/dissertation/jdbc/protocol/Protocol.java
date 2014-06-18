@@ -391,8 +391,9 @@ public class Protocol implements Closeable {
 				writeCancellation();
 
 				/*
-				 * skip any resource demand at this point, the cancellation is
-				 * send
+				 * Skip any resource demand at this point, the cancellation is
+				 * send. Any additional write is not expected at this point by
+				 * the server.
 				 */
 				if (value.is(ResponseType.RESOURCE_DEMAND)) {
 					continue;
