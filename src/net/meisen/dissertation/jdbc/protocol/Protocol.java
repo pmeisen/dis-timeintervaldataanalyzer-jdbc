@@ -117,10 +117,6 @@ public class Protocol implements Closeable {
 		return result;
 	}
 
-	public void writeEndOfResult() throws IOException {
-		writeEndOfResponse();
-	}
-	
 	public void writeEndOfResponse() throws IOException {
 		write(ResponseType.EOR);
 	}
@@ -300,13 +296,38 @@ public class Protocol implements Closeable {
 		os.flush();
 	}
 
+	/**
+	 * Initializes a communication with the server for the specified {@code msg}
+	 * . The retrieved information from the server during the initialization are
+	 * evaluated by {@code this} as well as the {@code handler}.
+	 * 
+	 * @param msg
+	 *            the message to be initialized
+	 * @param handler
+	 *            the handler used to determine if the queryType should be
+	 *            processed (using
+	 *            {@link IResponseHandler#doHandleQueryType(QueryType)}), can be
+	 *            {@code null} if so the query will be processed for sure
+	 * 
+	 * @return {@code true} if the initialization is valid and accepted by the
+	 *         server and the client, otherwise {@code false}
+	 * 
+	 * @throws IOException
+	 *             if an unexpected communication error occurs
+	 */
 	public boolean initializeCommunication(final String msg,
 			final IResponseHandler handler) throws IOException {
 
 		// finish any old communication
 		if (inCommunication) {
-			while (!handleResponse(null)) {
-				// do nothing keep reading
+			while (true) {
+				final int available = is.available();
+				if (available < 1) {
+					break;
+				}
+
+				final byte[] buffer = new byte[Math.min(1024, available)];
+				is.read(buffer);
 			}
 		}
 
@@ -424,7 +445,6 @@ public class Protocol implements Closeable {
 	public boolean handleResponse(final IResponseHandler handler)
 			throws IOException {
 
-		DataType[] header = null;
 		boolean eorReached = false;
 		boolean read = true;
 		while (read) {
@@ -463,9 +483,7 @@ public class Protocol implements Closeable {
 					writeResource(handler.getResourceStream(resource));
 				}
 			} else if (value.is(ResponseType.HEADER)) {
-				if (handler == null) {
-					header = value.getHeader();
-				} else {
+				if (handler != null) {
 					handler.handleResult(value.getType(), value.getHeader());
 				}
 			} else if (value.is(ResponseType.HEADERNAMES)) {
@@ -479,11 +497,12 @@ public class Protocol implements Closeable {
 							new String[] { value.getString() });
 				}
 			} else if (value.is(ResponseType.RESULT)) {
-				if (handler != null) {
+				if (handler == null) {
+					throw new IllegalStateException(
+							"Cannot read a result without any header.");
+				} else {
 					final Object[] result = readResult(handler.getHeader());
 					read = handler.handleResult(value.getType(), result);
-				} else {
-					readResult(header);
 				}
 			} else if (value.is(ResponseType.INT)
 					|| value.is(ResponseType.INT_ARRAY)) {

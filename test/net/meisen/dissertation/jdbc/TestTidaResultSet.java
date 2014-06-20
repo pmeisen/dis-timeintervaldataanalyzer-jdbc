@@ -235,30 +235,12 @@ public class TestTidaResultSet extends TestBaseForConnections {
 		tStmt.setQueryTimeoutInMs(0);
 		stmt.execute("UNLOAD testNumberModel");
 
-		// get some more Results
-		final ResultSet rs1 = stmt
-				.executeQuery("SELECT TIMESERIES FROM testNumberModel");
-		final ResultSet rs2 = stmt
-				.executeQuery("SELECT TRANSPOSE(TIMESERIES) FROM testNumberModel");
-		assertTrue(rs1 instanceof TidaResultSet);
-		assertTrue(rs2 instanceof TidaResultSet);
-		final TidaResultSet trs1 = (TidaResultSet) rs1;
-		final TidaResultSet trs2 = (TidaResultSet) rs2;
-
-		// check the manager, it should use the statement's connection
-		assertEquals(2, manager.sizeOfOwners());
-		assertEquals(1, manager.sizeOfScopes());
-		assertEquals(2, manager.sizeOfProtocols(tStmt));
-		assertEquals(0, manager.sizeOfProtocols(trs1));
-		assertEquals(0, manager.sizeOfProtocols(trs2));
-		assertFalse(manager.isOwner(trs1));
-		assertTrue(manager.isOwner(trs2));
-		assertTrue(manager.isOwner(tStmt));
-
 		// check the exception
+		TidaResultSet rs = null;
 		exception = null;
 		try {
-			rs1.next();
+			rs = (TidaResultSet) stmt
+					.executeQuery("SELECT TIMESERIES FROM testNumberModel");
 		} catch (final SQLException e) {
 			exception = e;
 		}
@@ -270,6 +252,14 @@ public class TestTidaResultSet extends TestBaseForConnections {
 								+ "]"));
 		assertTrue(exception.getMessage(),
 				exception.getMessage().contains("'testNumberModel"));
+
+		// check the manager, it should use the statement's connection
+		assertEquals(1, manager.sizeOfOwners());
+		assertEquals(1, manager.sizeOfScopes());
+		assertEquals(1, manager.sizeOfProtocols(tStmt));
+		assertEquals(0, manager.sizeOfProtocols(rs));
+		assertFalse(manager.isOwner(rs));
+		assertTrue(manager.isOwner(tStmt));
 
 		// close the statement and the connection
 		stmt.close();
@@ -324,8 +314,9 @@ public class TestTidaResultSet extends TestBaseForConnections {
 		assertNotNull(res);
 		assertNull(stmt.getResultSet());
 		assertEquals(-1, stmt.getUpdateCount());
-		
-		System.out.println(Arrays.asList(((TidaResultSet) res).getHeaderTypes()));
+
+		System.out
+				.println(Arrays.asList(((TidaResultSet) res).getHeaderTypes()));
 
 		final ResultSetMetaData metaData = res.getMetaData();
 		System.out.println(metaData.getColumnCount());

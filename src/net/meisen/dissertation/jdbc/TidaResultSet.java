@@ -152,9 +152,26 @@ public class TidaResultSet extends BaseConnectionWrapper implements ResultSet {
 		handler.setQueryStatus(status);
 
 		// fire the query
+		try {
+			initialize(sql);
+		} catch (final SQLException e) {
+
+			// close the connection in the case of an exception
+			close();
+
+			// keep the exception to be thrown
+			throw e;
+		}
+	}
+
+	protected void initialize(final String sql) throws SQLException {
+
 		if (fireQuery(sql, handler)) {
-			if (handler.getResultSetType().equals(TidaResultSetType.MODIFY)) {
-				// a modification send everything in one run, so just let it run
+			if (TidaResultSetType.MODIFY.equals(handler.getResultSetType())) {
+				/*
+				 * Handle the complete modification at once. There is no data to
+				 * be retrieved, which is retrieved in chunks.
+				 */
 				while (!handler.isEOR()) {
 					handleResponse(handler);
 				}
@@ -162,23 +179,36 @@ public class TidaResultSet extends BaseConnectionWrapper implements ResultSet {
 				// we don't need the connection anymore, so just release it
 				release();
 			} else {
+				
+				// check if we receive identifiers for a query statement
+				if (TidaResultSetType.QUERY.equals(handler.getResultSetType())
+						&& QueryStatus.PROCESSANDGETIDS.equals(handler
+								.getQueryStatus())) {
+					throw TidaSqlExceptions.createException(4021);
+				}
+				
 				/*
-				 * A query is handled by the resultSet itself
+				 * Read the meta-data of the handler, no data should be read so
+				 * far. Therefore after the handling the header should be known
+				 * as well as no result should have been read.
 				 */
+				handleResponse(handler);
+				if (handler.getLastResult() != null) {
+					throw TidaSqlExceptions.createException(4025);
+				} else if (handler.getHeader() == null) {
+					throw TidaSqlExceptions.createException(4026);
+				}
 			}
-		}
-		// check if the
-		else if (TidaResultSetType.QUERY.equals(handler.getResultSetType())
-				&& QueryStatus.PROCESSANDGETIDS.equals(status)) {
-			throw TidaSqlExceptions.createException(4021);
 		}
 		// we have a modifying statement, but an update was expected
 		else if (TidaResultSetType.MODIFY.equals(handler.getResultSetType())) {
-			throw TidaSqlExceptions.createException(4006);
+			throw TidaSqlExceptions.createException(4006, sql);
 		}
 		// we have a query-statement, but a modifying was expected
 		else if (TidaResultSetType.QUERY.equals(handler.getResultSetType())) {
-			throw TidaSqlExceptions.createException(4005);
+			throw TidaSqlExceptions.createException(4005, sql);
+		} else {
+			throw TidaSqlExceptions.createException(4027, sql);
 		}
 	}
 

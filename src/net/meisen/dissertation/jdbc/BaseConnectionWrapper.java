@@ -93,14 +93,12 @@ public abstract class BaseConnectionWrapper extends BaseWrapper {
 
 			// close this one and re-query
 			close();
-			refireQuery(sql, handler);
+			return refireQuery(sql, handler);
 		} catch (final IOException e) {
 			throw TidaSqlExceptions.createException(9008, sql, e.getMessage());
 		} catch (final WrappedException e) {
 			throw TidaSqlExceptions.createException(9006, sql, e.getMessage());
 		}
-
-		return false;
 	}
 
 	private boolean refireQuery(final String sql, final IResponseHandler handler)
