@@ -356,7 +356,13 @@ public class QueryResponseHandler implements IResponseHandler {
 
 	@Override
 	public boolean handleResult(final ResponseType type, final Object[] value) {
-		if (value == null) {
+		
+		if (ResponseType.EOM.equals(type)) {
+			/*
+			 * Nothing to do, important is that it is reached and therefore stop
+			 * reading anything further.
+			 */
+		} else if (value == null) {
 			throw new NullPointerException(
 					"The retrieved value cannot be null.");
 		} else if (ResponseType.INT_ARRAY.equals(type)) {
@@ -369,11 +375,6 @@ public class QueryResponseHandler implements IResponseHandler {
 			this.header = (DataType[]) value;
 		} else if (ResponseType.HEADERNAMES.equals(type)) {
 			this.headerNames = (String[]) value;
-		} else if (ResponseType.EOM.equals(type)) {
-			/*
-			 * Nothing to do, important it that it is reached and therefore stop
-			 * reading anything further.
-			 */
 		} else {
 			throw new IllegalArgumentException(
 					"Unexpected values retrieved from type '" + type + "'.");
