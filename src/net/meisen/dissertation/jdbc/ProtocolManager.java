@@ -202,10 +202,23 @@ public class ProtocolManager {
 		return protocol;
 	}
 
+	/**
+	 * Gets the amount of scopes.
+	 * 
+	 * @return the amount of scopes
+	 */
 	public synchronized int sizeOfScopes() {
 		return scopes.size();
 	}
 
+	/**
+	 * Gets the amount of protocols associated to the specified {@code scope}.
+	 * 
+	 * @param scope
+	 *            the scope to get the amount of associated protocols of
+	 * 
+	 * @return the amount of associated protocols to the {@code scope}
+	 */
 	public synchronized int sizeOfProtocols(final BaseConnectionWrapper scope) {
 		final Set<Protocol> protocols = scopes.get(scope);
 		if (protocols == null) {

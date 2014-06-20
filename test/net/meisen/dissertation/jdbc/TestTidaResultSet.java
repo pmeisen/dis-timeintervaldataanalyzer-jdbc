@@ -12,11 +12,9 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Arrays;
 
 import net.meisen.dissertation.exceptions.QueryEvaluationException;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -297,29 +295,90 @@ public class TestTidaResultSet extends TestBaseForConnections {
 		conn.close();
 	}
 
+	/**
+	 * 
+	 * @throws SQLException
+	 */
 	@Test
-	@Ignore
 	public void testExecuteSelect() throws SQLException {
-		final Connection conn = DriverManager
+		final TidaConnection conn = (TidaConnection) DriverManager
 				.getConnection("jdbc:tida://localhost:7001");
-		final Statement stmt = conn.createStatement();
+		final ProtocolManager manager = conn.getManager();
+		final TidaStatement stmt = conn.createStatement();
 		stmt.executeUpdate("LOAD FROM 'classpath:/net/meisen/dissertation/model/testNumberModel.xml'");
 
 		// execute INSERT using update
 		stmt.executeUpdate("INSERT INTO testNumberModel ([START], [END], NUMBER) VALUES (2, 3, '100')");
 
+		// check the manager, it should use the statement's connection
+		assertEquals(1, manager.sizeOfOwners());
+		assertEquals(1, manager.sizeOfScopes());
+		assertEquals(1, manager.sizeOfProtocols(stmt));
+		assertTrue(manager.isOwner(stmt));
+
 		// execute INSERT using just execute
-		final ResultSet res = stmt
-				.executeQuery("SELECT TIMESERIES FROM testNumberModel");
+		final TidaResultSet resCount = stmt
+				.executeQuery("SELECT TIMESERIES OF COUNT(NUMBER) AS \"COUNT\" FROM testNumberModel");
+		assertNotNull(resCount);
+		assertNull(stmt.getResultSet());
+		assertEquals(-1, stmt.getUpdateCount());
+
+		final ResultSetMetaData metaDataCount = resCount.getMetaData();
+		assertEquals(6, metaDataCount.getColumnCount());
+		assertTrue(resCount.next());
+		assertEquals("COUNT", resCount.getString(1));
+		assertEquals(0.0, resCount.getDouble(2), 0.0);
+		assertEquals(1.0, resCount.getDouble(3), 0.0);
+		assertEquals(1.0, resCount.getDouble(4), 0.0);
+		assertEquals(0.0, resCount.getDouble(5), 0.0);
+		assertEquals(0.0, resCount.getDouble(6), 0.0);
+		assertFalse(resCount.next());
+
+		// check the manager, it should use the statement's connection
+		assertEquals(1, manager.sizeOfOwners());
+		assertEquals(1, manager.sizeOfScopes());
+		assertEquals(1, manager.sizeOfProtocols(stmt));
+		assertEquals(0, manager.sizeOfProtocols(resCount));
+		assertTrue(manager.isOwner(stmt));
+		assertFalse(manager.isOwner(resCount));
+
+		stmt.executeUpdate("INSERT INTO testNumberModel ([START], [END], NUMBER) VALUES (1, 5, '100')");
+		final TidaResultSet res = stmt
+				.executeQuery("SELECT TIMESERIES OF MIN(NUMBER) AS \"MIN\", SUM(NUMBER) AS \"SUM\" FROM testNumberModel");
+
 		assertNotNull(res);
 		assertNull(stmt.getResultSet());
 		assertEquals(-1, stmt.getUpdateCount());
 
-		System.out
-				.println(Arrays.asList(((TidaResultSet) res).getHeaderTypes()));
-
 		final ResultSetMetaData metaData = res.getMetaData();
-		System.out.println(metaData.getColumnCount());
+		assertEquals(6, metaData.getColumnCount());
+		assertTrue(res.next());
+		assertEquals("MIN", res.getString(1));
+		assertEquals(100.0, res.getDouble(2), 0.0);
+		assertEquals(100.0, res.getDouble(3), 0.0);
+		assertEquals(100.0, res.getDouble(4), 0.0);
+		assertEquals(100.0, res.getDouble(5), 0.0);
+		assertEquals(100.0, res.getDouble(6), 0.0);
+
+		assertTrue(res.next());
+		assertEquals("SUM", res.getString(1));
+		assertEquals(100.0, res.getDouble(2), 0.0);
+		assertEquals(200.0, res.getDouble(3), 0.0);
+		assertEquals(200.0, res.getDouble(4), 0.0);
+		assertEquals(100.0, res.getDouble(5), 0.0);
+		assertEquals(100.0, res.getDouble(6), 0.0);
+
+		// check the manager, it should use the statement's connection
+		assertEquals(2, manager.sizeOfOwners());
+		assertEquals(1, manager.sizeOfScopes());
+		assertEquals(2, manager.sizeOfProtocols(stmt));
+		assertEquals(0, manager.sizeOfProtocols(resCount));
+		assertEquals(0, manager.sizeOfProtocols(res));
+		assertTrue(manager.isOwner(stmt));
+		assertFalse(manager.isOwner(resCount));
+		assertTrue(manager.isOwner(res));
+
+		assertFalse(resCount.next());
 
 		// close everything
 		conn.close();

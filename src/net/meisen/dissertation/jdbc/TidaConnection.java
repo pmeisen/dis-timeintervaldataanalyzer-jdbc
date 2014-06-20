@@ -56,20 +56,20 @@ public class TidaConnection extends BaseConnectionWrapper implements Connection 
 	}
 
 	@Override
-	public Statement createStatement() throws SQLException {
+	public TidaStatement createStatement() throws SQLException {
 		return createStatement(ResultSet.TYPE_FORWARD_ONLY,
 				ResultSet.CONCUR_READ_ONLY);
 	}
 
 	@Override
-	public Statement createStatement(final int resultSetType,
+	public TidaStatement createStatement(final int resultSetType,
 			final int resultSetConcurrency) throws SQLException {
 		return createStatement(resultSetType, resultSetConcurrency,
 				getHoldability());
 	}
 
 	@Override
-	public Statement createStatement(final int resultSetType,
+	public TidaStatement createStatement(final int resultSetType,
 			final int resultSetConcurrency, final int resultSetHoldability)
 			throws SQLException {
 		checkClosed();

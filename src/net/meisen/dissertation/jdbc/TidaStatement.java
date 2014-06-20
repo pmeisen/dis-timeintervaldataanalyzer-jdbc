@@ -195,12 +195,12 @@ public class TidaStatement extends BaseConnectionWrapper implements Statement,
 	}
 
 	@Override
-	public ResultSet executeQuery() throws SQLException {
+	public TidaResultSet executeQuery() throws SQLException {
 		return executeQuery(null);
 	}
 
 	@Override
-	public ResultSet executeQuery(final String sql) throws SQLException {
+	public TidaResultSet executeQuery(final String sql) throws SQLException {
 		return executeQuery(sql, Statement.NO_GENERATED_KEYS, null, null);
 	}
 
