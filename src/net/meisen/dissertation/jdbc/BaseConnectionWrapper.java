@@ -61,7 +61,10 @@ public abstract class BaseConnectionWrapper extends BaseWrapper {
 
 		// remove the protocol and release it to be used by others
 		this.protocol = null;
-		parent.setUser(null);
+
+		if (parent.isUsedBy(this)) {
+			parent.setUser(null);
+		}
 	}
 
 	protected Protocol getProtocol() throws SQLException {

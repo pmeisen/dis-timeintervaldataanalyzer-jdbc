@@ -323,16 +323,7 @@ public class TestTidaResultSet extends TestBaseForConnections {
 		assertNull(stmt.getResultSet());
 		assertEquals(-1, stmt.getUpdateCount());
 
-		final ResultSetMetaData metaDataCount = resCount.getMetaData();
-		assertEquals(6, metaDataCount.getColumnCount());
-		assertTrue(resCount.next());
-		assertEquals("COUNT", resCount.getString(1));
-		assertEquals(0.0, resCount.getDouble(2), 0.0);
-		assertEquals(1.0, resCount.getDouble(3), 0.0);
-		assertEquals(1.0, resCount.getDouble(4), 0.0);
-		assertEquals(0.0, resCount.getDouble(5), 0.0);
-		assertEquals(0.0, resCount.getDouble(6), 0.0);
-		assertFalse(resCount.next());
+
 
 		// check the manager, it should use the statement's connection
 		assertEquals(1, manager.sizeOfOwners());
@@ -378,6 +369,18 @@ public class TestTidaResultSet extends TestBaseForConnections {
 		assertFalse(manager.isOwner(resCount));
 		assertTrue(manager.isOwner(res));
 
+		// now check the other countResultSet
+		final ResultSetMetaData metaDataCount = resCount.getMetaData();
+		assertEquals(6, metaDataCount.getColumnCount());
+		assertTrue(resCount.next());
+		assertEquals("COUNT", resCount.getString(1));
+		assertEquals(0.0, resCount.getDouble(2), 0.0);
+		assertEquals(1.0, resCount.getDouble(3), 0.0);
+		assertEquals(1.0, resCount.getDouble(4), 0.0);
+		assertEquals(0.0, resCount.getDouble(5), 0.0);
+		assertEquals(0.0, resCount.getDouble(6), 0.0);
+		assertFalse(resCount.next());
+		
 		assertFalse(resCount.next());
 
 		// close everything

@@ -209,7 +209,6 @@ public class TidaStatement extends BaseConnectionWrapper implements Statement,
 			final String[] columnNames) throws SQLException {
 		final TidaResultSet resultSet = execute(sql, TidaResultSetType.QUERY,
 				Statement.NO_GENERATED_KEYS, columnIndexes, columnNames);
-
 		return resultSet;
 	}
 
