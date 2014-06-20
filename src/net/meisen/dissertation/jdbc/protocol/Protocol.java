@@ -118,7 +118,15 @@ public class Protocol implements Closeable {
 	}
 
 	public void writeEndOfResult() throws IOException {
+		writeEndOfResponse();
+	}
+	
+	public void writeEndOfResponse() throws IOException {
 		write(ResponseType.EOR);
+	}
+
+	public void writeEndOfMeta() throws IOException {
+		write(ResponseType.EOM);
 	}
 
 	public void writeCancellation() throws IOException {
@@ -455,19 +463,20 @@ public class Protocol implements Closeable {
 					writeResource(handler.getResourceStream(resource));
 				}
 			} else if (value.is(ResponseType.HEADER)) {
-				if (handler != null) {
-					handler.setHeader(value.getHeader());
-				} else {
+				if (handler == null) {
 					header = value.getHeader();
+				} else {
+					handler.handleResult(value.getType(), value.getHeader());
 				}
 			} else if (value.is(ResponseType.HEADERNAMES)) {
 				if (handler == null) {
 					// nothing to do
 				} else if (value instanceof ChunkedRetrievedValue) {
-					handler.setHeaderNames(((ChunkedRetrievedValue) value)
-							.getHeaderNames());
+					handler.handleResult(value.getType(),
+							((ChunkedRetrievedValue) value).getHeaderNames());
 				} else {
-					handler.setHeaderNames(new String[] { value.getString() });
+					handler.handleResult(value.getType(),
+							new String[] { value.getString() });
 				}
 			} else if (value.is(ResponseType.RESULT)) {
 				if (handler != null) {
@@ -481,6 +490,10 @@ public class Protocol implements Closeable {
 				if (handler != null) {
 					read = handler.handleResult(value.getType(),
 							value.getIntegers());
+				}
+			} else if (value.is(ResponseType.EOM)) {
+				if (handler != null) {
+					read = handler.handleResult(value.getType(), null);
 				}
 			} else {
 				throw new IllegalStateException("Cannot handle the result '"

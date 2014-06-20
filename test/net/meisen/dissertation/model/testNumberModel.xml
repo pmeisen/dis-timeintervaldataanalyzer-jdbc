@@ -20,17 +20,5 @@
     <entries />
   </meta>
   
-  <structure>   
-    <meta position="1" descriptor="NUMBER" />
-    <interval position="2" type="start" />
-    <interval position="3" type="end" />
-  </structure>
-  
-  <data metahandling="create" intervalhandling="boundariesWhenNull">
-    <dataset><entry class="int" value="110" /><entry class="int" value="1" /><entry class="int" value="2" /></dataset>
-    <dataset><entry class="int" value="100" /><entry class="int" value="1" /><entry class="int" value="2" /></dataset>
-    <dataset><entry class="int" value="130" /><entry class="int" value="2" /><entry class="int" value="4" /></dataset>
-    <dataset><entry class="int" value="110" /><entry class="int" value="3" /><entry class="int" value="5" /></dataset>
-    <dataset><entry class="int" value="110" /><entry class="int" value="3" /><entry class="int" value="5" /></dataset>
-  </data>
+  <data metahandling="create" intervalhandling="boundariesWhenNull" />
 </model>

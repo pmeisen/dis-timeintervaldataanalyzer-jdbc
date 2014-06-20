@@ -11,8 +11,25 @@ import net.meisen.dissertation.jdbc.protocol.QueryStatus;
 import net.meisen.dissertation.jdbc.protocol.QueryType;
 import net.meisen.dissertation.jdbc.protocol.ResponseType;
 
+/**
+ * A {@code ResponseHandler} used by default by the driver to handle any
+ * responses from the server. The implementation, i.e. handler to be used, can
+ * be configured by the driver's property (see
+ * {@link DriverProperties#PROPERTY_HANDLERCLASS}).
+ * 
+ * @author pmeisen
+ * 
+ */
 public class QueryResponseHandler implements IResponseHandler {
+	/**
+	 * The prefix used to identify a resource which should be read from the
+	 * class-path.
+	 */
 	public final static String PREFIX_CLASSPATH = "classpath";
+	/**
+	 * The prefix used to identify a resource which should be read from the
+	 * file-system.
+	 */
 	public final static String PREFIX_FILE = "file";
 
 	private boolean eor = false;
@@ -29,6 +46,9 @@ public class QueryResponseHandler implements IResponseHandler {
 
 	private Object[] lastResult;
 
+	/**
+	 * Default constructor, which resets the handler.
+	 */
 	public QueryResponseHandler() {
 		resetHandler();
 	}
@@ -82,15 +102,34 @@ public class QueryResponseHandler implements IResponseHandler {
 		return status;
 	}
 
+	/**
+	 * Sets the expected {@code ResultSetType} of {@code this}. If the expected
+	 * type is set to {@code TidaResultSetType#UNKNOWN} the handler will handle
+	 * any kind of type. Otherwise the handling is canceled if the determined
+	 * {@code QueryType} is unequal to the expected one.
+	 * 
+	 * @param expectedResultSetType
+	 *            the expected {@code TidaResultSetType}
+	 */
 	public void setExpectedResultSetType(
 			final TidaResultSetType expectedResultSetType) {
 		this.expectedResultSetType = expectedResultSetType;
 	}
 
+	/**
+	 * Gets the expected {@code TidaResultSetType}.
+	 * 
+	 * @return the expected {@code TidaResultSetType}
+	 */
 	public TidaResultSetType getExpectedResultSetType() {
 		return expectedResultSetType;
 	}
 
+	/**
+	 * Gets the determined {@code TidaResultSetType}.
+	 * 
+	 * @return the determined {@code TidaResultSetType}
+	 */
 	public TidaResultSetType getResultSetType() {
 		return resultSetType;
 	}
@@ -128,6 +167,19 @@ public class QueryResponseHandler implements IResponseHandler {
 		return is;
 	}
 
+	/**
+	 * Method used to determine the stream for the specified path.
+	 * 
+	 * @param path
+	 *            the path to retrieve the stream for
+	 * @param lookOnClasspath
+	 *            {@code true} if the resource should be searched on class-path,
+	 *            otherwise - i.e. {@code false} is set - the resource will be
+	 *            searched on the file-system
+	 * 
+	 * @return the {@code InputStream} for the resource, {@code null} if the
+	 *         resource could not be found
+	 */
 	protected InputStream getStream(final String path,
 			final boolean lookOnClasspath) {
 		if (lookOnClasspath) {
@@ -141,13 +193,24 @@ public class QueryResponseHandler implements IResponseHandler {
 		}
 	}
 
+	/**
+	 * Determines the path of the resource by removing the specified
+	 * {@code prefix}. The method does not check if the prefix of the resource
+	 * is equal to the one specified, i.e. the method just calls:
+	 * 
+	 * <pre>
+	 * resource.substring(prefix.length() + 1);
+	 * </pre>
+	 * 
+	 * @param resource
+	 *            the resource to remove the prefix from
+	 * @param prefix
+	 *            the prefix to be removed
+	 * 
+	 * @return the resource with the removed prefix
+	 */
 	protected String getPath(final String resource, final String prefix) {
 		return resource.substring(prefix.length() + 1);
-	}
-
-	@Override
-	public void setHeader(final DataType[] header) {
-		this.header = header;
 	}
 
 	@Override
@@ -155,6 +218,16 @@ public class QueryResponseHandler implements IResponseHandler {
 		return header;
 	}
 
+	/**
+	 * Determines the zero-based position of the header with the specified
+	 * {@code name}.
+	 * 
+	 * @param name
+	 *            the name to retrieve the position for
+	 * 
+	 * @return the determined position or {@code -1} if no header with the
+	 *         specified {@code name} could be found
+	 */
 	public int getHeaderPosition(final String name) {
 		if (headerNames == null) {
 			if (name == null) {
@@ -177,6 +250,16 @@ public class QueryResponseHandler implements IResponseHandler {
 		}
 	}
 
+	/**
+	 * Gets the {@code DataType} of the header at the specified zero-based
+	 * {@code pos}.
+	 * 
+	 * @param pos
+	 *            the zero-based position to get the {@code DataType} for
+	 * 
+	 * @return the retrieved {@code DataType} or {@code null} if no header at
+	 *         the specified {@code pos} could be found
+	 */
 	public DataType getHeaderType(final int pos) {
 
 		// no header, nothing is valid
@@ -191,6 +274,15 @@ public class QueryResponseHandler implements IResponseHandler {
 		}
 	}
 
+	/**
+	 * Gets the name of the header at the specified zero-based {@code pos}.
+	 * 
+	 * @param pos
+	 *            the zero-based position to get the name for
+	 * 
+	 * @return the retrieved name or {@code null} if no header at the specified
+	 *         {@code pos} could be found
+	 */
 	public String getHeaderName(final int pos) {
 		// no header, nothing is valid
 		if (headerNames == null) {
@@ -204,6 +296,18 @@ public class QueryResponseHandler implements IResponseHandler {
 		}
 	}
 
+	/**
+	 * Checks if the {@code clazz} is a valid type for the header specified at
+	 * the zero-based {@code pos}.
+	 * 
+	 * @param pos
+	 *            the zero-based position to check the type for
+	 * @param clazz
+	 *            the type to be checked
+	 * 
+	 * @return {@code true} if the specified {@code clazz} is a valid type for
+	 *         the header at position {@code pos}, otherwise {@code false}
+	 */
 	public boolean isValidHeaderType(final int pos, final Class<?> clazz) {
 
 		// no header, nothing is valid
@@ -224,6 +328,21 @@ public class QueryResponseHandler implements IResponseHandler {
 		}
 	}
 
+	/**
+	 * Casts the value at the specified zero-based position to the specified
+	 * type.
+	 * 
+	 * @param pos
+	 *            the zero-based position to get the value of the last result
+	 *            for
+	 * @param clazz
+	 *            the type to cast the value to, the validity is not checked but
+	 *            can be checked using {@link #isValidHeaderType(int, Class)}
+	 * 
+	 * @return the retrieved value
+	 * 
+	 * @see #isValidHeaderType(int, Class)
+	 */
 	@SuppressWarnings("unchecked")
 	public <T> T cast(final int pos, final Class<T> clazz) {
 
@@ -233,11 +352,6 @@ public class QueryResponseHandler implements IResponseHandler {
 		}
 
 		return (T) lastResult[pos];
-	}
-
-	@Override
-	public void setHeaderNames(final String[] header) {
-		this.headerNames = header;
 	}
 
 	@Override
@@ -251,19 +365,42 @@ public class QueryResponseHandler implements IResponseHandler {
 			this.countValue = (Integer) value[0];
 		} else if (ResponseType.RESULT.equals(type)) {
 			this.lastResult = value;
+		} else if (ResponseType.HEADER.equals(type)) {
+			this.header = (DataType[]) value;
+		} else if (ResponseType.HEADERNAMES.equals(type)) {
+			this.headerNames = (String[]) value;
+		} else if (ResponseType.EOM.equals(type)) {
+			/*
+			 * Nothing to do, important it that it is reached and therefore stop
+			 * reading anything further.
+			 */
 		} else {
 			throw new IllegalArgumentException(
 					"Unexpected values retrieved from type '" + type + "'.");
 		}
 
-		// auto-read everything as long as we don't receive any results
-		return !ResponseType.RESULT.equals(type);
+		/*
+		 * Auto-read everything as long as we didn't read the end of meta-data
+		 * or any results.
+		 */
+		return !(ResponseType.EOM.equals(type) || ResponseType.RESULT
+				.equals(type));
 	}
 
+	/**
+	 * Method checks if the end-of-response was reached.
+	 * 
+	 * @return {@code true} if the end was reached, otherwise {@code false}
+	 */
 	public boolean reachedEOR() {
 		return eor;
 	}
 
+	/**
+	 * Method checks if the end-of-response was reached.
+	 * 
+	 * @return {@code true} if the end was reached, otherwise {@code false}
+	 */
 	public boolean isEOR() {
 		return eor;
 	}
@@ -286,26 +423,59 @@ public class QueryResponseHandler implements IResponseHandler {
 		lastResult = null;
 	}
 
+	/**
+	 * Gets the record retrieved last. The method returns {@code null} if no
+	 * such last-record exists.
+	 * 
+	 * @return the record retrieved last
+	 */
 	public Object[] getLastResult() {
 		return lastResult;
 	}
 
+	/**
+	 * Gets the generated identifiers received while handling.
+	 * 
+	 * @return the generated identifiers received
+	 */
 	public Integer[] getGeneratedIds() {
 		return generatedIds;
 	}
 
+	/**
+	 * Gets the current {@code QueryStatus} of the handler.
+	 * 
+	 * @return the current {@code QueryStatus} of the handler
+	 */
 	public QueryStatus getQueryStatus() {
 		return queryStatus;
 	}
 
+	/**
+	 * Sets the current {@code QueryStatus} of the handler.
+	 * 
+	 * @param queryStatus
+	 *            the current {@code QueryStatus} of the handler to be set
+	 */
 	public void setQueryStatus(final QueryStatus queryStatus) {
 		this.queryStatus = queryStatus;
 	}
 
+	/**
+	 * Gets the retrieved count value of the handler.
+	 * 
+	 * @return the retrieved count value, can be {@ode null} if no such
+	 *         value was handled so far
+	 */
 	public Integer getCountValue() {
 		return countValue;
 	}
 
+	/**
+	 * Gets the retrieved header-names handled by {@code this}.
+	 * 
+	 * @return the retrieved header-names
+	 */
 	public String[] getHeaderNames() {
 		return headerNames;
 	}

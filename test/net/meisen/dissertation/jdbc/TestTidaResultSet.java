@@ -3,21 +3,36 @@ package net.meisen.dissertation.jdbc;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Arrays;
 
 import net.meisen.dissertation.exceptions.QueryEvaluationException;
 
 import org.junit.Ignore;
 import org.junit.Test;
 
+/**
+ * Tests the implementation of a {@code ResultSet}.
+ * 
+ * @author pmeisen
+ * 
+ */
 public class TestTidaResultSet extends TestBaseForConnections {
 
+	/**
+	 * Tests the execution of a result-set used for a manipulation.
+	 * 
+	 * @throws SQLException
+	 *             if an error occurs
+	 */
 	@Test
 	public void testResultSetExecuteUpdate() throws SQLException {
 		final Connection conn = DriverManager
@@ -34,8 +49,14 @@ public class TestTidaResultSet extends TestBaseForConnections {
 		conn.close();
 	}
 
+	/**
+	 * Tests the execution of an update result-set.
+	 * 
+	 * @throws SQLException
+	 *             if an error occurs
+	 */
 	@Test
-	public void testResultSetCloseOfUpdate() throws SQLException {
+	public void testUpdateResultSet() throws SQLException {
 		final Connection conn = DriverManager
 				.getConnection("jdbc:tida://localhost:7001");
 		assertTrue(conn instanceof TidaConnection);
@@ -59,21 +80,13 @@ public class TestTidaResultSet extends TestBaseForConnections {
 		conn.close();
 	}
 
-	@Test
-	public void testResultSetExecute() throws SQLException {
-		final Connection conn = DriverManager
-				.getConnection("jdbc:tida://localhost:7001");
-		final Statement stmt = conn.createStatement();
-
-		// execute tells us what type we can expect
-		assertFalse(stmt
-				.execute("LOAD FROM 'classpath:/net/meisen/dissertation/model/testNumberModel.xml'"));
-
-		// cleanUp
-		stmt.close();
-		conn.close();
-	}
-
+	/**
+	 * Tests the closing of a result-set and the correct handling of the
+	 * manager.
+	 * 
+	 * @throws SQLException
+	 *             if an error occurs
+	 */
 	@Test
 	public void testResultSetCloseOfResultSet() throws SQLException {
 		final Connection conn = DriverManager
@@ -189,7 +202,7 @@ public class TestTidaResultSet extends TestBaseForConnections {
 	 * Tests the usage of time-outs.
 	 * 
 	 * @throws SQLException
-	 *             if an unexpected error occures
+	 *             if an unexpected error occurs
 	 */
 	@Test
 	public void testResultSetTimeout() throws SQLException {
@@ -260,6 +273,64 @@ public class TestTidaResultSet extends TestBaseForConnections {
 
 		// close the statement and the connection
 		stmt.close();
+		conn.close();
+	}
+
+	/**
+	 * Tests the value retrieval of an update statement.
+	 * 
+	 * @throws SQLException
+	 *             if an unexpected error occurs
+	 */
+	@Test
+	public void testExecuteUpdate() throws SQLException {
+		final Connection conn = DriverManager
+				.getConnection("jdbc:tida://localhost:7001");
+		final Statement stmt = conn.createStatement();
+		stmt.executeUpdate("LOAD FROM 'classpath:/net/meisen/dissertation/model/testNumberModel.xml'");
+
+		// execute INSERT using update
+		final int res = stmt
+				.executeUpdate("INSERT INTO testNumberModel ([START], [END], NUMBER) VALUES (2, 3, '100')");
+		assertEquals(1, res);
+		assertNull(stmt.getResultSet());
+		assertEquals(-1, stmt.getUpdateCount());
+
+		// execute INSERT using just execute
+		assertFalse(stmt
+				.execute("INSERT INTO testNumberModel ([START], [END], NUMBER) VALUES (1, 3, '200'), (5, 5, '100')"));
+		assertEquals(2, stmt.getUpdateCount());
+		assertEquals(-1, stmt.getUpdateCount());
+		assertNull(stmt.getResultSet());
+
+		// close everything
+		conn.close();
+	}
+
+	@Test
+	@Ignore
+	public void testExecuteSelect() throws SQLException {
+		final Connection conn = DriverManager
+				.getConnection("jdbc:tida://localhost:7001");
+		final Statement stmt = conn.createStatement();
+		stmt.executeUpdate("LOAD FROM 'classpath:/net/meisen/dissertation/model/testNumberModel.xml'");
+
+		// execute INSERT using update
+		stmt.executeUpdate("INSERT INTO testNumberModel ([START], [END], NUMBER) VALUES (2, 3, '100')");
+
+		// execute INSERT using just execute
+		final ResultSet res = stmt
+				.executeQuery("SELECT TIMESERIES FROM testNumberModel");
+		assertNotNull(res);
+		assertNull(stmt.getResultSet());
+		assertEquals(-1, stmt.getUpdateCount());
+		
+		System.out.println(Arrays.asList(((TidaResultSet) res).getHeaderTypes()));
+
+		final ResultSetMetaData metaData = res.getMetaData();
+		System.out.println(metaData.getColumnCount());
+
+		// close everything
 		conn.close();
 	}
 }

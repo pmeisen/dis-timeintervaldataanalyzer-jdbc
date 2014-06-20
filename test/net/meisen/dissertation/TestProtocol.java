@@ -55,16 +55,6 @@ public class TestProtocol {
 		}
 
 		@Override
-		public void setHeaderNames(String[] header) {
-			fail("Not expected!");
-		}
-
-		@Override
-		public void setHeader(final DataType[] header) {
-			fail("Not expected!");
-		}
-
-		@Override
 		public DataType[] getHeader() {
 			fail("Not expected!");
 			return null;
@@ -134,7 +124,7 @@ public class TestProtocol {
 						if (QueryStatus.PROCESS.equals(status)) {
 							serverHandler.answer(nr, val, serverSideProtocol);
 						} else {
-							serverSideProtocol.writeEndOfResult();
+							serverSideProtocol.writeEndOfResponse();
 						}
 						nr++;
 					}
@@ -192,7 +182,7 @@ public class TestProtocol {
 				} catch (final Exception e) {
 					serverSideProtocol.writeException(e);
 				}
-				serverSideProtocol.writeEndOfResult();
+				serverSideProtocol.writeEndOfResponse();
 			}
 		};
 
@@ -200,7 +190,11 @@ public class TestProtocol {
 		final IResponseHandler clientHandler = new TestResponseHandler() {
 
 			@Override
-			public void setHeader(final DataType[] header) {
+			public boolean handleResult(final ResponseType type,
+					final Object[] result) {
+				assertEquals(ResponseType.HEADER, type);
+				final DataType[] header = (DataType[]) result;
+
 				switch (testCounter) {
 				case 0:
 					assertEquals(1, header.length);
@@ -224,6 +218,8 @@ public class TestProtocol {
 				default:
 					fail("No test result defined for test: " + testCounter);
 				}
+
+				return true;
 			}
 		};
 
@@ -275,7 +271,7 @@ public class TestProtocol {
 				for (int i = 0; i < 1000; i++) {
 					serverSideProtocol.writeInt(i);
 				}
-				serverSideProtocol.writeEndOfResult();
+				serverSideProtocol.writeEndOfResponse();
 			}
 		};
 
@@ -305,6 +301,12 @@ public class TestProtocol {
 		assertEquals(999, testCounter);
 	}
 
+	/**
+	 * Tests the sending of integers.
+	 * 
+	 * @throws Exception
+	 *             if an unexpected exception occurrs
+	 */
 	@Test
 	public void testProtocolInts() throws Exception {
 		serverHandler = new ITestHandler() {
@@ -322,7 +324,7 @@ public class TestProtocol {
 					}
 					serverSideProtocol.writeInts(values);
 				}
-				serverSideProtocol.writeEndOfResult();
+				serverSideProtocol.writeEndOfResponse();
 			}
 		};
 
@@ -380,14 +382,18 @@ public class TestProtocol {
 				}
 
 				serverSideProtocol.writeHeaderNames(headerNames);
-				serverSideProtocol.writeEndOfResult();
+				serverSideProtocol.writeEndOfResponse();
 			}
 		};
 
 		final IResponseHandler clientHandler = new TestResponseHandler() {
 
 			@Override
-			public void setHeaderNames(final String[] headerNames) {
+			public boolean handleResult(final ResponseType type,
+					final Object[] result) {
+				assertEquals(ResponseType.HEADERNAMES, type);
+				final String[] headerNames = (String[]) result;
+
 				switch (testCounter) {
 				case 0:
 					assertEquals(0, headerNames.length);
@@ -401,6 +407,8 @@ public class TestProtocol {
 				default:
 					fail("No test result defined for test: " + testCounter);
 				}
+
+				return true;
 			}
 		};
 
@@ -437,7 +445,7 @@ public class TestProtocol {
 							new DataType[] { DataType.STRING },
 							new Object[] { (msgNr + "-" + i) });
 				}
-				serverSideProtocol.writeEndOfResult();
+				serverSideProtocol.writeEndOfResponse();
 			}
 		};
 
@@ -469,6 +477,12 @@ public class TestProtocol {
 		}
 	}
 
+	/**
+	 * Tests the reading and writing of results.
+	 * 
+	 * @throws Exception
+	 *             if an unexpected exception occurrs
+	 */
 	@Test
 	public void testReadAndWriteResults() throws Exception {
 		serverHandler = new ITestHandler() {
@@ -482,7 +496,7 @@ public class TestProtocol {
 							new DataType[] { DataType.STRING },
 							new Object[] { (msgNr + "-" + i) });
 				}
-				serverSideProtocol.writeEndOfResult();
+				serverSideProtocol.writeEndOfResponse();
 			}
 		};
 

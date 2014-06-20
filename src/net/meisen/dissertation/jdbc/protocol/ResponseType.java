@@ -7,7 +7,7 @@ public enum ResponseType {
 	 */
 	EXCEPTION((byte) 1),
 	/**
-	 * The end of results is reached.
+	 * The end of response is reached.
 	 */
 	EOR((byte) 2, false, false),
 	/**
@@ -50,7 +50,11 @@ public enum ResponseType {
 	/**
 	 * A {@code ResponseType} which identifies a cancellation.
 	 */
-	CANCEL((byte) 11, false, false);
+	CANCEL((byte) 11, false, false),
+	/**
+	 * A {@code ResponseType} which marks the end of meta-data.
+	 */
+	EOM((byte) 12, false, false);
 
 	private final byte id;
 	private final boolean hasData;
