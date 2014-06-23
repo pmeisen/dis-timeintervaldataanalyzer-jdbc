@@ -672,59 +672,66 @@ public class TidaStatement extends BaseConnectionWrapper implements Statement,
 	}
 
 	@Override
-	public void setBlob(int parameterIndex, Blob x) throws SQLException {
+	public void setBlob(final int parameterIndex, final Blob x)
+			throws SQLException {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void setClob(int parameterIndex, Clob x) throws SQLException {
+	public void setClob(final int parameterIndex, final Clob x)
+			throws SQLException {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void setArray(int parameterIndex, Array x) throws SQLException {
+	public void setArray(final int parameterIndex, final Array x)
+			throws SQLException {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
 	public ResultSetMetaData getMetaData() throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		if (currentResultSet == null) {
+			return null;
+		} else {
+			return currentResultSet.getMetaData();
+		}
 	}
 
 	@Override
-	public void setDate(int parameterIndex, Date x, Calendar cal)
+	public void setDate(final int parameterIndex, Date x, final Calendar cal)
 			throws SQLException {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void setTime(int parameterIndex, Time x, Calendar cal)
-			throws SQLException {
+	public void setTime(final int parameterIndex, final Time x,
+			final Calendar cal) throws SQLException {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void setTimestamp(int parameterIndex, Timestamp x, Calendar cal)
-			throws SQLException {
+	public void setTimestamp(final int parameterIndex, final Timestamp x,
+			final Calendar cal) throws SQLException {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void setNull(int parameterIndex, int sqlType, String typeName)
-			throws SQLException {
+	public void setNull(final int parameterIndex, final int sqlType,
+			final String typeName) throws SQLException {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void setURL(int parameterIndex, URL x) throws SQLException {
+	public void setURL(final int parameterIndex, final URL x)
+			throws SQLException {
 		// TODO Auto-generated method stub
 
 	}
@@ -736,130 +743,136 @@ public class TidaStatement extends BaseConnectionWrapper implements Statement,
 	}
 
 	@Override
-	public void setRowId(int parameterIndex, RowId x) throws SQLException {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void setNString(int parameterIndex, String value)
+	public void setRowId(final int parameterIndex, final RowId x)
 			throws SQLException {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void setNCharacterStream(int parameterIndex, Reader value,
-			long length) throws SQLException {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void setNClob(int parameterIndex, NClob value) throws SQLException {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void setClob(int parameterIndex, Reader reader, long length)
+	public void setNString(final int parameterIndex, final String value)
 			throws SQLException {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void setBlob(int parameterIndex, InputStream inputStream, long length)
+	public void setNCharacterStream(final int parameterIndex,
+			final Reader value, final long length) throws SQLException {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void setNClob(final int parameterIndex, final NClob value)
 			throws SQLException {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void setNClob(int parameterIndex, Reader reader, long length)
+	public void setClob(final int parameterIndex, final Reader reader,
+			final long length) throws SQLException {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void setBlob(final int parameterIndex,
+			final InputStream inputStream, final long length)
 			throws SQLException {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void setSQLXML(int parameterIndex, SQLXML xmlObject)
+	public void setNClob(final int parameterIndex, final Reader reader,
+			final long length) throws SQLException {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void setSQLXML(final int parameterIndex, final SQLXML xmlObject)
 			throws SQLException {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void setObject(int parameterIndex, Object x, int targetSqlType,
-			int scaleOrLength) throws SQLException {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void setAsciiStream(int parameterIndex, InputStream x, long length)
+	public void setObject(final int parameterIndex, final Object x,
+			final int targetSqlType, final int scaleOrLength)
 			throws SQLException {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void setBinaryStream(int parameterIndex, InputStream x, long length)
+	public void setAsciiStream(final int parameterIndex, final InputStream x,
+			final long length) throws SQLException {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void setBinaryStream(final int parameterIndex, final InputStream x,
+			final long length) throws SQLException {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void setCharacterStream(final int parameterIndex,
+			final Reader reader, final long length) throws SQLException {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void setAsciiStream(final int parameterIndex, final InputStream x)
 			throws SQLException {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void setCharacterStream(int parameterIndex, Reader reader,
-			long length) throws SQLException {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void setAsciiStream(int parameterIndex, InputStream x)
+	public void setBinaryStream(final int parameterIndex, final InputStream x)
 			throws SQLException {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void setBinaryStream(int parameterIndex, InputStream x)
+	public void setCharacterStream(final int parameterIndex, final Reader reader)
 			throws SQLException {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void setCharacterStream(int parameterIndex, Reader reader)
+	public void setNCharacterStream(final int parameterIndex, final Reader value)
 			throws SQLException {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void setNCharacterStream(int parameterIndex, Reader value)
+	public void setClob(final int parameterIndex, final Reader reader)
 			throws SQLException {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void setClob(int parameterIndex, Reader reader) throws SQLException {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void setBlob(int parameterIndex, InputStream inputStream)
+	public void setBlob(final int parameterIndex, final InputStream inputStream)
 			throws SQLException {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void setNClob(int parameterIndex, Reader reader) throws SQLException {
+	public void setNClob(final int parameterIndex, final Reader reader)
+			throws SQLException {
 		// TODO Auto-generated method stub
 
 	}
