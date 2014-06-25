@@ -16,9 +16,7 @@ import org.junit.runners.Suite;
  * 
  */
 @RunWith(Suite.class)
-@Suite.SuiteClasses({ TestQueryResponseHandler.class, TestProtocol.class,
-		TestTidaDriver.class, TestTidaConnection.class,
-		TestTidaStatement.class, TestTidaResultSet.class })
+@Suite.SuiteClasses({ TestQueryResponseHandler.class })
 public class AllTests {
 	// nothing more to do here
 }
