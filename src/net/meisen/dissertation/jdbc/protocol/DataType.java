@@ -1,6 +1,6 @@
 package net.meisen.dissertation.jdbc.protocol;
 
-import java.io.DataInputStream;
+import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.sql.Types;
@@ -153,35 +153,35 @@ public enum DataType {
 	/**
 	 * Reads {@code this} data-type from the specified {@code is}.
 	 * 
-	 * @param is
-	 *            the {@code InputStream} to read from
+	 * @param in
+	 *            the {@code DataInput} to read from
 	 * 
 	 * @return the object read
 	 * 
 	 * @throws IOException
 	 *             if an IO-exception occurs
 	 */
-	public Object read(final DataInputStream is) throws IOException {
-		byte nullIndicator = is.readByte();
+	public Object read(final DataInput in) throws IOException {
+		byte nullIndicator = in.readByte();
 		if (nullIndicator == 0) {
 			return null;
 		} else {
 			if (BYTE.equals(this)) {
-				return is.readByte();
+				return in.readByte();
 			} else if (SHORT.equals(this)) {
-				return is.readShort();
+				return in.readShort();
 			} else if (INT.equals(this)) {
-				return is.readInt();
+				return in.readInt();
 			} else if (LONG.equals(this)) {
-				return is.readLong();
+				return in.readLong();
 			} else if (DATE.equals(this)) {
-				return new Date((Long) is.readLong());
+				return new Date((Long) in.readLong());
 			} else if (DOUBLE.equals(this)) {
-				return is.readDouble();
+				return in.readDouble();
 			} else if (STRING.equals(this)) {
-				final int length = is.readInt();
+				final int length = in.readInt();
 				final byte[] bytes = new byte[length];
-				is.read(bytes);
+				in.readFully(bytes);
 				return new String(bytes, "UTF8");
 			} else {
 				throw new IllegalStateException("The read-method of dataType '"
@@ -194,7 +194,7 @@ public enum DataType {
 	 * Writes {@code this} data-type from the specified {@code os}.
 	 * 
 	 * @param out
-	 *            the {@code OutputStream} to write to
+	 *            the {@code DataOutput} to write to
 	 * @param object
 	 *            the object to be written
 	 * 
