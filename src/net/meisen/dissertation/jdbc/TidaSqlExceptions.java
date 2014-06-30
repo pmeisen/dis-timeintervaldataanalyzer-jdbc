@@ -58,7 +58,7 @@ public class TidaSqlExceptions {
 
 	protected static String createMessage(final int number,
 			final String... parameter) {
-
+		
 		switch (number) {
 		case 1000:
 			return "Transaction isolation levels are not supported.";

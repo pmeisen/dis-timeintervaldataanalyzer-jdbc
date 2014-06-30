@@ -251,7 +251,8 @@ public class IntResultSet extends BaseWrapper implements ResultSet {
 	}
 
 	@Override
-	public BigDecimal getBigDecimal(final int columnIndex, int scale)
+	@Deprecated
+	public BigDecimal getBigDecimal(final int columnIndex, final int scale)
 			throws SQLException {
 
 		return BigDecimal.valueOf(getCurrentValue(), scale);
@@ -299,6 +300,7 @@ public class IntResultSet extends BaseWrapper implements ResultSet {
 	}
 
 	@Override
+	@Deprecated
 	public InputStream getUnicodeStream(final int columnIndex)
 			throws SQLException {
 		checkClosed();
@@ -381,7 +383,8 @@ public class IntResultSet extends BaseWrapper implements ResultSet {
 	}
 
 	@Override
-	public BigDecimal getBigDecimal(final String columnLabel, int scale)
+	@Deprecated
+	public BigDecimal getBigDecimal(final String columnLabel, final int scale)
 			throws SQLException {
 		checkClosed();
 		checkColumnLabel(columnLabel);
@@ -431,6 +434,7 @@ public class IntResultSet extends BaseWrapper implements ResultSet {
 	}
 
 	@Override
+	@Deprecated
 	public InputStream getUnicodeStream(final String columnLabel)
 			throws SQLException {
 		checkClosed();

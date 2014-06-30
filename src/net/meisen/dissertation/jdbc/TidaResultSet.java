@@ -164,6 +164,15 @@ public class TidaResultSet extends BaseConnectionWrapper implements ResultSet {
 		}
 	}
 
+	/**
+	 * Initializes the {@code ResultSet} with the specified {@code sql} query.
+	 * 
+	 * @param sql
+	 *            the query to be initialized
+	 * 
+	 * @throws SQLException
+	 *             if the query fails or cannot be initialized
+	 */
 	protected void initialize(final String sql) throws SQLException {
 
 		if (fireQuery(sql, handler)) {
@@ -179,14 +188,14 @@ public class TidaResultSet extends BaseConnectionWrapper implements ResultSet {
 				// we don't need the connection anymore, so just release it
 				release();
 			} else {
-				
+
 				// check if we receive identifiers for a query statement
 				if (TidaResultSetType.QUERY.equals(handler.getResultSetType())
 						&& QueryStatus.PROCESSANDGETIDS.equals(handler
 								.getQueryStatus())) {
 					throw TidaSqlExceptions.createException(4021);
 				}
-				
+
 				/*
 				 * Read the meta-data of the handler, no data should be read so
 				 * far. Therefore after the handling the header should be known
@@ -291,6 +300,7 @@ public class TidaResultSet extends BaseConnectionWrapper implements ResultSet {
 	 *             if the {@code columnIndex} is invalid or the {@code clazz}
 	 *             cannot be mapped
 	 */
+	@SuppressWarnings("unchecked")
 	public <T> T getValue(final int columnIndex, final Class<T> clazz)
 			throws SQLException {
 		checkClosed();
@@ -301,6 +311,9 @@ public class TidaResultSet extends BaseConnectionWrapper implements ResultSet {
 		// get the value
 		if (handler.isValidHeaderType(pos, clazz)) {
 			return handler.cast(pos, clazz);
+		} else if (Number.class.isAssignableFrom(clazz)
+				&& handler.isInteger(pos)) {
+			return (T) handler.toInteger(pos, (Class<? extends Number>) clazz);
 		} else {
 			throw TidaSqlExceptions.createException(4022, "" + columnIndex,
 					clazz.getName());
@@ -355,6 +368,7 @@ public class TidaResultSet extends BaseConnectionWrapper implements ResultSet {
 	}
 
 	@Override
+	@Deprecated
 	public BigDecimal getBigDecimal(final int columnIndex, final int scale)
 			throws SQLException {
 		return getValue(columnIndex, BigDecimal.class).setScale(scale);
@@ -387,6 +401,7 @@ public class TidaResultSet extends BaseConnectionWrapper implements ResultSet {
 	}
 
 	@Override
+	@Deprecated
 	public InputStream getUnicodeStream(final int columnIndex)
 			throws SQLException {
 		return getValue(columnIndex, InputStream.class);
@@ -439,6 +454,7 @@ public class TidaResultSet extends BaseConnectionWrapper implements ResultSet {
 	}
 
 	@Override
+	@Deprecated
 	public BigDecimal getBigDecimal(final String columnLabel, final int scale)
 			throws SQLException {
 		return getBigDecimal(findColumn(columnLabel), scale);
@@ -471,6 +487,7 @@ public class TidaResultSet extends BaseConnectionWrapper implements ResultSet {
 	}
 
 	@Override
+	@Deprecated
 	public InputStream getUnicodeStream(final String columnLabel)
 			throws SQLException {
 		return getUnicodeStream(findColumn(columnLabel));

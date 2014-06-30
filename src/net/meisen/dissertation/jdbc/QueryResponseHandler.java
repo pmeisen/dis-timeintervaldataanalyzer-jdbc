@@ -329,6 +329,83 @@ public class QueryResponseHandler implements IResponseHandler {
 	}
 
 	/**
+	 * Checks if the header specified at the zero-based {@code pos} is a number
+	 * (i.e. an integer).
+	 * 
+	 * @param pos
+	 *            the zero-based position to check the type for
+	 * 
+	 * @return {@code true} if the specified header at position {@code pos} is
+	 *         an integer, otherwise {@code false}
+	 */
+	public boolean isInteger(final int pos) {
+		// no header, nothing is valid
+		if (header == null) {
+			return false;
+		}
+		// check the position
+		else if (pos < 0 || pos >= header.length) {
+			return false;
+		}
+		// check the Class<?>
+		else if (header[pos].isInteger()) {
+			return true;
+		}
+		// invalid result
+		else {
+			return false;
+		}
+	}
+
+	/**
+	 * Casts the value at the specified zero-based position to the specified
+	 * {@code Number}-type.
+	 * 
+	 * @param pos
+	 *            the zero-based position to get the {@code Number} of the last
+	 *            result for
+	 * @param clazz
+	 *            the type to cast the value to, the validity is not checked but
+	 *            can be checked using {@link #isInteger(int)}
+	 * 
+	 * @return the retrieved value
+	 * 
+	 * @see #isInteger(int)
+	 */
+	@SuppressWarnings("unchecked")
+	public <T extends Number> T toInteger(final int pos, final Class<T> clazz) {
+
+		// check the position
+		if (pos < 0 || pos >= header.length) {
+			throw new IllegalArgumentException("Invalid position used.");
+		}
+
+		// get the current number
+		final Number o = (Number) lastResult[pos];
+
+		// get the result
+		final Number res;
+		if (o == null) {
+			res = null;
+		} else if (o.getClass().equals(clazz)) {
+			res = (T) o;
+		} else if (Byte.class.equals(clazz)) {
+			res = o.byteValue();
+		} else if (Short.class.equals(clazz)) {
+			res = o.shortValue();
+		} else if (Integer.class.equals(clazz)) {
+			res = o.intValue();
+		} else if (Long.class.equals(clazz)) {
+			res = o.longValue();
+		} else {
+			throw new IllegalArgumentException("The class '" + clazz
+					+ "' is not supported as number type.");
+		}
+
+		return (T) res;
+	}
+
+	/**
 	 * Casts the value at the specified zero-based position to the specified
 	 * type.
 	 * 
@@ -356,7 +433,7 @@ public class QueryResponseHandler implements IResponseHandler {
 
 	@Override
 	public boolean handleResult(final ResponseType type, final Object[] value) {
-		
+
 		if (ResponseType.EOM.equals(type)) {
 			/*
 			 * Nothing to do, important is that it is reached and therefore stop

@@ -233,6 +233,20 @@ public enum DataType {
 	}
 
 	/**
+	 * Checks if the specified {@code DataType} is an integer.
+	 * 
+	 * @return {@code true} if the type is an integer, otherwise {@code false}
+	 */
+	public boolean isInteger() {
+		final Class<?> repClass = getRepresentorClass();
+
+		return repClass != null
+				&& (repClass.equals(Byte.class) || repClass.equals(Short.class)
+						|| repClass.equals(Integer.class) || repClass
+							.equals(Long.class));
+	}
+
+	/**
 	 * Finds the {@code DataType} for the specified {@code clazz}.
 	 * 
 	 * @param clazz
