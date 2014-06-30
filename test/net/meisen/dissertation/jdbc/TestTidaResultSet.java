@@ -282,13 +282,12 @@ public class TestTidaResultSet extends TestBaseForConnections {
 				.executeUpdate("INSERT INTO testNumberModel ([START], [END], NUMBER) VALUES (2, 3, '100')");
 		assertEquals(1, res);
 		assertNull(stmt.getResultSet());
-		assertEquals(-1, stmt.getUpdateCount());
+		assertEquals(1, stmt.getUpdateCount());
 
 		// execute INSERT using just execute
 		assertFalse(stmt
 				.execute("INSERT INTO testNumberModel ([START], [END], NUMBER) VALUES (1, 3, '200'), (5, 5, '100')"));
 		assertEquals(2, stmt.getUpdateCount());
-		assertEquals(-1, stmt.getUpdateCount());
 		assertNull(stmt.getResultSet());
 
 		// close everything
@@ -322,8 +321,6 @@ public class TestTidaResultSet extends TestBaseForConnections {
 		assertNotNull(resCount);
 		assertNull(stmt.getResultSet());
 		assertEquals(-1, stmt.getUpdateCount());
-
-
 
 		// check the manager, it should use the statement's connection
 		assertEquals(1, manager.sizeOfOwners());

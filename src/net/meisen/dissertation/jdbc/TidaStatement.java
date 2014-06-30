@@ -401,14 +401,13 @@ public class TidaStatement extends BaseConnectionWrapper implements Statement,
 				.getResultSetType())) {
 			return null;
 		} else if (CurrentResultSetType.RETURNED_AS_RESULT
-				.equals(currentResultSet)) {
+				.equals(currentResultSetType)) {
 			return null;
 		} else {
-			final TidaResultSet resultSet = currentResultSet;
 			this.currentResultSetType = CurrentResultSetType.RETURNED_AS_RESULT;
 
 			// make sure it cannot be retrieved a second time
-			return resultSet;
+			return currentResultSet;
 		}
 	}
 
