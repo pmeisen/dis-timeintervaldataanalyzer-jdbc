@@ -16,6 +16,8 @@ public class TidaDatabaseMetaData extends BaseWrapper implements
 		DatabaseMetaData {
 	private TidaConnection connection;
 
+	private boolean todoMarker;
+	
 	/**
 	 * The default constructor retrieves the meta-data for the specified
 	 * {@code connection}.
