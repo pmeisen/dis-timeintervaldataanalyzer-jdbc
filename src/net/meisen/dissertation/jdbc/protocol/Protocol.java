@@ -15,6 +15,12 @@ import java.net.Socket;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * A {@code Protocol} to communicate with the server.
+ * 
+ * @author pmeisen
+ * 
+ */
 public class Protocol implements Closeable {
 
 	/*
@@ -56,21 +62,57 @@ public class Protocol implements Closeable {
 		this(socket.getInputStream(), socket.getOutputStream());
 	}
 
+	/**
+	 * Constructor to define the {@code InputStream} and {@code OutputStream} to
+	 * communicate over.
+	 * 
+	 * @param is
+	 *            the {@code InputStream} used for the communication
+	 * @param os
+	 *            the {@code OutputStream} used for the communication
+	 */
 	public Protocol(final InputStream is, final OutputStream os) {
 		this.is = new DataInputStream(new BufferedInputStream(is));
 		this.os = new DataOutputStream(new BufferedOutputStream(os));
 	}
 
+	/**
+	 * Writes an integer.
+	 * 
+	 * @param value
+	 *            the integer to be written
+	 * 
+	 * @throws IOException
+	 *             if the {@code value} cannot be written
+	 */
 	public void writeInt(final int value) throws IOException {
 		os.writeByte(ResponseType.INT.getId());
 		os.writeInt(value);
 		os.flush();
 	}
 
+	/**
+	 * Writes a single integer as array.
+	 * 
+	 * @param value
+	 *            the integer to be written
+	 * 
+	 * @throws IOException
+	 *             if the {@code value} cannot be written
+	 */
 	public void writeInts(final int value) throws IOException {
 		writeInts(new int[] { value });
 	}
 
+	/**
+	 * Writes an integer-array.
+	 * 
+	 * @param values
+	 *            the integers to be written
+	 * 
+	 * @throws IOException
+	 *             if the {@code values} cannot be written
+	 */
 	public void writeInts(final int[] values) throws IOException {
 		os.writeByte(ResponseType.INT_ARRAY.getId());
 		os.writeInt(values.length);
@@ -80,6 +122,15 @@ public class Protocol implements Closeable {
 		os.flush();
 	}
 
+	/**
+	 * Writes an {@code exception}.
+	 * 
+	 * @param exception
+	 *            the {@code exception} to be written
+	 * 
+	 * @throws IOException
+	 *             if the {@code exception} cannot be written
+	 */
 	public void writeException(final Exception exception) throws IOException {
 		final String msg = " [" + exception.getClass().getSimpleName() + "]: "
 				+ exception.getLocalizedMessage();
@@ -87,6 +138,17 @@ public class Protocol implements Closeable {
 		write(ResponseType.EXCEPTION, msg.getBytes("UTF8"));
 	}
 
+	/**
+	 * Writes a result, i.e. the {@code values}.
+	 * 
+	 * @param header
+	 *            the header's types to of the values to be written
+	 * @param values
+	 *            the values to be written
+	 * 
+	 * @throws IOException
+	 *             if the {@code exception} cannot be written
+	 */
 	public void writeResult(final DataType[] header, final Object[] values)
 			throws IOException {
 
@@ -106,6 +168,17 @@ public class Protocol implements Closeable {
 		os.flush();
 	}
 
+	/**
+	 * Reads an result.
+	 * 
+	 * @param header
+	 *            the header of the values to be read
+	 * 
+	 * @return the read result
+	 * 
+	 * @throws IOException
+	 *             if the result cannot be read
+	 */
 	public Object[] readResult(final DataType[] header) throws IOException {
 
 		final Object[] result = new Object[header.length];
@@ -117,14 +190,32 @@ public class Protocol implements Closeable {
 		return result;
 	}
 
+	/**
+	 * Writes a flag meaning end-of-response.
+	 * 
+	 * @throws IOException
+	 *             if the flag cannot be written
+	 */
 	public void writeEndOfResponse() throws IOException {
 		write(ResponseType.EOR);
 	}
 
+	/**
+	 * Writes a flag meaning end-of-meta data.
+	 * 
+	 * @throws IOException
+	 *             if the flag cannot be written
+	 */
 	public void writeEndOfMeta() throws IOException {
 		write(ResponseType.EOM);
 	}
 
+	/**
+	 * Writes a flag meaning cancelled.
+	 * 
+	 * @throws IOException
+	 *             if the flag cannot be written
+	 */
 	public void writeCancellation() throws IOException {
 		write(ResponseType.CANCEL);
 	}
@@ -538,10 +629,35 @@ public class Protocol implements Closeable {
 		}
 	}
 
+	/**
+	 * Internally used method to read the next {@code RetrievedValue} from the
+	 * input.
+	 * 
+	 * @return the {@code RetrievedValue} of the read
+	 * 
+	 * @throws IOException
+	 *             if the type cannot be read
+	 * 
+	 * @see ResponseType
+	 */
 	protected RetrievedValue _read() throws IOException {
 		return _read(is.readByte());
 	}
 
+	/**
+	 * Internally used method to read bytes from the input of the specified
+	 * {@code ResponseType}.
+	 * 
+	 * @param typeId
+	 *            the type to be read
+	 * 
+	 * @return the {@code RetrievedValue} of the read
+	 * 
+	 * @throws IOException
+	 *             if the type cannot be read
+	 * 
+	 * @see ResponseType
+	 */
 	protected RetrievedValue _read(final byte typeId) throws IOException {
 		final ResponseType type = ResponseType.find(typeId);
 

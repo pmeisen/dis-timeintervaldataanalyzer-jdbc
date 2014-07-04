@@ -33,8 +33,7 @@ public class TestTidaResultSet extends TestBaseForConnections {
 	 */
 	@Test
 	public void testResultSetExecuteUpdate() throws SQLException {
-		final Connection conn = DriverManager
-				.getConnection("jdbc:tida://localhost:7001");
+		final Connection conn = DriverManager.getConnection(getJdbc());
 		final Statement stmt = conn.createStatement();
 
 		// execute tells us what type we can expect
@@ -55,8 +54,7 @@ public class TestTidaResultSet extends TestBaseForConnections {
 	 */
 	@Test
 	public void testUpdateResultSet() throws SQLException {
-		final Connection conn = DriverManager
-				.getConnection("jdbc:tida://localhost:7001");
+		final Connection conn = DriverManager.getConnection(getJdbc());
 		assertTrue(conn instanceof TidaConnection);
 		final TidaConnection tConn = (TidaConnection) conn;
 
@@ -87,8 +85,7 @@ public class TestTidaResultSet extends TestBaseForConnections {
 	 */
 	@Test
 	public void testResultSetCloseOfResultSet() throws SQLException {
-		final Connection conn = DriverManager
-				.getConnection("jdbc:tida://localhost:7001");
+		final Connection conn = DriverManager.getConnection(getJdbc());
 		assertTrue(conn instanceof TidaConnection);
 		final TidaConnection tConn = (TidaConnection) conn;
 
@@ -204,8 +201,7 @@ public class TestTidaResultSet extends TestBaseForConnections {
 	 */
 	@Test
 	public void testResultSetTimeout() throws SQLException {
-		final Connection conn = DriverManager
-				.getConnection("jdbc:tida://localhost:7001");
+		final Connection conn = DriverManager.getConnection(getJdbc());
 		assertTrue(conn instanceof TidaConnection);
 		final TidaConnection tConn = (TidaConnection) conn;
 
@@ -272,8 +268,7 @@ public class TestTidaResultSet extends TestBaseForConnections {
 	 */
 	@Test
 	public void testExecuteUpdate() throws SQLException {
-		final Connection conn = DriverManager
-				.getConnection("jdbc:tida://localhost:7001");
+		final Connection conn = DriverManager.getConnection(getJdbc());
 		final Statement stmt = conn.createStatement();
 		stmt.executeUpdate("LOAD FROM 'classpath:/net/meisen/dissertation/model/testNumberModel.xml'");
 
@@ -301,7 +296,7 @@ public class TestTidaResultSet extends TestBaseForConnections {
 	@Test
 	public void testExecuteSelect() throws SQLException {
 		final TidaConnection conn = (TidaConnection) DriverManager
-				.getConnection("jdbc:tida://localhost:7001");
+				.getConnection(getJdbc());
 		final ProtocolManager manager = conn.getManager();
 		final TidaStatement stmt = conn.createStatement();
 		stmt.executeUpdate("LOAD FROM 'classpath:/net/meisen/dissertation/model/testNumberModel.xml'");
@@ -377,7 +372,7 @@ public class TestTidaResultSet extends TestBaseForConnections {
 		assertEquals(0.0, resCount.getDouble(5), 0.0);
 		assertEquals(0.0, resCount.getDouble(6), 0.0);
 		assertFalse(resCount.next());
-		
+
 		assertFalse(resCount.next());
 
 		// close everything

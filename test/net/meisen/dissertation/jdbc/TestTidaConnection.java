@@ -38,8 +38,7 @@ public class TestTidaConnection extends TestBaseForConnections {
 		final Properties properties = new Properties();
 		properties.setProperty(DriverProperties.PROPERTY_TIMEOUT, "1000");
 		for (int i = 0; i < 1000; i++) {
-			conn = DriverManager.getConnection("jdbc:tida://localhost:7001",
-					properties);
+			conn = DriverManager.getConnection(getJdbc(), properties);
 
 			// check the validity, must be true
 			assertTrue(conn.isValid(100));
@@ -65,7 +64,7 @@ public class TestTidaConnection extends TestBaseForConnections {
 		}
 
 		// create a new connection
-		conn = DriverManager.getConnection("jdbc:tida://localhost:7001");
+		conn = DriverManager.getConnection(getJdbc());
 
 		// shutdown the server and check the validity
 		server.shutdown();
@@ -88,8 +87,8 @@ public class TestTidaConnection extends TestBaseForConnections {
 		final Properties properties = new Properties();
 		properties.setProperty(DriverProperties.PROPERTY_TIMEOUT, "0");
 		for (int i = 0; i < 1000; i++) {
-			final Connection conn = DriverManager.getConnection(
-					"jdbc:tida://localhost:7001", properties);
+			final Connection conn = DriverManager.getConnection(getJdbc(),
+					properties);
 
 			// check the validity, must be true
 			assertTrue(conn.isValid(100));
@@ -130,7 +129,7 @@ public class TestTidaConnection extends TestBaseForConnections {
 
 		// create the connectionPool
 		final BoneCPDataSource ds = new BoneCPDataSource();
-		ds.setJdbcUrl("jdbc:tida://localhost:7001");
+		ds.setJdbcUrl(getJdbc());
 		ds.setUsername("any");
 		ds.setPassword("nopw");
 

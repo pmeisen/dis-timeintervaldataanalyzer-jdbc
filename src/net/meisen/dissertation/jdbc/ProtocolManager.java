@@ -4,16 +4,32 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
 import net.meisen.dissertation.jdbc.protocol.Protocol;
 
+/**
+ * Manager to handle the different {@code Protocol} instances for different
+ * owners. The manager assigns each {@code Protocol} created to one specific
+ * {@code owner}. The relationship is thereby 1:1, i.e. a {@code Protocol} can
+ * only be owned by one owner, and an owner can only own one {@code Protocol}.
+ * Additionally, each {@code Protocol} instance is using a specific
+ * {@code Socket} to communicate with the server. A {@code Protocol} belongs
+ * also to a specific {@code scope}, whereby a {@code scope} can contain several
+ * protocols.<br/>
+ * The idea behind this mechanism is simple. A {@code scope} groups
+ * {@code Protocol} instances. Whenever a scope dies (is closed) all the
+ * contained {@code Protocol} instances are closed as well. Additionally, an
+ * {@code owner} can be closed, if so the scope of the owning instance is closed
+ * as well as the owner itself.
+ * 
+ * @author pmeisen
+ * 
+ */
 public class ProtocolManager {
 	private final DriverProperties driverProperties;
 	private final Map<Protocol, Socket> protocols;
@@ -22,8 +38,15 @@ public class ProtocolManager {
 
 	private boolean closed;
 
-	public ProtocolManager(final DriverProperties driverProperties)
-			throws SQLException {
+	/**
+	 * Initializes the {@code ProtocolManager} with the specified
+	 * {@code DriverProperties}.
+	 * 
+	 * @param driverProperties
+	 *            the properties defining the connection to be established by
+	 *            the manager
+	 */
+	public ProtocolManager(final DriverProperties driverProperties) {
 		this.driverProperties = driverProperties;
 
 		this.protocols = new HashMap<Protocol, Socket>();
@@ -33,6 +56,14 @@ public class ProtocolManager {
 		this.closed = false;
 	}
 
+	/**
+	 * This method closes all the {@code owners} which should be closed on
+	 * commit (i.e. {@link BaseConnectionWrapper#doCloseOnCommit()} return
+	 * {@code true}).
+	 * 
+	 * @throws SQLException
+	 *             if an error occurs while closing the owner
+	 */
 	public synchronized void closeOnCommit() throws SQLException {
 		if (isClosed()) {
 			return;
@@ -48,6 +79,12 @@ public class ProtocolManager {
 		}
 	}
 
+	/**
+	 * Closes the manager and all the protocols managed by the instance.
+	 * 
+	 * @throws SQLException
+	 *             if the closing fails
+	 */
 	public synchronized void close() throws SQLException {
 		if (isClosed()) {
 			return;
@@ -63,39 +100,40 @@ public class ProtocolManager {
 		this.closed = true;
 	}
 
+	/**
+	 * Checks if the manager is closed.
+	 * 
+	 * @return {@code true} if the manager is closed, otherwise {@code false}
+	 */
 	public boolean isClosed() {
 		return closed;
 	}
 
+	/**
+	 * Gets the {@code DriverProperties} instance used by {@code this}.
+	 * 
+	 * @return the {@code DriverProperties} instance used by {@code this}
+	 */
 	public DriverProperties getDriverProperties() {
 		return driverProperties;
 	}
 
-	protected boolean isClosed(final Protocol protocol) {
-		final Socket socket = this.protocols.remove(protocol);
-
-		if (socket.isClosed() || socket.isInputShutdown()
-				|| socket.isOutputShutdown()) {
-
-			// mark the socket as closed
-			try {
-				close();
-			} catch (final SQLException e) {
-				// ignore
-			}
-			return true;
-		} else {
-			return false;
-		}
-	}
-
+	/**
+	 * Release the specified {@code owner}. Releasing an owner implies to
+	 * release the {@code Protocol} instance owned (if one is owned), as well as
+	 * all the {@code Protocol} instances which are in the scope of the
+	 * {@code owner}.
+	 * 
+	 * @param owner
+	 * @throws SQLException
+	 */
 	public synchronized void release(final BaseConnectionWrapper owner)
 			throws SQLException {
 		if (owner == null) {
 			return;
 		}
 
-		// cleanup the protocols owned
+		// cleanup the protocol owned
 		Protocol ownedProtocol = null;
 		for (final Entry<Protocol, BaseConnectionWrapper> entry : owners
 				.entrySet()) {
@@ -115,6 +153,17 @@ public class ProtocolManager {
 		}
 	}
 
+	/**
+	 * Releases the {@code protocol} by closing it. Additionally the
+	 * {@code protocol's} socket is closed and it is removed from the scope it
+	 * belongs to. Additionally the scope is removed if it is empty.
+	 * 
+	 * @param protocol
+	 *            the {@code Protocol} instance to be released
+	 * 
+	 * @throws SQLException
+	 *             if releasing the {@code protocol} led to an error
+	 */
 	protected void releaseProtocol(final Protocol protocol) throws SQLException {
 		if (protocol == null) {
 			return;
@@ -163,19 +212,37 @@ public class ProtocolManager {
 		}
 	}
 
-	public synchronized Protocol getProtocol(final BaseConnectionWrapper owner,
-			final BaseConnectionWrapper scope) throws SQLException {
+	/**
+	 * Creates a new {@code Protocol} for the specified {@code owner} within the
+	 * specified {@code scope}.
+	 * 
+	 * @param owner
+	 *            the {@code BaseConnectionWrapper} instance owning the created
+	 *            {@code Protocol}
+	 * @param scope
+	 *            the {@code BaseConnectionWrapper} instance which defines the
+	 *            scope
+	 * 
+	 * @return a created {@code Protocol}
+	 * 
+	 * @throws SQLException
+	 *             if no {@code Protocol} instance could be created
+	 */
+	public synchronized Protocol createProtocol(
+			final BaseConnectionWrapper owner, final BaseConnectionWrapper scope)
+			throws SQLException {
 		if (isClosed()) {
 			throw TidaSqlExceptions.createException(9004);
 		}
 
 		final Socket socket = new Socket();
 		try {
-			socket.connect(new InetSocketAddress("localhost", 7001),
-					driverProperties.getTimeout());
-			socket.setSoTimeout(getDriverProperties().getTimeout());
+			socket.connect(
+					new InetSocketAddress("localhost", driverProperties
+							.getPort()), driverProperties.getTimeout());
+			socket.setSoTimeout(driverProperties.getTimeout());
 		} catch (final IOException e) {
-			throw TidaSqlExceptions.createException(9002, e,
+			throw TidaSqlExceptions.createException(9001, e,
 					getDriverProperties().getRawJdbc());
 		}
 
@@ -228,10 +295,25 @@ public class ProtocolManager {
 		}
 	}
 
+	/**
+	 * Checks if the specified {@code owner} is really an owner of any
+	 * {@code Protocol}.
+	 * 
+	 * @param owner
+	 *            the instance to be checked
+	 * 
+	 * @return {@code true} if the {@code owner} owns a {@code Protocol},
+	 *         otherwise {@code false}
+	 */
 	public synchronized boolean isOwner(final BaseConnectionWrapper owner) {
 		return owners.containsValue(owner);
 	}
 
+	/**
+	 * Gets the amount of owners, managed by {@code this}.
+	 * 
+	 * @return the amount of owners, managed by {@code this}
+	 */
 	public synchronized int sizeOfOwners() {
 		return owners.size();
 	}

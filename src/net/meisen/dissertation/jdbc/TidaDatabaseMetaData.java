@@ -6,10 +6,23 @@ import java.sql.ResultSet;
 import java.sql.RowIdLifetime;
 import java.sql.SQLException;
 
+/**
+ * The database's meta information about the database itself.
+ * 
+ * @author pmeisen
+ * 
+ */
 public class TidaDatabaseMetaData extends BaseWrapper implements
 		DatabaseMetaData {
 	private TidaConnection connection;
 
+	/**
+	 * The default constructor retrieves the meta-data for the specified
+	 * {@code connection}.
+	 * 
+	 * @param connection
+	 *            the {@code TidaConnection} to retrieve the meta-data for
+	 */
 	public TidaDatabaseMetaData(final TidaConnection connection) {
 		this.connection = connection;
 	}
@@ -36,7 +49,6 @@ public class TidaDatabaseMetaData extends BaseWrapper implements
 
 	@Override
 	public boolean isReadOnly() throws SQLException {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
@@ -62,13 +74,26 @@ public class TidaDatabaseMetaData extends BaseWrapper implements
 
 	@Override
 	public String getDatabaseProductName() throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		// TODO retrieve from database
+		return Constants.getManifestInfo().getImplementationTitle();
 	}
 
 	@Override
 	public String getDatabaseProductVersion() throws SQLException {
+		// TODO retrieve from database
 		return Constants.getVersion().toStringRaw();
+	}
+
+	@Override
+	public int getDatabaseMajorVersion() throws SQLException {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public int getDatabaseMinorVersion() throws SQLException {
+		// TODO Auto-generated method stub
+		return 0;
 	}
 
 	@Override
@@ -319,91 +344,76 @@ public class TidaDatabaseMetaData extends BaseWrapper implements
 
 	@Override
 	public String getSchemaTerm() throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		return "";
 	}
 
 	@Override
 	public String getProcedureTerm() throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		return "";
 	}
 
 	@Override
 	public String getCatalogTerm() throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		return "";
 	}
 
 	@Override
 	public boolean isCatalogAtStart() throws SQLException {
-		// TODO Auto-generated method stub
-		return false;
+		return true;
 	}
 
 	@Override
 	public String getCatalogSeparator() throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		return ".";
 	}
 
 	@Override
 	public boolean supportsSchemasInDataManipulation() throws SQLException {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
 	public boolean supportsSchemasInProcedureCalls() throws SQLException {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
 	public boolean supportsSchemasInTableDefinitions() throws SQLException {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
 	public boolean supportsSchemasInIndexDefinitions() throws SQLException {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
 	public boolean supportsSchemasInPrivilegeDefinitions() throws SQLException {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
 	public boolean supportsCatalogsInDataManipulation() throws SQLException {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
 	public boolean supportsCatalogsInProcedureCalls() throws SQLException {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
 	public boolean supportsCatalogsInTableDefinitions() throws SQLException {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
 	public boolean supportsCatalogsInIndexDefinitions() throws SQLException {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
 	public boolean supportsCatalogsInPrivilegeDefinitions() throws SQLException {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
@@ -484,134 +494,112 @@ public class TidaDatabaseMetaData extends BaseWrapper implements
 
 	@Override
 	public int getMaxBinaryLiteralLength() throws SQLException {
-		// TODO Auto-generated method stub
 		return 0;
 	}
 
 	@Override
 	public int getMaxCharLiteralLength() throws SQLException {
-		// TODO Auto-generated method stub
 		return 0;
 	}
 
 	@Override
 	public int getMaxColumnNameLength() throws SQLException {
-		// TODO Auto-generated method stub
 		return 0;
 	}
 
 	@Override
 	public int getMaxColumnsInGroupBy() throws SQLException {
-		// TODO Auto-generated method stub
 		return 0;
 	}
 
 	@Override
 	public int getMaxColumnsInIndex() throws SQLException {
-		// TODO Auto-generated method stub
 		return 0;
 	}
 
 	@Override
 	public int getMaxColumnsInOrderBy() throws SQLException {
-		// TODO Auto-generated method stub
 		return 0;
 	}
 
 	@Override
 	public int getMaxColumnsInSelect() throws SQLException {
-		// TODO Auto-generated method stub
 		return 0;
 	}
 
 	@Override
 	public int getMaxColumnsInTable() throws SQLException {
-		// TODO Auto-generated method stub
 		return 0;
 	}
 
 	@Override
 	public int getMaxConnections() throws SQLException {
-		// TODO Auto-generated method stub
 		return 0;
 	}
 
 	@Override
 	public int getMaxCursorNameLength() throws SQLException {
-		// TODO Auto-generated method stub
 		return 0;
 	}
 
 	@Override
 	public int getMaxIndexLength() throws SQLException {
-		// TODO Auto-generated method stub
 		return 0;
 	}
 
 	@Override
 	public int getMaxSchemaNameLength() throws SQLException {
-		// TODO Auto-generated method stub
 		return 0;
 	}
 
 	@Override
 	public int getMaxProcedureNameLength() throws SQLException {
-		// TODO Auto-generated method stub
 		return 0;
 	}
 
 	@Override
 	public int getMaxCatalogNameLength() throws SQLException {
-		// TODO Auto-generated method stub
 		return 0;
 	}
 
 	@Override
 	public int getMaxRowSize() throws SQLException {
-		// TODO Auto-generated method stub
 		return 0;
 	}
 
 	@Override
 	public boolean doesMaxRowSizeIncludeBlobs() throws SQLException {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
 	public int getMaxStatementLength() throws SQLException {
-		// TODO Auto-generated method stub
 		return 0;
 	}
 
 	@Override
 	public int getMaxStatements() throws SQLException {
-		// TODO Auto-generated method stub
 		return 0;
 	}
 
 	@Override
 	public int getMaxTableNameLength() throws SQLException {
-		// TODO Auto-generated method stub
 		return 0;
 	}
 
 	@Override
 	public int getMaxTablesInSelect() throws SQLException {
-		// TODO Auto-generated method stub
-		return 0;
+		return 1;
 	}
 
 	@Override
 	public int getMaxUserNameLength() throws SQLException {
-		// TODO Auto-generated method stub
 		return 0;
 	}
 
 	@Override
 	public int getDefaultTransactionIsolation() throws SQLException {
-		// TODO Auto-generated method stub
-		return 0;
+		return Connection.TRANSACTION_NONE;
 	}
 
 	@Override
@@ -651,15 +639,21 @@ public class TidaDatabaseMetaData extends BaseWrapper implements
 	public ResultSet getProcedures(final String catalog,
 			final String schemaPattern, final String procedureNamePattern)
 			throws SQLException {
-		return null;
+		return new EmptyResultSet(new String[] { "PROCEDURE_CAT",
+				"PROCEDURE_SCHEM", "PROCEDURE_NAME", "", "", "", "REMARKS",
+				"PROCEDURE_TYPE", "SPECIFIC_NAME" });
 	}
 
 	@Override
 	public ResultSet getProcedureColumns(final String catalog,
 			final String schemaPattern, final String procedureNamePattern,
 			final String columnNamePattern) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		return new EmptyResultSet(new String[] { "PROCEDURE_CAT",
+				"PROCEDURE_SCHEM", "PROCEDURE_NAME", "COLUMN_NAME",
+				"COLUMN_TYPE", "DATA_TYPE", "TYPE_NAME", "PRECISION", "LENGTH",
+				"SCALE", "RADIX", "NULLABLE", "REMARKS", "COLUMN_DEF",
+				"SQL_DATA_TYPE", "SQL_DATETIME_SUB", "CHAR_OCTET_LENGTH",
+				"ORDINAL_POSITION", "IS_NULLABLE", "SPECIFIC_NAME" });
 	}
 
 	@Override
@@ -672,19 +666,17 @@ public class TidaDatabaseMetaData extends BaseWrapper implements
 
 	@Override
 	public ResultSet getSchemas() throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		return getSchemas("", null);
 	}
 
 	@Override
 	public ResultSet getCatalogs() throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		return new EmptyResultSet(new String[] { "TABLE_CAT" });
 	}
 
 	@Override
 	public ResultSet getTableTypes() throws SQLException {
-		// TODO Auto-generated method stub
+		// TODO
 		return null;
 	}
 
@@ -692,8 +684,22 @@ public class TidaDatabaseMetaData extends BaseWrapper implements
 	public ResultSet getColumns(final String catalog,
 			final String schemaPattern, final String tableNamePattern,
 			final String columnNamePattern) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		final String[] cols = new String[] { "TABLE_CAT", "TABLE_SCHEM",
+				"TABLE_NAME", "COLUMN_NAME", "DATA_TYPE", "TYPE_NAME",
+				"COLUMN_SIZE", "BUFFER_LENGTH", "DECIMAL_DIGITS",
+				"NUM_PREC_RADIX", "NULLABLE", "REMARKS", "COLUMN_DEF",
+				"SQL_DATA_TYPE", "SQL_DATETIME_SUB", "CHAR_OCTET_LENGTH",
+				"ORDINAL_POSITION", "IS_NULLABLE", "SCOPE_CATLOG",
+				"SCOPE_SCHEMA", "SCOPE_TABLE", "SOURCE_DATA_TYPE",
+				"IS_AUTOINCREMENT" };
+
+		if (catalog == null || "".equals(catalog)) {
+
+			// TODO
+			return null;
+		} else {
+			return new EmptyResultSet(cols);
+		}
 	}
 
 	@Override
@@ -723,29 +729,36 @@ public class TidaDatabaseMetaData extends BaseWrapper implements
 	@Override
 	public ResultSet getVersionColumns(final String catalog,
 			final String schema, final String table) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		return new EmptyResultSet(new String[] { "SCOPE", "COLUMN_NAME",
+				"DATA_TYPE", "TYPE_NAME", "COLUMN_SIZE", "BUFFER_LENGTH",
+				"DECIMAL_DIGITS", "PSEUDO_COLUMN" });
 	}
 
 	@Override
 	public ResultSet getPrimaryKeys(final String catalog, final String schema,
 			final String table) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		return new EmptyResultSet(new String[] { "TABLE_CAT", "TABLE_SCHEM",
+				"TABLE_NAME", "COLUMN_NAME", "KEY_SEQ", "PK_NAME" });
 	}
 
 	@Override
 	public ResultSet getImportedKeys(final String catalog, final String schema,
 			final String table) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		return new EmptyResultSet(new String[] { "PKTABLE_CAT",
+				"PKTABLE_SCHEM", "PKTABLE_NAME", "PKCOLUMN_NAME",
+				"FKTABLE_CAT", "FKTABLE_SCHEM", "FKTABLE_NAME",
+				"FKCOLUMN_NAME", "KEY_SEQ", "UPDATE_RULE", "DELETE_RULE",
+				"FK_NAME", "PK_NAME", "DEFERRABILITY" });
 	}
 
 	@Override
 	public ResultSet getExportedKeys(final String catalog, final String schema,
 			final String table) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		return new EmptyResultSet(new String[] { "PKTABLE_CAT",
+				"PKTABLE_SCHEM", "PKTABLE_NAME", "PKCOLUMN_NAME",
+				"FKTABLE_CAT", "FKTABLE_SCHEM", "FKTABLE_NAME",
+				"FKCOLUMN_NAME", "KEY_SEQ", "UPDATE_RULE", "DELETE_RULE",
+				"FK_NAME", "PK_NAME", "DEFERRABILITY" });
 	}
 
 	@Override
@@ -753,8 +766,11 @@ public class TidaDatabaseMetaData extends BaseWrapper implements
 			final String parentSchema, final String parentTable,
 			final String foreignCatalog, final String foreignSchema,
 			final String foreignTable) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		return new EmptyResultSet(new String[] { "PKTABLE_CAT",
+				"PKTABLE_SCHEM", "PKTABLE_NAME", "PKCOLUMN_NAME",
+				"FKTABLE_CAT", "FKTABLE_SCHEM", "FKTABLE_NAME",
+				"FKCOLUMN_NAME", "KEY_SEQ", "UPDATE_RULE", "DELETE_RULE",
+				"FK_NAME", "PK_NAME", "DEFERRABILITY" });
 	}
 
 	@Override
@@ -767,51 +783,52 @@ public class TidaDatabaseMetaData extends BaseWrapper implements
 	public ResultSet getIndexInfo(final String catalog, final String schema,
 			final String table, final boolean unique, final boolean approximate)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		return new EmptyResultSet(new String[] { "TABLE_CAT", "TABLE_SCHEM",
+				"TABLE_NAME", "NON_UNIQUE", "INDEX_QUALIFIER", "INDEX_NAME",
+				"TYPE", "ORDINAL_POSITION", "COLUMN_NAME", "ASC_OR_DESC",
+				"CARDINALITY", "PAGES", "FILTER_CONDITION" });
 	}
 
 	@Override
 	public boolean supportsResultSetType(final int type) throws SQLException {
-		// TODO Auto-generated method stub
-		return false;
+		return ResultSet.TYPE_FORWARD_ONLY == type;
 	}
 
 	@Override
 	public boolean supportsResultSetConcurrency(final int type,
 			final int concurrency) throws SQLException {
-		// TODO Auto-generated method stub
-		return false;
+		return ResultSet.TYPE_FORWARD_ONLY == type
+				&& ResultSet.CONCUR_READ_ONLY == concurrency;
 	}
 
 	@Override
 	public boolean ownUpdatesAreVisible(final int type) throws SQLException {
-		return false;
+		return ResultSet.TYPE_FORWARD_ONLY == type;
 	}
 
 	@Override
 	public boolean ownDeletesAreVisible(final int type) throws SQLException {
-		return false;
+		return ResultSet.TYPE_FORWARD_ONLY == type;
 	}
 
 	@Override
 	public boolean ownInsertsAreVisible(final int type) throws SQLException {
-		return false;
+		return ResultSet.TYPE_FORWARD_ONLY == type;
 	}
 
 	@Override
 	public boolean othersUpdatesAreVisible(final int type) throws SQLException {
-		return false;
+		return ResultSet.TYPE_FORWARD_ONLY == type;
 	}
 
 	@Override
 	public boolean othersDeletesAreVisible(final int type) throws SQLException {
-		return false;
+		return ResultSet.TYPE_FORWARD_ONLY == type;
 	}
 
 	@Override
 	public boolean othersInsertsAreVisible(final int type) throws SQLException {
-		return false;
+		return ResultSet.TYPE_FORWARD_ONLY == type;
 	}
 
 	@Override
@@ -835,10 +852,12 @@ public class TidaDatabaseMetaData extends BaseWrapper implements
 	}
 
 	@Override
-	public ResultSet getUDTs(String catalog, String schemaPattern,
-			String typeNamePattern, int[] types) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+	public ResultSet getUDTs(final String catalog, final String schemaPattern,
+			final String typeNamePattern, final int[] types)
+			throws SQLException {
+		return new EmptyResultSet(
+				new String[] { "TYPE_CAT", "TYPE_SCHEM", "TYPE_NAME",
+						"CLASS_NAME", "DATA_TYPE", "REMARKS", "BASE_TYPE" });
 	}
 
 	@Override
@@ -859,8 +878,7 @@ public class TidaDatabaseMetaData extends BaseWrapper implements
 
 	@Override
 	public boolean supportsMultipleOpenResults() throws SQLException {
-		// TODO Auto-generated method stub
-		return false;
+		return true;
 	}
 
 	@Override
@@ -872,23 +890,30 @@ public class TidaDatabaseMetaData extends BaseWrapper implements
 	public ResultSet getSuperTypes(final String catalog,
 			final String schemaPattern, final String typeNamePattern)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		return new EmptyResultSet(new String[] { "TYPE_CAT", "TYPE_SCHEM",
+				"TYPE_NAME", "SUPERTYPE_CAT", "SUPERTYPE_SCHEM",
+				"SUPERTYPE_NAME" });
 	}
 
 	@Override
-	public ResultSet getSuperTables(String catalog, String schemaPattern,
-			String tableNamePattern) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public ResultSet getAttributes(String catalog, String schemaPattern,
-			String typeNamePattern, String attributeNamePattern)
+	public ResultSet getSuperTables(final String catalog,
+			final String schemaPattern, final String tableNamePattern)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		return new EmptyResultSet(new String[] { "TABLE_CAT", "TABLE_SCHEM",
+				"TABLE_NAME", "SUPERTABLE_NAME" });
+	}
+
+	@Override
+	public ResultSet getAttributes(final String catalog,
+			final String schemaPattern, final String typeNamePattern,
+			final String attributeNamePattern) throws SQLException {
+		return new EmptyResultSet(new String[] { "TYPE_CAT", "TYPE_SCHEM",
+				"TYPE_NAME", "ATTR_NAME", "DATA_TYPE", "ATTR_TYPE_NAME",
+				"ATTR_SIZE", "DECIMAL_DIGITS", "NUM_PREC_RADIX", "NULLABLE",
+				"REMARKS", "ATTR_DEF", "SQL_DATA_TYPE", "SQL_DATETIME_SUB",
+				"CHAR_OCTET_LENGTH", "ORDINAL_POSITION", "IS_NULLABLE",
+				"SCOPE_CATALOG", "SCOPE_SCHEMA", "SCOPE_TABLE",
+				"SOURCE_DATA_TYPE" });
 	}
 
 	@Override
@@ -901,18 +926,6 @@ public class TidaDatabaseMetaData extends BaseWrapper implements
 	@Override
 	public int getResultSetHoldability() throws SQLException {
 		return ResultSet.HOLD_CURSORS_OVER_COMMIT;
-	}
-	
-	@Override
-	public int getDatabaseMajorVersion() throws SQLException {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	@Override
-	public int getDatabaseMinorVersion() throws SQLException {
-		// TODO Auto-generated method stub
-		return 0;
 	}
 
 	@Override
@@ -948,8 +961,14 @@ public class TidaDatabaseMetaData extends BaseWrapper implements
 	@Override
 	public ResultSet getSchemas(final String catalog, final String schemaPattern)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		if (catalog == null || "".equals(catalog)) {
+
+			// return the one and only schema
+			return null;
+		} else {
+			return new EmptyResultSet(new String[] { "TABLE_SCHEM",
+					"TABLE_CATALOG" });
+		}
 	}
 
 	@Override
@@ -972,16 +991,20 @@ public class TidaDatabaseMetaData extends BaseWrapper implements
 	public ResultSet getFunctions(final String catalog,
 			final String schemaPattern, final String functionNamePattern)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		return new EmptyResultSet(new String[] { "FUNCTION_CAT",
+				"FUNCTION_SCHEM", "FUNCTION_NAME", "REMARKS", "FUNCTION_TYPE",
+				"SPECIFIC_NAME" });
 	}
 
 	@Override
 	public ResultSet getFunctionColumns(final String catalog,
 			final String schemaPattern, final String functionNamePattern,
 			final String columnNamePattern) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		return new EmptyResultSet(new String[] { "FUNCTION_CAT",
+				"FUNCTION_SCHEM", "FUNCTION_NAME", "COLUMN_NAME",
+				"COLUMN_TYPE", "DATA_TYPE", "TYPE_NAME", "PRECISION", "LENGTH",
+				"SCALE", "RADIX", "NULLABLE", "REMARKS", "CHAR_OCTET_LENGTH",
+				"ORDINAL_POSITION", "IS_NULLABLE", "SPECIFIC_NAME" });
 	}
 
 }

@@ -1,5 +1,7 @@
 package net.meisen.dissertation.jdbc;
 
+import java.util.Properties;
+
 import net.meisen.dissertation.server.TidaServer;
 
 import org.junit.After;
@@ -18,21 +20,22 @@ public abstract class TestBaseForConnections {
 	 */
 	protected TidaServer server;
 
+	private int port;
+
 	/**
 	 * Start a test-server for testing purposes.
-	 * 
-	 * @throws InterruptedException
-	 *             if the server cannot be started
 	 */
 	@Before
-	public void startServer() throws InterruptedException {
-		server = TidaServer.create();
-		server.startAsync();
+	public void startServer() {
+		port = 6666;
 
-		// wait for the server to start
-		while (!server.isRunning()) {
-			Thread.sleep(50);
-		}
+		final Properties properties = new Properties();
+		properties.setProperty("tida.server.tsql.port", "" + getPort());
+		properties.setProperty("tida.server.tsql.enabled", "true");
+		properties.setProperty("tida.server.http.enabled", "false");
+
+		server = TidaServer.create(properties);
+		server.startAsync();
 	}
 
 	/**
@@ -41,5 +44,23 @@ public abstract class TestBaseForConnections {
 	@After
 	public void shutdownServer() {
 		server.shutdown(true);
+	}
+
+	/**
+	 * Gets the used port of the server.
+	 * 
+	 * @return the used port of the server
+	 */
+	public int getPort() {
+		return port;
+	}
+
+	/**
+	 * Gets the JDBC-URL to connect to the server.
+	 * 
+	 * @return the JDBC-URL to connect to the server
+	 */
+	public String getJdbc() {
+		return "jdbc:tida://localhost:" + getPort();
 	}
 }

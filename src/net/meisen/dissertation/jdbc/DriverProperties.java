@@ -3,8 +3,6 @@ package net.meisen.dissertation.jdbc;
 import java.sql.DriverPropertyInfo;
 import java.util.Properties;
 
-import net.meisen.dissertation.jdbc.protocol.IResponseHandler;
-
 /**
  * The {@code DriverProperties} contain the set properties for the server, i.e.
  * {@code host} and {@code port}.
@@ -13,12 +11,33 @@ import net.meisen.dissertation.jdbc.protocol.IResponseHandler;
  * 
  */
 public class DriverProperties {
+	/**
+	 * Property to specify the timeout of the client-connection in milliseconds.
+	 */
 	public static final String PROPERTY_TIMEOUT = "timeout";
+	/**
+	 * Property to specify the handler class used to handle resource requests.
+	 */
 	public static final String PROPERTY_HANDLERCLASS = "handlerclass";
+	/**
+	 * Property to specify the host of the tida-server to connect to.
+	 */
 	public static final String PROPERTY_PORT = "port";
+	/**
+	 * Property to specify the port of the tida-server to connect to.
+	 */
 	public static final String PROPERTY_HOST = "host";
+	/**
+	 * Property to specify the user used to connect to the tida-server.
+	 */
 	public static final String PROPERTY_USER = "user";
+	/**
+	 * Property to specify the password used to connect to the tida-server.
+	 */
 	public static final String PROPERTY_PASSWORD = "password";
+	/**
+	 * Property used to retrieve the raw-url used.
+	 */
 	public static final String PROPERTY_RAWURL = "rawurl";
 
 	private final String host;
@@ -30,8 +49,6 @@ public class DriverProperties {
 
 	private String handlerClass = QueryResponseHandler.class.getName();
 	private int timeout = 0;
-
-	private IResponseHandler handler = null;
 
 	/**
 	 * Constructor defining the port and host of the server.
@@ -118,26 +135,64 @@ public class DriverProperties {
 				"" + getPort());
 	}
 
+	/**
+	 * Gets the timeout in milliseconds used for the connection to the server.
+	 * If the client does not use the connection within the time, it is
+	 * automatically disconnected.
+	 * 
+	 * @return the timeout in milliseconds
+	 */
 	public int getTimeout() {
 		return timeout;
 	}
 
+	/**
+	 * Sets the timeout in milliseconds used for the connection to the server.
+	 * If the client does not use the connection within the time, it is
+	 * automatically disconnected.
+	 * 
+	 * @param timeout
+	 *            the timeout in milliseconds
+	 */
 	public void setTimeout(final int timeout) {
 		this.timeout = timeout;
 	}
 
+	/**
+	 * Gets the class of the {@code QueryResponseHandler} to be used.
+	 * 
+	 * @return the class of the {@code QueryResponseHandler} to be used
+	 */
 	public String getHandlerClass() {
 		return handlerClass;
 	}
 
+	/**
+	 * Sets the class of the {@code QueryResponseHandler} to be used.
+	 * 
+	 * @param handlerClass
+	 *            the class of the {@code QueryResponseHandler} to be used
+	 */
 	public void setHandlerClass(final String handlerClass) {
 		this.handlerClass = handlerClass;
 	}
 
+	/**
+	 * Get the raw jdbc-url used to connect to the driver.
+	 * 
+	 * @return the raw jdbc-url used to connect to the driver
+	 */
 	public String getRawJdbc() {
 		return rawJdbc;
 	}
 
+	/**
+	 * Gets {@code this} as {@code DriverPropertyInfo}.
+	 * 
+	 * @return {@code this} as {@code DriverPropertyInfo}
+	 * 
+	 * @see DriverPropertyInfo
+	 */
 	public DriverPropertyInfo[] getDriverPropertyInfo() {
 		final DriverPropertyInfo hostProp = new DriverPropertyInfo(
 				DriverProperties.PROPERTY_HOST, getHost());
@@ -162,7 +217,7 @@ public class DriverProperties {
 		final DriverPropertyInfo timeoutProp = new DriverPropertyInfo(
 				DriverProperties.PROPERTY_TIMEOUT, "" + getTimeout());
 		portProp.required = false;
-		portProp.description = "the timeout of the client-connection";
+		portProp.description = "the timeout of the client-connection in milliseconds";
 
 		final DriverPropertyInfo handlerProp = new DriverPropertyInfo(
 				DriverProperties.PROPERTY_HANDLERCLASS, getHandlerClass());
@@ -174,6 +229,15 @@ public class DriverProperties {
 				passwordProp, timeoutProp, handlerProp };
 	}
 
+	/**
+	 * Get the property for the specified {@code name}.
+	 * 
+	 * @param name
+	 *            the property to get the value for
+	 * 
+	 * @return the value of the property, or {@code null} if the property is
+	 *         unknown
+	 */
 	public String get(final String name) {
 		if (PROPERTY_PORT.equals(name)) {
 			return "" + getPort();
@@ -194,6 +258,13 @@ public class DriverProperties {
 		}
 	}
 
+	/**
+	 * Gets the properties of {@code this} as {@code Properties}.
+	 * 
+	 * @return the properties of {@code this} as {@code Properties}
+	 * 
+	 * @see Properties
+	 */
 	public Properties getProperties() {
 		final Properties prop = new Properties();
 		prop.setProperty(PROPERTY_PORT, "" + getPort());
@@ -207,6 +278,12 @@ public class DriverProperties {
 		return prop;
 	}
 
+	/**
+	 * Applies the default properties to {@code this}.
+	 * 
+	 * @param defaults
+	 *            the default properties to be applied
+	 */
 	public void applyDefaults(final Properties defaults) {
 		if (defaults == null) {
 			return;

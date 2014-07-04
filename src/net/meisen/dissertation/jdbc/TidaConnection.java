@@ -19,14 +19,27 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Properties;
 
+/**
+ * A {@code Connection} instance, used to establish connections with a server
+ * instance over tcp/ip.
+ * 
+ * @author pmeisen
+ * 
+ */
 public class TidaConnection extends BaseConnectionWrapper implements Connection {
 	private final DriverProperties driverProperties;
 
 	private boolean readOnly;
 	private int holdability = -1;
 
-	public TidaConnection(final DriverProperties driverProperties)
-			throws SQLException {
+	/**
+	 * Constructor to create a connection based on the specified
+	 * {@code driverProperties}.
+	 * 
+	 * @param driverProperties
+	 *            the properties to be used by the connection
+	 */
+	public TidaConnection(final DriverProperties driverProperties) {
 		super(driverProperties);
 
 		this.driverProperties = driverProperties;

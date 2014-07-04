@@ -6,8 +6,25 @@ import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.util.Collections;
 
+/**
+ * Class providing all the exceptions fired by the driver.
+ * 
+ * @author pmeisen
+ * 
+ */
 public class TidaSqlExceptions {
 
+	/**
+	 * Creates a {@code SQLClientInfoException} for the specified {@code number}
+	 * and the specified {@code parameter}.
+	 * 
+	 * @param number
+	 *            the number of the exception to be created
+	 * @param parameter
+	 *            the parameters to be replaced within the exception
+	 * 
+	 * @return the created exception
+	 */
 	public static SQLClientInfoException createClientInfoException(
 			final int number, final String... parameter) {
 		final String msg = "[" + number + "] "
@@ -17,11 +34,36 @@ public class TidaSqlExceptions {
 				Collections.<String, ClientInfoStatus> emptyMap());
 	}
 
+	/**
+	 * Creates a {@code SQLFeatureNotSupportedException} for the specified
+	 * {@code number} and the specified {@code parameter}.
+	 * 
+	 * @param number
+	 *            the number of the exception to be created
+	 * @param parameter
+	 *            the parameters to be replaced within the exception
+	 * 
+	 * @return the created exception
+	 */
 	public static SQLFeatureNotSupportedException createNotSupportedException(
 			final int number, final String... parameter) {
 		return createNotSupportedException(number, null, parameter);
 	}
 
+	/**
+	 * Creates a {@code SQLFeatureNotSupportedException} for the specified
+	 * {@code number}, with the specified {@code reason} and the specified
+	 * {@code parameter}.
+	 * 
+	 * @param number
+	 *            the number of the exception to be created
+	 * @param reason
+	 *            the reason of the exception - if any, otherwise {@code false}
+	 * @param parameter
+	 *            the parameters to be replaced within the exception
+	 * 
+	 * @return the created exception
+	 */
 	public static SQLFeatureNotSupportedException createNotSupportedException(
 			final int number, final Exception reason, final String... parameter) {
 		final String msg = "[" + number + "] "
@@ -35,15 +77,47 @@ public class TidaSqlExceptions {
 		}
 	}
 
+	/**
+	 * Creates a {@code SQLException} for the specified {@code number}.
+	 * 
+	 * @param number
+	 *            the number of the exception to be created
+	 * 
+	 * @return the created exception
+	 */
 	public static SQLException createException(final int number) {
 		return createException(number, null, (String[]) null);
 	}
 
+	/**
+	 * Creates a {@code SQLException} for the specified {@code number} and the
+	 * specified {@code parameter}.
+	 * 
+	 * @param number
+	 *            the number of the exception to be created
+	 * @param parameter
+	 *            the parameters to be replaced within the exception
+	 * 
+	 * @return the created exception
+	 */
 	public static SQLException createException(final int number,
 			final String... parameter) {
 		return createException(number, null, parameter);
 	}
 
+	/**
+	 * Creates a {@code SQLException} for the specified {@code number}, with the
+	 * specified {@code reason} and the specified {@code parameter}.
+	 * 
+	 * @param number
+	 *            the number of the exception to be created
+	 * @param reason
+	 *            the reason of the exception - if any, otherwise {@code false}
+	 * @param parameter
+	 *            the parameters to be replaced within the exception
+	 * 
+	 * @return the created exception
+	 */
 	public static SQLException createException(final int number,
 			final Exception reason, final String... parameter) {
 		final String msg = "[" + number + "] "
@@ -56,9 +130,20 @@ public class TidaSqlExceptions {
 		}
 	}
 
+	/**
+	 * Internally used method to resolve an error-number to a message.
+	 * 
+	 * @param number
+	 *            the number of the message to be retrieved
+	 * @param parameter
+	 *            the parameters to be replaced within the message
+	 * 
+	 * @return the defined message for the specified {@code number} with the
+	 *         replaced {@code parameter}
+	 */
 	protected static String createMessage(final int number,
 			final String... parameter) {
-		
+
 		switch (number) {
 		case 1000:
 			return "Transaction isolation levels are not supported.";
@@ -225,6 +310,20 @@ public class TidaSqlExceptions {
 			return "The result-set is attached to an update-statement and has therefore no columns.";
 		case 6002:
 			return "The column-index '" + parameter[0] + "' is invalid.";
+		case 7000:
+			return "The column-index of the result-set starts with 1 and has a maximum value of "
+					+ parameter[0] + ".";
+		case 7002:
+			return "The column-label of the result-set can only be one of '"
+					+ parameter[0] + "'.";
+		case 7004:
+			return "The result-set does not support manipulation of any kind.";
+		case 7005:
+			return "The result-set does not support rowIds.";
+		case 7998:
+			return "The result-set is closed.";
+		case 7999:
+			return "An empty result-set does not support any value retrieval.";
 		case 9000:
 			return "The wrapper does not support the type '" + parameter[0]
 					+ "'.";

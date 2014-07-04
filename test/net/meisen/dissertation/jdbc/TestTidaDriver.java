@@ -172,19 +172,11 @@ public class TestTidaDriver {
 	 * 
 	 * @throws SQLException
 	 *             if an sql problem occures
-	 * @throws InterruptedException
-	 *             if waiting for the server failed
 	 */
 	@Test
-	public void testUsageOfDriverManager() throws SQLException,
-			InterruptedException {
+	public void testUsageOfDriverManager() throws SQLException {
 		final TidaServer server = TidaServer.create();
 		server.startAsync();
-
-		// wait for the server to start
-		while (!server.isRunning()) {
-			Thread.sleep(50);
-		}
 
 		// check if the connections can be established
 		try {

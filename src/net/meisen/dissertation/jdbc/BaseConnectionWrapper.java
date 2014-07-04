@@ -17,8 +17,7 @@ public abstract class BaseConnectionWrapper extends BaseWrapper {
 	private boolean closed;
 	private Protocol protocol;
 
-	public BaseConnectionWrapper(final DriverProperties driverProperties)
-			throws SQLException {
+	public BaseConnectionWrapper(final DriverProperties driverProperties) {
 		this(new ProtocolManager(driverProperties), null);
 	}
 
@@ -79,7 +78,7 @@ public abstract class BaseConnectionWrapper extends BaseWrapper {
 			parent.setUser(this);
 			this.protocol = parent.getProtocol();
 		} else if (this.protocol == null) {
-			this.protocol = manager.getProtocol(this, getProtocolScope());
+			this.protocol = manager.createProtocol(this, getProtocolScope());
 		} else if (!isProtocolAvailable()) {
 			throw TidaSqlExceptions.createException(9005, getDriverProperties()
 					.getRawJdbc());
