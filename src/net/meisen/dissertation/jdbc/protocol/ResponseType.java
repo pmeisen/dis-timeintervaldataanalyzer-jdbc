@@ -1,5 +1,11 @@
 package net.meisen.dissertation.jdbc.protocol;
 
+/**
+ * The type of the response send by the server (typically) or the client.
+ * 
+ * @author pmeisen
+ * 
+ */
 public enum ResponseType {
 
 	/**
@@ -136,10 +142,26 @@ public enum ResponseType {
 		this.fixedSize = fixedSize;
 	}
 
+	/**
+	 * Gets the byte used to identify the {@code ResponseType}.
+	 * 
+	 * @return the byte used to identify the {@code ResponseType}
+	 */
 	public byte getId() {
 		return id;
 	}
 
+	/**
+	 * Resolve the {@code ResponseType} according to the specified {@code id}.
+	 * The method returns {@code null} if no {@code ResponseType} for the
+	 * specified {@code id} can be found.
+	 * 
+	 * @param id
+	 *            the identifier of the {@code ResponseType} to get
+	 * 
+	 * @return the {@code ResponseType} for the specified {@code id} or
+	 *         {@code null} if unknown
+	 */
 	public static ResponseType find(final byte id) {
 		for (final ResponseType type : ResponseType.values()) {
 			if (id == type.getId()) {
@@ -150,18 +172,47 @@ public enum ResponseType {
 		return null;
 	}
 
+	/**
+	 * Checks if the response has further data than just the marker of the type.
+	 * 
+	 * @return {@code true} if further data has to be read, otherwise
+	 *         {@code false}; later is typical for markers
+	 */
 	public boolean hasData() {
 		return hasData;
 	}
 
+	/**
+	 * Checks if the response is chunked in pieces, i.e. several reads have to
+	 * be performed to read the complete response (e.g. when arrays are send).
+	 * Chunked data normally sends an amount of chunks, together with a size of
+	 * each chunk (e.g. {@code 2 4 xxxx 3 xxx}, means 2 chunks are send, first
+	 * chunk is of size 4 with the four data bytes, second byte is of size 3
+	 * with the three data bytes).
+	 * 
+	 * @return {@code true} if the data is chunked, otherwise {@code false}
+	 */
 	public boolean isChunked() {
 		return chunked;
 	}
 
+	/**
+	 * Checks if the size of the response is fixed and therefore not wrapped
+	 * within the response, because it is commonly known.
+	 * 
+	 * @return {@code true} if the size is fixed, otherwise {@code false}
+	 */
 	public boolean isFixed() {
 		return fixedSize > 0;
 	}
 
+	/**
+	 * Gets the fixed size of the response if any, otherwise {@code -1} is
+	 * returned.
+	 * 
+	 * @return the fixed size of the response if any, otherwise {@code -1} is
+	 *         returned
+	 */
 	public int getFixedSize() {
 		return fixedSize;
 	}
