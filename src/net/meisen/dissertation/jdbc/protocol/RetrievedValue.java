@@ -5,21 +5,54 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.Arrays;
 
+/**
+ * A {@code RetrievedValue} is the value retrieved from the server or the client
+ * during a communication.
+ * 
+ * @author pmeisen
+ * 
+ */
 public class RetrievedValue {
 
-	public final ResponseType type;
-	public final byte[] bytes;
+	/**
+	 * The type of the retrieved value.
+	 */
+	private final ResponseType type;
+	/**
+	 * The bytes of the value retrieved
+	 */
+	private final byte[] bytes;
 
+	/**
+	 * The {@code InputStream} to read from.
+	 */
 	protected DataInputStream dis;
 
+	/**
+	 * Creates a retrieved value of the specified {@code type} with the
+	 * specified read {@code bytes}.
+	 * 
+	 * @param type
+	 *            the type of the {@code RetrievedValue}
+	 * @param bytes
+	 *            the bytes read
+	 */
 	public RetrievedValue(final ResponseType type, final byte[] bytes) {
 		this.type = type;
 		this.bytes = bytes;
 	}
 
+	/**
+	 * Checks if {@code this} is one of the specified {@code types}.
+	 * 
+	 * @param types
+	 *            the types to be checked
+	 * @return {@code true} if {@code this} is on eof the specified types,
+	 *         otherwise {@code false}
+	 */
 	public boolean is(final ResponseType... types) {
 		for (final ResponseType type : types) {
-			if (this.type.equals(type)) {
+			if (this.getType().equals(type)) {
 				return true;
 			}
 		}
@@ -71,9 +104,9 @@ public class RetrievedValue {
 	public DataType[] getHeader() throws IOException {
 		checkType(ResponseType.HEADER);
 
-		final DataType[] dts = new DataType[bytes.length];
-		for (int i = 0; i < bytes.length; i++) {
-			final byte id = bytes[i];
+		final DataType[] dts = new DataType[getBytes().length];
+		for (int i = 0; i < getBytes().length; i++) {
+			final byte id = getBytes()[i];
 			final DataType dt = DataType.find(id);
 			dts[i] = dt;
 		}
@@ -83,17 +116,17 @@ public class RetrievedValue {
 
 	public String getMessage() throws IOException {
 		checkType(ResponseType.MESSAGE);
-		return new String(bytes, "UTF8");
+		return new String(getBytes(), "UTF8");
 	}
 
 	public String getResourceDemand() throws IOException {
 		checkType(ResponseType.RESOURCE_DEMAND);
-		return new String(bytes, "UTF8");
+		return new String(getBytes(), "UTF8");
 	}
 
 	public byte[] getResource() throws IOException {
 		checkType(ResponseType.RESOURCE);
-		return bytes;
+		return getBytes();
 	}
 
 	public boolean isEOR() {
@@ -107,7 +140,8 @@ public class RetrievedValue {
 	public void checkType(final ResponseType... expected) {
 		if (!is(expected)) {
 			throw new IllegalStateException("Expected to read one of '"
-					+ Arrays.asList(expected) + "', but got a '" + type + "'.");
+					+ Arrays.asList(expected) + "', but got a '" + getType()
+					+ "'.");
 		}
 	}
 
@@ -123,12 +157,16 @@ public class RetrievedValue {
 
 	protected DataInputStream getDataInputStream() {
 		if (dis == null) {
-			dis = new DataInputStream(new ByteArrayInputStream(bytes));
+			dis = new DataInputStream(new ByteArrayInputStream(getBytes()));
 		}
 		return dis;
 	}
 
 	public ResponseType getType() {
 		return type;
+	}
+
+	public byte[] getBytes() {
+		return bytes;
 	}
 }

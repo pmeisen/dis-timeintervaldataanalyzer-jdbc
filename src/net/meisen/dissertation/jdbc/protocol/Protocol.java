@@ -622,7 +622,7 @@ public class Protocol implements Closeable {
 			throws WrappedException {
 		if (value.is(ResponseType.EXCEPTION)) {
 			try {
-				throw new WrappedException(new String(value.bytes, "UTF8"));
+				throw new WrappedException(new String(value.getBytes(), "UTF8"));
 			} catch (final UnsupportedEncodingException e) {
 				// ignore
 			}

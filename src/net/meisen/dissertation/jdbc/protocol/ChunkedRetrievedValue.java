@@ -34,7 +34,7 @@ public class ChunkedRetrievedValue extends RetrievedValue {
 	public int[] getInts() throws IOException {
 		checkType(ResponseType.INT, ResponseType.INT_ARRAY);
 
-		if (this.type.equals(ResponseType.INT)) {
+		if (this.getType().equals(ResponseType.INT)) {
 			return new int[] { getInt() };
 		} else {
 			final int[] ints = new int[chunks.length];
@@ -53,7 +53,7 @@ public class ChunkedRetrievedValue extends RetrievedValue {
 	public Integer[] getIntegers() throws IOException {
 		checkType(ResponseType.INT, ResponseType.INT_ARRAY);
 
-		if (this.type.equals(ResponseType.INT)) {
+		if (this.getType().equals(ResponseType.INT)) {
 			return new Integer[] { getInt() };
 		} else {
 			final Integer[] ints = new Integer[chunks.length];
