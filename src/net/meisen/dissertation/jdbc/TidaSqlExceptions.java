@@ -209,6 +209,13 @@ public class TidaSqlExceptions {
 			return "The execution of statement '" + parameter[0]
 					+ "' failed because of an interception: " + parameter[1]
 					+ ".";
+		case 3007:
+			return "The place-holders index '" + parameter[0] + "' is invalid.";
+		case 3008:
+			return "The statement does not support the data-type '"
+					+ parameter[0] + "'.";
+		case 3009:
+			return "The date '" + parameter[0] + "' cannot be parsed to UTC.";
 		case 3999:
 			return "The statement is already closed.";
 		case 4000:

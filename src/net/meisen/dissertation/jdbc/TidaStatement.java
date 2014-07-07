@@ -22,9 +22,18 @@ import java.sql.SQLXML;
 import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.text.DateFormat;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.List;
+import java.util.ListIterator;
+import java.util.Locale;
+import java.util.TimeZone;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -32,6 +41,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * The implementation of a {@code Statement} as well as an
@@ -42,7 +53,8 @@ import java.util.concurrent.TimeoutException;
  */
 public class TidaStatement extends BaseConnectionWrapper implements Statement,
 		PreparedStatement {
-	private boolean todoMarker;
+	private final static Pattern placeholderPattern = Pattern
+			.compile("'(?:(?:\\\\')|[^'])*'|(\\?)");
 
 	/**
 	 * The enumeration is used to determine the type of the current
@@ -70,7 +82,129 @@ public class TidaStatement extends BaseConnectionWrapper implements Statement,
 		USED_BY_STATEMENT;
 	}
 
+	/**
+	 * Helper class which defines a place-holder within a {@code Statement}.
+	 * 
+	 * @author pmeisen
+	 * 
+	 */
+	public final static class Placeholder {
+		private final static DecimalFormat decFormatter;
+		private final static SimpleDateFormat dateFormatter;
+
+		static {
+
+			// set the dateFormatter
+			dateFormatter = new SimpleDateFormat();
+			dateFormatter.applyPattern("dd.MM.yyyy HH:mm:ss");
+			dateFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+			// set the decimalFormatter
+			final DecimalFormatSymbols otherSymbols = new DecimalFormatSymbols(
+					Locale.US);
+			otherSymbols.setDecimalSeparator('.');
+			otherSymbols.setGroupingSeparator(',');
+
+			decFormatter = new DecimalFormat("##############0.###############");
+			decFormatter.setGroupingUsed(false);
+		}
+
+		private final int pos;
+		private Object value;
+
+		/**
+		 * Default constructor which just specifies the position of the
+		 * place-holder, the value is set to {@code null}.
+		 * 
+		 * @param pos
+		 *            the position of the place-holder
+		 */
+		public Placeholder(final int pos) {
+			this(pos, null);
+		}
+
+		/**
+		 * Constructor to specify the position and the value of the
+		 * place-holder.
+		 * 
+		 * @param pos
+		 *            the position of the place-holder
+		 * @param value
+		 *            the value of the place-holder
+		 */
+		public Placeholder(final int pos, final Object value) {
+			this.pos = pos;
+			this.set(value);
+		}
+
+		/**
+		 * Gets the current value of the place-holder.
+		 * 
+		 * @return the current value of the place-holder
+		 */
+		public Object get() {
+			return value;
+		}
+
+		/**
+		 * Sets the value of the place-holder.
+		 * 
+		 * @param value
+		 *            the value of the place-holder
+		 */
+		public void set(final Object value) {
+			this.value = value;
+		}
+
+		/**
+		 * Gets the position of place-holder within the statement.
+		 * 
+		 * @return the position of place-holder within the statement
+		 */
+		public int getPos() {
+			return pos;
+		}
+
+		/**
+		 * Gets the value of {@code this} as formatted value.
+		 * 
+		 * @return the formatted value
+		 */
+		public Object getFormattedValue() {
+
+			if (value == null) {
+				return "NULL";
+			} else if (value instanceof Byte) {
+				return "'" + Byte.toString((Byte) value) + "'";
+			} else if (value instanceof Short) {
+				return "'" + Short.toString((Short) value) + "'";
+			} else if (value instanceof Integer) {
+				return "'" + Integer.toString((Integer) value) + "'";
+			} else if (value instanceof Long) {
+				return "'" + Long.toString((Long) value) + "'";
+			} else if (value instanceof Float) {
+				return "'" + Float.toString((Float) value) + "'";
+			} else if (value instanceof Double) {
+				return "'" + Double.toString((Double) value) + "'";
+			} else if (value instanceof BigDecimal) {
+				return "'" + value.toString() + "'";
+			} else if (value instanceof Number) {
+				return "'" + decFormatter.format((Number) value) + "'";
+			} else if (value instanceof java.util.Date) {
+				return "'" + dateFormatter.format((java.util.Date) value) + "'";
+			} else {
+				return "'" + value.toString() + "'";
+			}
+		}
+
+		@Override
+		public String toString() {
+			return "pos: " + pos + " with value " + getFormattedValue();
+		}
+	}
+
 	private final String sql;
+	private final List<Placeholder> placeholders;
 	private final ExecutorService executor;
 
 	private final int resultSetType;
@@ -84,6 +218,29 @@ public class TidaStatement extends BaseConnectionWrapper implements Statement,
 	private int queryTimeoutInMs;
 	private TidaResultSet currentResultSet;
 	private CurrentResultSetType currentResultSetType;
+
+	/**
+	 * Creating a {@code Statement} for the specified {@code connection} and the
+	 * specified {@code sql}. The {@code Statement} uses the default settings,
+	 * i.e. {@link ResultSet#TYPE_FORWARD_ONLY},
+	 * {@link ResultSet#CONCUR_READ_ONLY},
+	 * {@link ResultSet#CLOSE_CURSORS_AT_COMMIT}, and
+	 * {@link Statement#NO_GENERATED_KEYS}.
+	 * 
+	 * @param connection
+	 *            the connection used to fire the statement
+	 * @param sql
+	 *            the statement to be fired
+	 * 
+	 * @throws SQLException
+	 *             if the statement cannot be created
+	 */
+	public TidaStatement(final TidaConnection connection, final String sql)
+			throws SQLException {
+		this(connection, sql, ResultSet.TYPE_FORWARD_ONLY,
+				ResultSet.CONCUR_READ_ONLY, ResultSet.CLOSE_CURSORS_AT_COMMIT,
+				Statement.NO_GENERATED_KEYS);
+	}
 
 	/**
 	 * Creating a {@code Statement} for the specified {@code connection} and the
@@ -248,6 +405,76 @@ public class TidaStatement extends BaseConnectionWrapper implements Statement,
 
 		this.sql = sql;
 		this.executor = Executors.newFixedThreadPool(1);
+
+		// check for place-holders
+		this.placeholders = retrievePlaceholders();
+	}
+
+	/**
+	 * Gets all the defined place-holders.
+	 * 
+	 * @return all the defined place-holders
+	 */
+	public List<Placeholder> getPlaceholders() {
+		return Collections.unmodifiableList(placeholders);
+	}
+
+	/**
+	 * Determines the place-holders defined within the {@code sql} of
+	 * {@code this}.
+	 * 
+	 * @return the found place-holders
+	 */
+	protected List<Placeholder> retrievePlaceholders() {
+
+		// check if we have any empty SQL, if so there are no placeholders
+		if (sql == null || "".equals(sql.trim())) {
+			return new ArrayList<Placeholder>(0);
+		}
+
+		// get all the placeholders
+		final Matcher m = placeholderPattern.matcher(sql);
+		final List<Placeholder> placeholders = new ArrayList<Placeholder>();
+		while (m.find()) {
+			if (m.group(1) != null) {
+				final Placeholder ph = new Placeholder(m.start(1));
+				placeholders.add(ph);
+			}
+		}
+
+		return placeholders;
+	}
+
+	/**
+	 * Replaces the place-holders within the {@code sql} according to the found
+	 * place-holders. The sql-statement must be equal to the one, used to
+	 * determine the place-holders, i.e. {@link #retrievePlaceholders()}.
+	 * 
+	 * @return the statement with replace place-holders
+	 */
+	protected String replacePlaceholder() {
+		if (placeholders == null || placeholders.size() == 0) {
+			return sql;
+		} else {
+			final StringBuilder sb = new StringBuilder();
+
+			final ListIterator<Placeholder> li = placeholders
+					.listIterator(placeholders.size());
+
+			int curPos = sql.length();
+			while (li.hasPrevious()) {
+				final Placeholder ph = li.previous();
+
+				sb.insert(0, sql.substring(ph.getPos() + 1, curPos));
+				sb.insert(0, ph.getFormattedValue());
+
+				curPos = ph.getPos();
+			}
+
+			sb.insert(0, sql.substring(0, curPos));
+
+			return sb.toString();
+		}
 	}
 
 	@Override
@@ -356,7 +583,7 @@ public class TidaStatement extends BaseConnectionWrapper implements Statement,
 		}
 
 		// get the sql to be used
-		final String query = sql == null ? this.sql : sql;
+		final String query = sql == null ? replacePlaceholder() : sql;
 
 		// create a thread to fire a query
 		final Callable<TidaResultSet> executeTask = new Callable<TidaResultSet>() {
@@ -794,369 +1021,437 @@ public class TidaStatement extends BaseConnectionWrapper implements Statement,
 		return false;
 	}
 
+	/**
+	 * Checks if the parameter-index is valid.
+	 * 
+	 * @param parameterIndex
+	 *            the index to be checked (1-based)
+	 * 
+	 * @return the 0-based index
+	 * 
+	 * @throws SQLException
+	 *             if the index is invalid
+	 */
+	protected int checkParameter(final int parameterIndex) throws SQLException {
+		if (placeholders == null) {
+			throw TidaSqlExceptions.createException(3007, "" + parameterIndex);
+		}
+
+		final int size = placeholders.size();
+		if (parameterIndex < 1 || parameterIndex > size) {
+			throw TidaSqlExceptions.createException(3007, "" + parameterIndex);
+		}
+
+		return parameterIndex - 1;
+	}
+
 	@Override
 	public void setNull(final int parameterIndex, final int sqlType)
 			throws SQLException {
-		// TODO Auto-generated method stub
-
+		final int pos = checkParameter(parameterIndex);
+		placeholders.get(pos).set(null);
 	}
 
 	@Override
 	public void setBoolean(final int parameterIndex, final boolean x)
 			throws SQLException {
-		// TODO Auto-generated method stub
-
+		final int pos = checkParameter(parameterIndex);
+		placeholders.get(pos).set(x);
 	}
 
 	@Override
 	public void setByte(final int parameterIndex, final byte x)
 			throws SQLException {
-		// TODO Auto-generated method stub
-
+		final int pos = checkParameter(parameterIndex);
+		placeholders.get(pos).set(x);
 	}
 
 	@Override
 	public void setShort(final int parameterIndex, final short x)
 			throws SQLException {
-		// TODO Auto-generated method stub
+		final int pos = checkParameter(parameterIndex);
+		placeholders.get(pos).set(x);
 	}
 
 	@Override
 	public void setInt(final int parameterIndex, final int x)
 			throws SQLException {
-		// TODO Auto-generated method stub
-
+		final int pos = checkParameter(parameterIndex);
+		placeholders.get(pos).set(x);
 	}
 
 	@Override
 	public void setLong(final int parameterIndex, final long x)
 			throws SQLException {
-		// TODO Auto-generated method stub
-
+		final int pos = checkParameter(parameterIndex);
+		placeholders.get(pos).set(x);
 	}
 
 	@Override
 	public void setFloat(final int parameterIndex, final float x)
 			throws SQLException {
-		// TODO Auto-generated method stub
-
+		final int pos = checkParameter(parameterIndex);
+		placeholders.get(pos).set(x);
 	}
 
 	@Override
 	public void setDouble(final int parameterIndex, final double x)
 			throws SQLException {
-		// TODO Auto-generated method stub
-
+		final int pos = checkParameter(parameterIndex);
+		placeholders.get(pos).set(x);
 	}
 
 	@Override
 	public void setBigDecimal(final int parameterIndex, final BigDecimal x)
 			throws SQLException {
-		// TODO Auto-generated method stub
-
+		final int pos = checkParameter(parameterIndex);
+		placeholders.get(pos).set(x);
 	}
 
 	@Override
 	public void setString(final int parameterIndex, final String x)
 			throws SQLException {
-		// TODO Auto-generated method stub
-
+		final int pos = checkParameter(parameterIndex);
+		placeholders.get(pos).set(x);
 	}
 
 	@Override
 	public void setBytes(final int parameterIndex, final byte[] x)
 			throws SQLException {
-		// TODO Auto-generated method stub
+		throw TidaSqlExceptions
+				.createNotSupportedException(3008, "byte-arrays");
+	}
 
+	/**
+	 * Sets the date {@code x} at the specified {@code parameterIndex} with the
+	 * specified {@code cal}. The {@code cal} can be {@code null} if the default
+	 * calendar should be used.
+	 * 
+	 * @param parameterIndex
+	 *            the first parameter is 1, the second is 2, ...
+	 * @param x
+	 *            the date value
+	 * @param cal
+	 *            the calendar of the date
+	 * 
+	 * @throws SQLException
+	 *             if parameterIndex does not correspond to a parameter marker
+	 *             in the SQL statement; if a database access error occurs or
+	 *             this method is called on a closed PreparedStatement
+	 */
+	protected void _setDate(final int parameterIndex, final java.util.Date x,
+			final Calendar cal) throws SQLException {
+		final int pos = checkParameter(parameterIndex);
+
+		// get the date's timeZone
+		final TimeZone srcTz = cal == null ? TimeZone.getDefault() : cal
+				.getTimeZone();
+
+		final TimeZone trgtTz = TimeZone.getTimeZone("UTC");
+
+		// create a formatter for the date
+		final DateFormat formatter = new SimpleDateFormat(
+				"dd.MM.yyyy HH:mm:ss,SSS");
+
+		// set the source timeZone and format the date
+		formatter.setTimeZone(srcTz);
+		final String strX = formatter.format(x);
+
+		// set the target timeZone and parse the date
+		formatter.setTimeZone(trgtTz);
+
+		final TimeZone defTz = TimeZone.getDefault();
+		try {
+			TimeZone.setDefault(trgtTz);
+			final java.util.Date parsedDate = formatter.parse(strX);
+			placeholders.get(pos).set(parsedDate);
+		} catch (final ParseException e) {
+			placeholders.get(pos).set(null);
+			throw TidaSqlExceptions.createException(3009, strX);
+		} finally {
+			TimeZone.setDefault(defTz);
+		}
 	}
 
 	@Override
 	public void setDate(final int parameterIndex, final Date x)
 			throws SQLException {
-		// TODO Auto-generated method stub
-
+		_setDate(parameterIndex, (java.util.Date) x, null);
 	}
 
 	@Override
 	public void setTime(final int parameterIndex, final Time x)
 			throws SQLException {
-		// TODO Auto-generated method stub
-
+		_setDate(parameterIndex, (java.util.Date) x, null);
 	}
 
 	@Override
 	public void setTimestamp(final int parameterIndex, final Timestamp x)
 			throws SQLException {
-		// TODO Auto-generated method stub
-
+		_setDate(parameterIndex, (java.util.Date) x, null);
 	}
 
 	@Override
 	public void setAsciiStream(final int parameterIndex, final InputStream x,
 			final int length) throws SQLException {
-		// TODO Auto-generated method stub
-
+		throw TidaSqlExceptions
+				.createNotSupportedException(3008, "AsciiStream");
 	}
 
 	@Override
 	@Deprecated
 	public void setUnicodeStream(final int parameterIndex, final InputStream x,
 			final int length) throws SQLException {
-		// TODO Auto-generated method stub
-
+		throw TidaSqlExceptions.createNotSupportedException(3008,
+				"UnicodeStream");
 	}
 
 	@Override
 	public void setBinaryStream(final int parameterIndex, final InputStream x,
 			final int length) throws SQLException {
-		// TODO Auto-generated method stub
-
+		throw TidaSqlExceptions.createNotSupportedException(3008,
+				"BinaryStream");
 	}
 
 	@Override
 	public void clearParameters() throws SQLException {
-		// TODO Auto-generated method stub
+		if (placeholders == null) {
+			return;
+		}
 
+		// set all the place-holders
+		for (final Placeholder ph : placeholders) {
+			ph.set(null);
+		}
 	}
 
 	@Override
 	public void setObject(final int parameterIndex, final Object x,
 			final int targetSqlType) throws SQLException {
-		// TODO Auto-generated method stub
-
+		final int pos = checkParameter(parameterIndex);
+		placeholders.get(pos).set(x);
 	}
 
 	@Override
 	public void setObject(final int parameterIndex, final Object x)
 			throws SQLException {
-		// TODO Auto-generated method stub
-
+		final int pos = checkParameter(parameterIndex);
+		placeholders.get(pos).set(x);
 	}
 
 	@Override
 	public void addBatch() throws SQLException {
-		// TODO Auto-generated method stub
-
+		// ignore
 	}
 
 	@Override
 	public void setCharacterStream(final int parameterIndex,
 			final Reader reader, final int length) throws SQLException {
-		// TODO Auto-generated method stub
-
+		throw TidaSqlExceptions.createNotSupportedException(3008,
+				"CharacterStream");
 	}
 
 	@Override
 	public void setRef(final int parameterIndex, final Ref x)
 			throws SQLException {
-		// TODO Auto-generated method stub
-
+		throw TidaSqlExceptions.createNotSupportedException(3008,
+				Ref.class.getName());
 	}
 
 	@Override
 	public void setBlob(final int parameterIndex, final Blob x)
 			throws SQLException {
-		// TODO Auto-generated method stub
-
+		throw TidaSqlExceptions.createNotSupportedException(3008,
+				Blob.class.getName());
 	}
 
 	@Override
 	public void setClob(final int parameterIndex, final Clob x)
 			throws SQLException {
-		// TODO Auto-generated method stub
-
+		throw TidaSqlExceptions.createNotSupportedException(3008,
+				Clob.class.getName());
 	}
 
 	@Override
 	public void setArray(final int parameterIndex, final Array x)
 			throws SQLException {
-		// TODO Auto-generated method stub
-
+		throw TidaSqlExceptions.createNotSupportedException(3008,
+				Array.class.getName());
 	}
 
 	@Override
 	public ResultSetMetaData getMetaData() throws SQLException {
 		if (currentResultSet == null) {
-			return null;
+			if (sql == null) {
+				return null;
+			} else {
+				execute(sql, Statement.NO_GENERATED_KEYS);
+				return currentResultSet.getMetaData();
+			}
 		} else {
 			return currentResultSet.getMetaData();
 		}
 	}
 
 	@Override
-	public void setDate(final int parameterIndex, Date x, final Calendar cal)
-			throws SQLException {
-		// TODO Auto-generated method stub
-
+	public void setDate(final int parameterIndex, final Date x,
+			final Calendar cal) throws SQLException {
+		_setDate(parameterIndex, (java.util.Date) x, cal);
 	}
 
 	@Override
 	public void setTime(final int parameterIndex, final Time x,
 			final Calendar cal) throws SQLException {
-		// TODO Auto-generated method stub
-
+		_setDate(parameterIndex, (java.util.Date) x, cal);
 	}
 
 	@Override
 	public void setTimestamp(final int parameterIndex, final Timestamp x,
 			final Calendar cal) throws SQLException {
-		// TODO Auto-generated method stub
-
+		_setDate(parameterIndex, (java.util.Date) x, cal);
 	}
 
 	@Override
 	public void setNull(final int parameterIndex, final int sqlType,
 			final String typeName) throws SQLException {
-		// TODO Auto-generated method stub
-
+		setNull(parameterIndex, sqlType);
 	}
 
 	@Override
 	public void setURL(final int parameterIndex, final URL x)
 			throws SQLException {
-		// TODO Auto-generated method stub
-
+		final int pos = checkParameter(parameterIndex);
+		placeholders.get(pos).set(x);
 	}
 
 	@Override
 	public ParameterMetaData getParameterMetaData() throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		return new TidaParameterMetaData(placeholders);
 	}
 
 	@Override
 	public void setRowId(final int parameterIndex, final RowId x)
 			throws SQLException {
-		// TODO Auto-generated method stub
-
+		throw TidaSqlExceptions.createNotSupportedException(3008, "RowId");
 	}
 
 	@Override
 	public void setNString(final int parameterIndex, final String value)
 			throws SQLException {
-		// TODO Auto-generated method stub
-
+		throw TidaSqlExceptions.createNotSupportedException(3008, "NString");
 	}
 
 	@Override
 	public void setNCharacterStream(final int parameterIndex,
 			final Reader value, final long length) throws SQLException {
-		// TODO Auto-generated method stub
-
+		throw TidaSqlExceptions.createNotSupportedException(3008,
+				"NCharacterStream");
 	}
 
 	@Override
 	public void setNClob(final int parameterIndex, final NClob value)
 			throws SQLException {
-		// TODO Auto-generated method stub
-
+		throw TidaSqlExceptions.createNotSupportedException(3008, "NClob");
 	}
 
 	@Override
 	public void setClob(final int parameterIndex, final Reader reader,
 			final long length) throws SQLException {
-		// TODO Auto-generated method stub
-
+		throw TidaSqlExceptions.createNotSupportedException(3008, "Clob");
 	}
 
 	@Override
 	public void setBlob(final int parameterIndex,
 			final InputStream inputStream, final long length)
 			throws SQLException {
-		// TODO Auto-generated method stub
-
+		throw TidaSqlExceptions.createNotSupportedException(3008, "Blob");
 	}
 
 	@Override
 	public void setNClob(final int parameterIndex, final Reader reader,
 			final long length) throws SQLException {
-		// TODO Auto-generated method stub
-
+		throw TidaSqlExceptions.createNotSupportedException(3008, "NClob");
 	}
 
 	@Override
 	public void setSQLXML(final int parameterIndex, final SQLXML xmlObject)
 			throws SQLException {
-		// TODO Auto-generated method stub
-
+		throw TidaSqlExceptions.createNotSupportedException(3008, "SQLXML");
 	}
 
 	@Override
 	public void setObject(final int parameterIndex, final Object x,
 			final int targetSqlType, final int scaleOrLength)
 			throws SQLException {
-		// TODO Auto-generated method stub
-
+		final int pos = checkParameter(parameterIndex);
+		placeholders.get(pos).set(x);
 	}
 
 	@Override
 	public void setAsciiStream(final int parameterIndex, final InputStream x,
 			final long length) throws SQLException {
-		// TODO Auto-generated method stub
-
+		throw TidaSqlExceptions
+				.createNotSupportedException(3008, "AsciiStream");
 	}
 
 	@Override
 	public void setBinaryStream(final int parameterIndex, final InputStream x,
 			final long length) throws SQLException {
-		// TODO Auto-generated method stub
-
+		throw TidaSqlExceptions.createNotSupportedException(3008,
+				"BinaryStream");
 	}
 
 	@Override
 	public void setCharacterStream(final int parameterIndex,
 			final Reader reader, final long length) throws SQLException {
-		// TODO Auto-generated method stub
-
+		throw TidaSqlExceptions.createNotSupportedException(3008,
+				"CharacterStream");
 	}
 
 	@Override
 	public void setAsciiStream(final int parameterIndex, final InputStream x)
 			throws SQLException {
-		// TODO Auto-generated method stub
-
+		throw TidaSqlExceptions
+				.createNotSupportedException(3008, "AsciiStream");
 	}
 
 	@Override
 	public void setBinaryStream(final int parameterIndex, final InputStream x)
 			throws SQLException {
-		// TODO Auto-generated method stub
-
+		throw TidaSqlExceptions.createNotSupportedException(3008,
+				"BinaryStream");
 	}
 
 	@Override
 	public void setCharacterStream(final int parameterIndex, final Reader reader)
 			throws SQLException {
-		// TODO Auto-generated method stub
-
+		throw TidaSqlExceptions.createNotSupportedException(3008,
+				"CharacterStream");
 	}
 
 	@Override
 	public void setNCharacterStream(final int parameterIndex, final Reader value)
 			throws SQLException {
-		// TODO Auto-generated method stub
-
+		throw TidaSqlExceptions.createNotSupportedException(3008,
+				"NCharacterStream");
 	}
 
 	@Override
 	public void setClob(final int parameterIndex, final Reader reader)
 			throws SQLException {
-		// TODO Auto-generated method stub
-
+		throw TidaSqlExceptions.createNotSupportedException(3008, "Clob");
 	}
 
 	@Override
 	public void setBlob(final int parameterIndex, final InputStream inputStream)
 			throws SQLException {
-		// TODO Auto-generated method stub
-
+		throw TidaSqlExceptions.createNotSupportedException(3008, "Blob");
 	}
 
 	@Override
 	public void setNClob(final int parameterIndex, final Reader reader)
 			throws SQLException {
-		// TODO Auto-generated method stub
-
+		throw TidaSqlExceptions.createNotSupportedException(3008, "NClob");
 	}
 
 	@Override
