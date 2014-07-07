@@ -673,6 +673,7 @@ public class TidaDatabaseMetaData extends BaseWrapper implements
 
 	@Override
 	public ResultSet getCatalogs() throws SQLException {
+		// TODO return the empty catalog
 		return new EmptyResultSet(new String[] { "TABLE_CAT" });
 	}
 
@@ -874,7 +875,6 @@ public class TidaDatabaseMetaData extends BaseWrapper implements
 
 	@Override
 	public boolean supportsNamedParameters() throws SQLException {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
@@ -1008,5 +1008,4 @@ public class TidaDatabaseMetaData extends BaseWrapper implements
 				"SCALE", "RADIX", "NULLABLE", "REMARKS", "CHAR_OCTET_LENGTH",
 				"ORDINAL_POSITION", "IS_NULLABLE", "SPECIFIC_NAME" });
 	}
-
 }
