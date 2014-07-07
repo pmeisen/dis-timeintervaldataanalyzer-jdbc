@@ -331,6 +331,30 @@ public class TidaSqlExceptions {
 			return "The result-set is closed.";
 		case 7999:
 			return "An empty result-set does not support any value retrieval.";
+
+		case 8000:
+			return "The column-index of the result-set starts with 1 and ends with "
+					+ parameter[0] + ".";
+		case 8001:
+			return "The result-set can only retrieve results between 0 and "
+					+ parameter[1] + ", the value " + parameter[0]
+					+ " is therefore invalid.";
+		case 8002:
+			return "The column-label of the result-set can only be one of '"
+					+ parameter[0] + "'.";
+		case 8003:
+			return "The setting of a fetch-direction other than ResultSet.FETCH_FORWARD is not supported.";
+		case 8004:
+			return "The result-set does not support manipulation of any kind.";
+		case 8005:
+			return "The result-set does not support rowIds.";
+		case 8006:
+			return "Null values are not supported for columns with index '"
+					+ parameter[0] + "'.";
+		case 8007:
+			return "A value of type '" + parameter[0]
+					+ "' was expected, got a value of '" + parameter[1] + "'";
+
 		case 9000:
 			return "The wrapper does not support the type '" + parameter[0]
 					+ "'.";

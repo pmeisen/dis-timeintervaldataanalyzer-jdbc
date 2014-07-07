@@ -17,7 +17,7 @@ public class TidaDatabaseMetaData extends BaseWrapper implements
 	private TidaConnection connection;
 
 	private boolean todoMarker;
-	
+
 	/**
 	 * The default constructor retrieves the meta-data for the specified
 	 * {@code connection}.
@@ -346,17 +346,17 @@ public class TidaDatabaseMetaData extends BaseWrapper implements
 
 	@Override
 	public String getSchemaTerm() throws SQLException {
-		return "";
+		return "unused-schema";
 	}
 
 	@Override
 	public String getProcedureTerm() throws SQLException {
-		return "";
+		return "unused-procedure";
 	}
 
 	@Override
 	public String getCatalogTerm() throws SQLException {
-		return "";
+		return "unused-catalog";
 	}
 
 	@Override
@@ -673,8 +673,8 @@ public class TidaDatabaseMetaData extends BaseWrapper implements
 
 	@Override
 	public ResultSet getCatalogs() throws SQLException {
-		// TODO return the empty catalog
-		return new EmptyResultSet(new String[] { "TABLE_CAT" });
+		return new ObjectArrayResultSet(new String[] { "TABLE_CAT" },
+				new Object[][] { new Object[] { "" } });
 	}
 
 	@Override
@@ -965,8 +965,9 @@ public class TidaDatabaseMetaData extends BaseWrapper implements
 			throws SQLException {
 		if (catalog == null || "".equals(catalog)) {
 
-			// return the one and only schema
-			return null;
+			return new ObjectArrayResultSet(new String[] { "TABLE_SCHEM",
+					"TABLE_CATALOG" },
+					new Object[][] { new Object[] { "", "" } });
 		} else {
 			return new EmptyResultSet(new String[] { "TABLE_SCHEM",
 					"TABLE_CATALOG" });
