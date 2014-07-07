@@ -220,10 +220,30 @@ public class Protocol implements Closeable {
 		write(ResponseType.CANCEL);
 	}
 
+	/**
+	 * Writes a {@code ResourceDemand}, whereby the {@code resource} specifies
+	 * which resource is demanded.
+	 * 
+	 * @param resource
+	 *            the resource needed
+	 * 
+	 * @throws IOException
+	 *             if the demand cannot be written
+	 */
 	public void writeResourceDemand(final String resource) throws IOException {
 		write(ResponseType.RESOURCE_DEMAND, resource.getBytes("UTF8"));
 	}
 
+	/**
+	 * Writes a {@code Resource}, whereby the {@code resource} is written
+	 * directly to the socket.
+	 * 
+	 * @param resource
+	 *            the resource to be written
+	 * 
+	 * @throws IOException
+	 *             if the resource cannot be written
+	 */
 	public void writeResource(final InputStream resource) throws IOException {
 		final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 
@@ -239,6 +259,17 @@ public class Protocol implements Closeable {
 		write(ResponseType.RESOURCE, buffer.toByteArray());
 	}
 
+	/**
+	 * Writes a {@code Header} to the socket.
+	 * 
+	 * @param headerTypes
+	 *            the types to be written
+	 * 
+	 * @return the written types as {@code DataType} instance
+	 * 
+	 * @throws IOException
+	 *             if the header cannot be written
+	 */
 	public DataType[] writeHeader(final Class<?>[] headerTypes)
 			throws IOException {
 		if (headerTypes == null) {
@@ -264,6 +295,15 @@ public class Protocol implements Closeable {
 		return dts;
 	}
 
+	/**
+	 * Writes the names of the {@code Header} to the socket.
+	 * 
+	 * @param headerNames
+	 *            the names to be written
+	 * 
+	 * @throws IOException
+	 *             if the names cannot be written
+	 */
 	public void writeHeaderNames(final String[] headerNames) throws IOException {
 		if (headerNames == null || headerNames.length == 0) {
 			// don't write it at all
@@ -278,6 +318,15 @@ public class Protocol implements Closeable {
 		os.flush();
 	}
 
+	/**
+	 * Writes the specified {@code value} to the socket.
+	 * 
+	 * @param value
+	 *            the string to be written
+	 * 
+	 * @throws IOException
+	 *             if the string cannot be written
+	 */
 	protected void writeString(final String value) throws IOException {
 		if (value == null) {
 			os.writeInt(0);
@@ -288,6 +337,20 @@ public class Protocol implements Closeable {
 		}
 	}
 
+	/**
+	 * Writes the complete meta-information (i.e. {@code queryType},
+	 * {@code header} and {@code headerNames}) to the socket.
+	 * 
+	 * @param queryType
+	 *            the {@code QueryType} to be written
+	 * @param header
+	 *            the header to be written
+	 * @param headerNames
+	 *            the names to be written
+	 * 
+	 * @throws IOException
+	 *             if the names cannot be written
+	 */
 	public void writeMeta(final QueryType queryType, final Class<?>[] header,
 			final String[] headerNames) throws IOException {
 		writeQueryType(queryType);
@@ -295,10 +358,29 @@ public class Protocol implements Closeable {
 		writeHeaderNames(headerNames);
 	}
 
+	/**
+	 * Writes a {@code Resource}, whereby the {@code resource} is written
+	 * directly to the socket.
+	 * 
+	 * @param resource
+	 *            the resource to be written
+	 * 
+	 * @throws IOException
+	 *             if the resource cannot be written
+	 */
 	public void writeResource(final byte[] resource) throws IOException {
 		write(ResponseType.RESOURCE, resource);
 	}
 
+	/**
+	 * Reads the next value retrieved. The method blocks until the next value is
+	 * read.
+	 * 
+	 * @return the value read
+	 * 
+	 * @throws IOException
+	 *             if an exception occurred during the read
+	 */
 	public RetrievedValue read() throws IOException {
 		final RetrievedValue value = _read();
 		checkException(value);
@@ -306,18 +388,45 @@ public class Protocol implements Closeable {
 		return value;
 	}
 
+	/**
+	 * Reads a message.
+	 * 
+	 * @return the read message
+	 * 
+	 * @throws IOException
+	 *             if an error occurred on client- or server-side, or if the
+	 *             retrieved value is not a message
+	 */
 	public String readMessage() throws IOException {
 		final RetrievedValue value = _read();
 		checkException(value);
 		return value.getMessage();
 	}
 
+	/**
+	 * Reads a resource-demand.
+	 * 
+	 * @return the read resource-demand
+	 * 
+	 * @throws IOException
+	 *             if an error occurred on client- or server-side, or if the
+	 *             retrieved value is not a resource-demand
+	 */
 	public String readResourceDemand() throws IOException {
 		final RetrievedValue value = _read();
 		checkException(value);
 		return value.getResourceDemand();
 	}
 
+	/**
+	 * Reads a resource.
+	 * 
+	 * @return the read resource
+	 * 
+	 * @throws IOException
+	 *             if an error occurred on client- or server-side, or if the
+	 *             retrieved value is not a resource
+	 */
 	public byte[] readResource() throws IOException {
 		final RetrievedValue value = _read();
 		checkException(value);
@@ -329,12 +438,30 @@ public class Protocol implements Closeable {
 		}
 	}
 
+	/**
+	 * Reads a header.
+	 * 
+	 * @return the read header
+	 * 
+	 * @throws IOException
+	 *             if an error occurred on client- or server-side, or if the
+	 *             retrieved value is not a header
+	 */
 	public DataType[] readHeader() throws IOException {
 		final RetrievedValue value = _read();
 		checkException(value);
 		return value.getHeader();
 	}
 
+	/**
+	 * Reads a {@code QueryType}.
+	 * 
+	 * @return the read {@code QueryType}
+	 * 
+	 * @throws IOException
+	 *             if an error occurred on client- or server-side, or if the
+	 *             retrieved value is not a {@code QueryType}
+	 */
 	public QueryType readQueryType() throws IOException {
 		final byte marker = is.readByte();
 		final QueryType queryType = QueryType.find(marker);
@@ -348,6 +475,15 @@ public class Protocol implements Closeable {
 		return queryType;
 	}
 
+	/**
+	 * Reads a {@code QueryStatus}.
+	 * 
+	 * @return the read {@code QueryStatus}
+	 * 
+	 * @throws IOException
+	 *             if an error occurred on client- or server-side, or if the
+	 *             retrieved value is not a {@code QueryStatus}
+	 */
 	public QueryStatus readQueryStatus() throws IOException {
 		final byte marker = is.readByte();
 		final QueryStatus queryStatus = QueryStatus.find(marker);
@@ -361,10 +497,30 @@ public class Protocol implements Closeable {
 		return queryStatus;
 	}
 
+	/**
+	 * Writes a message (i.e. {@link ResponseType#MESSAGE}) to the other side.
+	 * 
+	 * @param msg
+	 *            the message to be written
+	 * 
+	 * @throws IOException
+	 *             if the message cannot be written
+	 */
 	public void writeMessage(final String msg) throws IOException {
 		write(ResponseType.MESSAGE, msg.getBytes("UTF8"));
 	}
 
+	/**
+	 * Writes the {@code bytes} of the specified {@code type}.
+	 * 
+	 * @param type
+	 *            the type of the {@code bytes} to be send
+	 * @param bytes
+	 *            the data to be send
+	 * 
+	 * @throws IOException
+	 *             if writing fails
+	 */
 	public void write(final ResponseType type, byte... bytes)
 			throws IOException {
 		os.writeByte(type.getId());
@@ -377,11 +533,29 @@ public class Protocol implements Closeable {
 		os.flush();
 	}
 
+	/**
+	 * Writes the {@code QueryType} to the socket.
+	 * 
+	 * @param type
+	 *            the {@code QueryType} to be written
+	 * 
+	 * @throws IOException
+	 *             if the {@code QueryType} cannot be written
+	 */
 	public void writeQueryType(final QueryType type) throws IOException {
 		os.writeByte(type.getId());
 		os.flush();
 	}
 
+	/**
+	 * Writes the {@code QueryStatus} to the socket.
+	 * 
+	 * @param status
+	 *            the {@code QueryStatus} to be written
+	 * 
+	 * @throws IOException
+	 *             if the {@code QueryStatus} cannot be written
+	 */
 	public void writeQueryStatus(final QueryStatus status) throws IOException {
 		os.writeByte(status.getId());
 		os.flush();
@@ -459,6 +633,24 @@ public class Protocol implements Closeable {
 		}
 	}
 
+	/**
+	 * Writes the specified {@code msg} and handles the response to it using the
+	 * specified {@code handler}. The response is only handled once, i.e.
+	 * additional reads are needed if the end of the response is not reached
+	 * with one read. The method returns {@code true} if the message was sent
+	 * successfully, otherwise {@code false}.
+	 * 
+	 * @param msg
+	 *            the message to be send
+	 * @param handler
+	 *            the handler to handle the response with
+	 * 
+	 * @return {@code true} if the message was sent successfully, otherwise
+	 *         {@code false}
+	 * 
+	 * @throws IOException
+	 *             if an exception occurres during handling
+	 */
 	public boolean writeAndHandle(final String msg,
 			final IResponseHandler handler) throws IOException {
 		if (initializeCommunication(msg, handler)) {
@@ -533,6 +725,21 @@ public class Protocol implements Closeable {
 		}
 	}
 
+	/**
+	 * Handles the next item of or the complete response using the specified
+	 * {@code handler}. The method returns {@code true} if the end of the
+	 * response was reached, otherwise {@code false} is returned, which means
+	 * that more data has to be handled to process the response complete.
+	 * 
+	 * @param handler
+	 *            the {@code ResponseHandler} used to handle the (next) response
+	 * 
+	 * @return {@code true} if the end of the response was reached, otherwise
+	 *         {@code false}
+	 * 
+	 * @throws IOException
+	 *             if the response could not be handled
+	 */
 	public boolean handleResponse(final IResponseHandler handler)
 			throws IOException {
 
@@ -618,6 +825,17 @@ public class Protocol implements Closeable {
 		return eorReached;
 	}
 
+	/**
+	 * Checks if an exception was thrown on the other side of the communication.
+	 * If so the exception is thrown on {@code this} side as well, using a
+	 * {@code WrappedException}.
+	 * 
+	 * @param value
+	 *            the {@code RetrievedValue} to be checked for an exception
+	 * 
+	 * @throws WrappedException
+	 *             the exception found, if one was found
+	 */
 	protected void checkException(final RetrievedValue value)
 			throws WrappedException {
 		if (value.is(ResponseType.EXCEPTION)) {

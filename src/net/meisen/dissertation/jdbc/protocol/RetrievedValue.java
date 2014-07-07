@@ -101,6 +101,14 @@ public class RetrievedValue {
 		return new Integer[] { getInt() };
 	}
 
+	/**
+	 * Interprets {@code this} as a header and returns the value.
+	 * 
+	 * @return the read header
+	 * 
+	 * @throws IOException
+	 *             if {@code this} cannot be interpreted as a header
+	 */
 	public DataType[] getHeader() throws IOException {
 		checkType(ResponseType.HEADER);
 
@@ -114,29 +122,71 @@ public class RetrievedValue {
 		return dts;
 	}
 
+	/**
+	 * Interprets {@code this} as a message and returns the value.
+	 * 
+	 * @return the read message
+	 * 
+	 * @throws IOException
+	 *             if {@code this} cannot be interpreted as a message
+	 */
 	public String getMessage() throws IOException {
 		checkType(ResponseType.MESSAGE);
 		return new String(getBytes(), "UTF8");
 	}
 
+	/**
+	 * Interprets {@code this} as a resource-demand and returns the value.
+	 * 
+	 * @return the read resource-demand
+	 * 
+	 * @throws IOException
+	 *             if {@code this} cannot be interpreted as a resource-demand
+	 */
 	public String getResourceDemand() throws IOException {
 		checkType(ResponseType.RESOURCE_DEMAND);
 		return new String(getBytes(), "UTF8");
 	}
 
+	/**
+	 * Interprets {@code this} as a resource and returns the value.
+	 * 
+	 * @return the read resource
+	 * 
+	 * @throws IOException
+	 *             if {@code this} cannot be interpreted as a resource
+	 */
 	public byte[] getResource() throws IOException {
 		checkType(ResponseType.RESOURCE);
 		return getBytes();
 	}
 
+	/**
+	 * Checks if {@code this} is an end-of-response flag
+	 * 
+	 * @return {@code true} if {@code this} is an end-of-response flag,
+	 *         otherwise {@code false}
+	 */
 	public boolean isEOR() {
 		return is(ResponseType.EOR);
 	}
 
+	/**
+	 * Checks if {@code this} is cancel flag
+	 * 
+	 * @return {@code true} if {@code this} is a cancel flag, otherwise
+	 *         {@code false}
+	 */
 	public boolean isCancel() {
 		return is(ResponseType.CANCEL);
 	}
 
+	/**
+	 * Checks if {@code this} is of one of the expected types.
+	 * 
+	 * @param expected
+	 *            the types to be checked
+	 */
 	public void checkType(final ResponseType... expected) {
 		if (!is(expected)) {
 			throw new IllegalStateException("Expected to read one of '"
@@ -145,6 +195,14 @@ public class RetrievedValue {
 		}
 	}
 
+	/**
+	 * Reads a string from the {@code DataInputStream} of {@code this}.
+	 * 
+	 * @return reads a string from the stream
+	 * 
+	 * @throws IOException
+	 *             if the stream cannot be read
+	 */
 	public String getString() throws IOException {
 		final DataInputStream dis = getDataInputStream();
 		final int length = dis.readInt();
@@ -155,6 +213,11 @@ public class RetrievedValue {
 		return new String(b, "UTF8");
 	}
 
+	/**
+	 * Gets a {@code DataInputStream} to handle the bytes of {@code this}.
+	 * 
+	 * @return a {@code DataInputStream} to handle the bytes of {@code this}
+	 */
 	protected DataInputStream getDataInputStream() {
 		if (dis == null) {
 			dis = new DataInputStream(new ByteArrayInputStream(getBytes()));
@@ -162,10 +225,20 @@ public class RetrievedValue {
 		return dis;
 	}
 
+	/**
+	 * Gets the {@code ResponseType} of {@code this}.
+	 * 
+	 * @return the {@code ResponseType} of {@code this}
+	 */
 	public ResponseType getType() {
 		return type;
 	}
 
+	/**
+	 * Gets the bytes of {@code this}.
+	 * 
+	 * @return the bytes of {@code this}
+	 */
 	public byte[] getBytes() {
 		return bytes;
 	}
