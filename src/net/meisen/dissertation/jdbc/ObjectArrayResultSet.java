@@ -19,9 +19,13 @@ import java.sql.SQLXML;
 import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 public class ObjectArrayResultSet extends BaseWrapper implements ResultSet {
 
@@ -32,11 +36,157 @@ public class ObjectArrayResultSet extends BaseWrapper implements ResultSet {
 	private int curPosition;
 
 	public ObjectArrayResultSet(final String[] names, final Object[][] data) {
-		this.data = data;
+		this(names, data, null);
+	}
+
+	public ObjectArrayResultSet(final String[] names, final Object[][] data,
+			final String column, final String filterPattern) {
+		this(names, data, createMap(column, filterPattern));
+	}
+
+	public ObjectArrayResultSet(final String[] names, final Object[][] data,
+			final Map<String, String> filterPatterns) {
+
+		if (filterPatterns == null) {
+			this.data = data;
+		} else {
+			final List<Object[]> filteredData = new ArrayList<Object[]>();
+			final Map<String, String> regEx = new HashMap<String, String>();
+			for (final Entry<String, String> e : filterPatterns.entrySet()) {
+				regEx.put(e.getKey(), createRegEx(e.getValue()));
+			}
+
+			for (final Object[] row : data) {
+				boolean addRow = true;
+
+				// check the filters on the row
+				for (final Entry<String, String> e : regEx.entrySet()) {
+					final int pos = findPos(names, e.getKey());
+					if (pos == -1) {
+						continue;
+					}
+
+					final Object val = row[pos - 1];
+					if (val == null) {
+						addRow = false;
+					} else {
+						addRow = val.toString().matches(e.getValue());
+					}
+
+					if (!addRow) {
+						break;
+					}
+				}
+
+				// add the row if it should
+				if (addRow) {
+					filteredData.add(row);
+				}
+			}
+
+			this.data = filteredData.toArray(new Object[][] {});
+		}
+
 		this.names = names;
 
 		this.closed = false;
 		this.curPosition = -1;
+	}
+
+	/**
+	 * The methods transforms a {@code LIKE}-statement into a regular
+	 * expression. The syntax of a {@code LIKE} statement is defined as:
+	 * <ul>
+	 * <li>{@code %} - means any character zero or several times, e.g.
+	 * {@code Stra%e} matches Strasse, Straﬂe, Strae, etc.</li>
+	 * <li>{@code _} - means any character exactly one time, e.g. {@code Stra_e}
+	 * matches Straﬂe, Strafe, etc. Strasse does not match {@code Stra_e}!</li>
+	 * </ul>
+	 * Additionally quotation is done with a {@code ?} i.e.:
+	 * <ul>
+	 * <li>{@code ?_} means {@code _}</li>
+	 * <li>{@code ??} means {@code ?}</li>
+	 * <li>{@code ?%} means {@code %}</li>
+	 * </ul>
+	 * 
+	 * @param pattern
+	 *            the {@code LIKE}-statement to be transformed
+	 * 
+	 * @return the resulting regular expression
+	 */
+	protected static String createRegEx(final String pattern) {
+
+		if (pattern == null || pattern.length() == 0) {
+			return pattern;
+		}
+
+		final StringBuilder sb = new StringBuilder();
+
+		boolean inQuote = false;
+		for (int i = 0; i < pattern.length(); i++) {
+			final char curChar = pattern.charAt(i);
+
+			final boolean needQuotation;
+			final String write;
+			if (curChar == '?') {
+				if (i == pattern.length() - 1) {
+					write = "?";
+					needQuotation = true;
+				} else if (pattern.charAt(i + 1) == '%'
+						|| pattern.charAt(i + 1) == '?'
+						|| pattern.charAt(i + 1) == '_') {
+					write = "" + pattern.charAt(i + 1);
+					needQuotation = true;
+					i++;
+				} else {
+					write = "?";
+					needQuotation = true;
+				}
+			} else if (curChar == '%') {
+				write = ".*";
+				needQuotation = false;
+			} else if (curChar == '_') {
+				write = ".";
+				needQuotation = false;
+			} else {
+				write = "" + curChar;
+				needQuotation = true;
+			}
+
+			if (needQuotation && !inQuote) {
+				sb.append("\\Q");
+				inQuote = true;
+			} else if (!needQuotation && inQuote) {
+				sb.append("\\E");
+				inQuote = false;
+			}
+			sb.append(write);
+		}
+
+		if (inQuote) {
+			sb.append("\\E");
+		}
+
+		return sb.toString();
+	}
+
+	protected static Map<String, String> createMap(final String column,
+			final String filterPattern) {
+		final Map<String, String> pattern = new HashMap<String, String>(1);
+		pattern.put(column, filterPattern);
+
+		return pattern;
+	}
+
+	protected static int findPos(final String[] names, final String label) {
+		for (int i = 0; i < names.length; i++) {
+			final String name = names[i];
+			if (name.equals(label)) {
+				return i + 1;
+			}
+		}
+
+		return -1;
 	}
 
 	/**
@@ -62,7 +212,7 @@ public class ObjectArrayResultSet extends BaseWrapper implements ResultSet {
 	 *             specified {@code columnIndex}.
 	 */
 	protected void checkColumnIndex(final int columnIndex) throws SQLException {
-		if (columnIndex < 0 || columnIndex > names.length - 1) {
+		if (columnIndex < 1 || columnIndex > names.length) {
 			throw TidaSqlExceptions.createException(8000, "" + names.length);
 		}
 	}
@@ -96,14 +246,7 @@ public class ObjectArrayResultSet extends BaseWrapper implements ResultSet {
 	 *         returned if the label cannot be found
 	 */
 	protected int getColumnIndex(final String columnLabel) {
-		for (int i = 0; i < names.length; i++) {
-			final String name = names[i];
-			if (name.equals(columnLabel)) {
-				return i;
-			}
-		}
-
-		return -1;
+		return findPos(names, columnLabel);
 	}
 
 	/**
@@ -127,7 +270,7 @@ public class ObjectArrayResultSet extends BaseWrapper implements ResultSet {
 			final boolean nullable) throws SQLException {
 		checkColumnIndex(columnIndex);
 
-		final Object value = getCurrentRow()[columnIndex];
+		final Object value = getCurrentRow()[columnIndex - 1];
 		if (value == null) {
 			if (nullable) {
 				return null;
@@ -290,7 +433,7 @@ public class ObjectArrayResultSet extends BaseWrapper implements ResultSet {
 	public String getString(final String columnLabel) throws SQLException {
 		checkClosed();
 		checkColumnLabel(columnLabel);
-		
+
 		return getString(getColumnIndex(columnLabel));
 	}
 

@@ -5,6 +5,9 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.RowIdLifetime;
 import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * The database's meta information about the database itself.
@@ -662,8 +665,23 @@ public class TidaDatabaseMetaData extends BaseWrapper implements
 	public ResultSet getTables(final String catalog,
 			final String schemaPattern, final String tableNamePattern,
 			final String[] types) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		final String[] cols = new String[] { "TABLE_CAT", "TABLE_SCHEM",
+				"TABLE_NAME", "TABLE_TYPE", "REMARKS", "TYPE_CAT",
+				"TYPE_SCHEM", "TYPE_NAME", "SELF_REFERENCING_COL_NAME",
+				"REF_GENERATION" };
+
+		if ((catalog == null || "".equals(catalog))
+				&& (types == null || Arrays.asList(types).contains("TABLE"))) {
+			final Map<String, String> patterns = new HashMap<String, String>();
+			patterns.put("TABLE_SCHEM", schemaPattern);
+			patterns.put("TABLE_NAME", tableNamePattern);
+
+			// TODO get the tables known on server-side using GET MODELS
+			return new ObjectArrayResultSet(cols,
+					new Object[][] { new Object[] { "", "" } }, patterns);
+		} else {
+			return new EmptyResultSet(cols);
+		}
 	}
 
 	@Override
@@ -679,8 +697,8 @@ public class TidaDatabaseMetaData extends BaseWrapper implements
 
 	@Override
 	public ResultSet getTableTypes() throws SQLException {
-		// TODO
-		return null;
+		return new ObjectArrayResultSet(new String[] { "TABLE_TYPE " },
+				new Object[][] { new Object[] { "TABLE" } });
 	}
 
 	@Override
@@ -697,9 +715,14 @@ public class TidaDatabaseMetaData extends BaseWrapper implements
 				"IS_AUTOINCREMENT" };
 
 		if (catalog == null || "".equals(catalog)) {
+			final Map<String, String> patterns = new HashMap<String, String>();
+			patterns.put("TABLE_SCHEM", schemaPattern);
+			patterns.put("TABLE_NAME", tableNamePattern);
+			patterns.put("COLUMN_NAME", columnNamePattern);
 
-			// TODO
-			return null;
+			// TODO get the tables known on server-side GET MODELS
+			return new ObjectArrayResultSet(cols,
+					new Object[][] { new Object[] { "", "" } }, patterns);
 		} else {
 			return new EmptyResultSet(cols);
 		}
@@ -709,16 +732,38 @@ public class TidaDatabaseMetaData extends BaseWrapper implements
 	public ResultSet getColumnPrivileges(final String catalog,
 			final String schema, final String table,
 			final String columnNamePattern) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		final String[] cols = new String[] { "TABLE_CAT", "TABLE_SCHEM",
+				"TABLE_NAME", "COLUMN_NAME", "GRANTOR", "GRANTEE", "PRIVILEGE",
+				"IS_GRANTABLE" };
+
+		if (columnNamePattern == null || "".equals(columnNamePattern)) {
+
+			// TODO get the tables known on server-side GET MODELS
+			return new ObjectArrayResultSet(cols,
+					new Object[][] { new Object[] { "", "" } });
+		} else {
+			return new EmptyResultSet(cols);
+		}
 	}
 
 	@Override
 	public ResultSet getTablePrivileges(final String catalog,
 			final String schemaPattern, final String tableNamePattern)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		final String[] cols = new String[] { "TABLE_CAT", "TABLE_SCHEM",
+				"TABLE_NAME", "GRANTOR", "GRANTEE", "PRIVILEGE", "IS_GRANTABLE" };
+
+		if (catalog == null || "".equals(catalog)) {
+			final Map<String, String> patterns = new HashMap<String, String>();
+			patterns.put("TABLE_SCHEM", schemaPattern);
+			patterns.put("TABLE_NAME", tableNamePattern);
+
+			// TODO get the tables known on server-side GET MODELS
+			return new ObjectArrayResultSet(cols,
+					new Object[][] { new Object[] { "", "" } }, patterns);
+		} else {
+			return new EmptyResultSet(cols);
+		}
 	}
 
 	@Override
@@ -964,10 +1009,10 @@ public class TidaDatabaseMetaData extends BaseWrapper implements
 	public ResultSet getSchemas(final String catalog, final String schemaPattern)
 			throws SQLException {
 		if (catalog == null || "".equals(catalog)) {
-
 			return new ObjectArrayResultSet(new String[] { "TABLE_SCHEM",
 					"TABLE_CATALOG" },
-					new Object[][] { new Object[] { "", "" } });
+					new Object[][] { new Object[] { "", "" } }, "TABLE_SCHEM",
+					schemaPattern);
 		} else {
 			return new EmptyResultSet(new String[] { "TABLE_SCHEM",
 					"TABLE_CATALOG" });

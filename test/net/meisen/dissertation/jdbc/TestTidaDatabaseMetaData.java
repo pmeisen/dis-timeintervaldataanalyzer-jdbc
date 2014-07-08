@@ -38,7 +38,7 @@ public class TestTidaDatabaseMetaData {
 		final ResultSet res = meta.getCatalogs();
 
 		assertTrue(res.next());
-		assertEquals("", res.getString("names.length"));
+		assertEquals("", res.getString("TABLE_CAT"));
 		assertEquals("", res.getString(1));
 
 		assertFalse(res.next());
@@ -56,18 +56,34 @@ public class TestTidaDatabaseMetaData {
 		
 		res = meta.getSchemas();
 		assertTrue(res.next());
+		assertEquals("", res.getString("TABLE_SCHEM"));
+		assertEquals("", res.getString(1));
+		assertEquals("", res.getString("TABLE_CATALOG"));
+		assertEquals("", res.getString(2));
 		assertFalse(res.next());
 		
 		res = meta.getSchemas(null, null);
 		assertTrue(res.next());
+		assertEquals("", res.getString("TABLE_SCHEM"));
+		assertEquals("", res.getString(1));
+		assertEquals("", res.getString("TABLE_CATALOG"));
+		assertEquals("", res.getString(2));
 		assertFalse(res.next());
 		
 		res = meta.getSchemas("", "");
 		assertTrue(res.next());
+		assertEquals("", res.getString("TABLE_SCHEM"));
+		assertEquals("", res.getString(1));
+		assertEquals("", res.getString("TABLE_CATALOG"));
+		assertEquals("", res.getString(2));
 		assertFalse(res.next());
 		
 		res = meta.getSchemas("", "%");
 		assertTrue(res.next());
+		assertEquals("", res.getString("TABLE_SCHEM"));
+		assertEquals("", res.getString(1));
+		assertEquals("", res.getString("TABLE_CATALOG"));
+		assertEquals("", res.getString(2));
 		assertFalse(res.next());
 		
 		res = meta.getSchemas("", "_");
