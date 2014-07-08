@@ -2,12 +2,17 @@ package net.meisen.dissertation.jdbc;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
+import java.sql.DriverPropertyInfo;
 import java.sql.ResultSet;
 import java.sql.RowIdLifetime;
 import java.sql.SQLException;
+import java.sql.Types;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 
 /**
  * The database's meta information about the database itself.
@@ -79,26 +84,107 @@ public class TidaDatabaseMetaData extends BaseWrapper implements
 
 	@Override
 	public String getDatabaseProductName() throws SQLException {
-		// TODO retrieve from database
-		return Constants.getManifestInfo().getImplementationTitle();
+		final TidaStatement statement = connection.createStatement();
+		final TidaResultSet res = statement.executeQuery("GET VERSION");
+
+		final String productName;
+		if (res.next()) {
+			productName = res.getString(1);
+		} else {
+			productName = null;
+		}
+		res.close();
+		statement.close();
+
+		return productName;
 	}
 
 	@Override
 	public String getDatabaseProductVersion() throws SQLException {
-		// TODO retrieve from database
-		return Constants.getVersion().toStringRaw();
+		final TidaStatement statement = connection.createStatement();
+		final TidaResultSet res = statement.executeQuery("GET VERSION");
+
+		final String productVersion;
+		if (res.next()) {
+			productVersion = res.getString(2);
+		} else {
+			productVersion = null;
+		}
+		res.close();
+		statement.close();
+
+		return productVersion;
 	}
 
 	@Override
 	public int getDatabaseMajorVersion() throws SQLException {
-		// TODO Auto-generated method stub
-		return 0;
+		final TidaStatement statement = connection.createStatement();
+		final TidaResultSet res = statement.executeQuery("GET VERSION");
+
+		final int majorVersion;
+		if (res.next()) {
+			majorVersion = extractMajorVersion(res.getString(2));
+		} else {
+			majorVersion = -1;
+		}
+		res.close();
+		statement.close();
+
+		return majorVersion;
+	}
+
+	/**
+	 * Extracts the major version from the specified {@code version}.
+	 * 
+	 * @param version
+	 *            the version to extract the major version from
+	 * 
+	 * @return the extracted major version, or {@code -1} if no major version
+	 *         was found
+	 */
+	protected int extractMajorVersion(final String version) {
+		try {
+			return new Scanner(version).useDelimiter("\\D+").nextInt();
+		} catch (final Exception e) {
+			return -1;
+		}
 	}
 
 	@Override
 	public int getDatabaseMinorVersion() throws SQLException {
-		// TODO Auto-generated method stub
-		return 0;
+		final TidaStatement statement = connection.createStatement();
+		final TidaResultSet res = statement.executeQuery("GET VERSION");
+
+		final int minorVersion;
+		if (res.next()) {
+			minorVersion = extractMinorVersion(res.getString(2));
+		} else {
+			minorVersion = -1;
+		}
+		res.close();
+		statement.close();
+
+		return minorVersion;
+	}
+
+	/**
+	 * Extracts the minor version from the specified {@code version}.
+	 * 
+	 * @param version
+	 *            the version to extract the minor version from
+	 * 
+	 * @return the extracted minor version, or {@code -1} if no minor version
+	 *         was found
+	 */
+	protected int extractMinorVersion(final String version) {
+		final Scanner scanner = new Scanner(version).useDelimiter("\\D+");
+
+		try {
+			scanner.nextInt();
+			return scanner.nextInt();
+		} catch (final Exception e) {
+			return -1;
+		}
 	}
 
 	@Override
@@ -676,9 +762,29 @@ public class TidaDatabaseMetaData extends BaseWrapper implements
 			patterns.put("TABLE_SCHEM", schemaPattern);
 			patterns.put("TABLE_NAME", tableNamePattern);
 
-			// TODO get the tables known on server-side using GET MODELS
+			final TidaStatement statement = connection.createStatement();
+			final TidaResultSet res = statement.executeQuery("GET MODELS");
+			final List<Object[]> rows = new ArrayList<Object[]>();
+			while (res.next()) {
+				final Object[] row = new Object[] { "", // TABLE_CAT
+						"", // TABLE_SCHEM
+						res.getString(1), // TABLE_NAME
+						"TABLE", // TABLE_TYPE
+						"", // REMARKS
+						null, // TYPE_CAT
+						null, // TYPE_SCHEM
+						null, // TYPE_NAME
+						null, // SELF_REFERENCING_COL_NAME
+						null // REF_GENERATION
+				};
+
+				rows.add(row);
+			}
+			res.close();
+			statement.close();
+
 			return new ObjectArrayResultSet(cols,
-					new Object[][] { new Object[] { "", "" } }, patterns);
+					rows.toArray(new Object[][] {}));
 		} else {
 			return new EmptyResultSet(cols);
 		}
@@ -720,9 +826,42 @@ public class TidaDatabaseMetaData extends BaseWrapper implements
 			patterns.put("TABLE_NAME", tableNamePattern);
 			patterns.put("COLUMN_NAME", columnNamePattern);
 
-			// TODO get the tables known on server-side GET MODELS
+			final TidaStatement statement = connection.createStatement();
+			final TidaResultSet res = statement.executeQuery("GET MODELS");
+			final List<Object[]> rows = new ArrayList<Object[]>();
+			while (res.next()) {
+				final Object[] row = new Object[] { "", // TABLE_CAT
+						"", // TABLE_SCHEM
+						res.getString(1), // TABLE_NAME
+						"DYNAMIC", // COLUMN_NAME
+						"", // DATA_TYPE int => SQL type from java.sql.Types
+						"", // TYPE_NAME String
+						0, // COLUMN_SIZE int => column size.
+						"", // BUFFER_LENGTH is not used.
+						0, // DECIMAL_DIGITS int
+						0, // NUM_PREC_RADIX int
+						DatabaseMetaData.columnNullable, // NULLABLE int
+						"", // REMARKS
+						"", // COLUMN_DEF
+						Types.JAVA_OBJECT, // SQL_DATA_TYPE int
+						0, // SQL_DATETIME_SUB int
+						0, // CHAR_OCTET_LENGTH int
+						0, // ORDINAL_POSITION
+						"YES", // IS_NULLABLE String
+						null, // SCOPE_CATLOG
+						null, // SCOPE_SCHEMA
+						null, // SCOPE_TABLE
+						null, // SOURCE_DATA_TYPE
+						"NO" // IS_AUTOINCREMENT
+				};
+
+				rows.add(row);
+			}
+			res.close();
+			statement.close();
+
 			return new ObjectArrayResultSet(cols,
-					new Object[][] { new Object[] { "", "" } }, patterns);
+					rows.toArray(new Object[][] {}));
 		} else {
 			return new EmptyResultSet(cols);
 		}
@@ -737,10 +876,28 @@ public class TidaDatabaseMetaData extends BaseWrapper implements
 				"IS_GRANTABLE" };
 
 		if (columnNamePattern == null || "".equals(columnNamePattern)) {
+			final TidaStatement statement = connection.createStatement();
+			final TidaResultSet res = statement.executeQuery("GET MODELS");
+			final List<Object[]> rows = new ArrayList<Object[]>();
+			while (res.next()) {
+				// TODO add the privs
+				final Object[] row = new Object[] { "", // TABLE_CAT
+						"", // TABLE_SCHEM
+						res.getString(1), // TABLE_NAME
+						"DYNAMIC", // COLUMN_NAME
+						"", // GRANTOR
+						"", // GRANTEE
+						"", // PRIVILEGE
+						"" // IS_GRANTABLE
+				};
 
-			// TODO get the tables known on server-side GET MODELS
+				rows.add(row);
+			}
+			res.close();
+			statement.close();
+
 			return new ObjectArrayResultSet(cols,
-					new Object[][] { new Object[] { "", "" } });
+					rows.toArray(new Object[][] {}));
 		} else {
 			return new EmptyResultSet(cols);
 		}
@@ -758,9 +915,27 @@ public class TidaDatabaseMetaData extends BaseWrapper implements
 			patterns.put("TABLE_SCHEM", schemaPattern);
 			patterns.put("TABLE_NAME", tableNamePattern);
 
-			// TODO get the tables known on server-side GET MODELS
+			final TidaStatement statement = connection.createStatement();
+			final TidaResultSet res = statement.executeQuery("GET MODELS");
+			final List<Object[]> rows = new ArrayList<Object[]>();
+			while (res.next()) {
+				// TODO add the privs
+				final Object[] row = new Object[] { "", // TABLE_CAT
+						"", // TABLE_SCHEM
+						res.getString(1), // TABLE_NAME
+						"", // GRANTOR
+						"", // GRANTEE
+						"", // PRIVILEGE
+						"" // IS_GRANTABLE
+				};
+
+				rows.add(row);
+			}
+			res.close();
+			statement.close();
+
 			return new ObjectArrayResultSet(cols,
-					new Object[][] { new Object[] { "", "" } }, patterns);
+					rows.toArray(new Object[][] {}));
 		} else {
 			return new EmptyResultSet(cols);
 		}
@@ -770,8 +945,9 @@ public class TidaDatabaseMetaData extends BaseWrapper implements
 	public ResultSet getBestRowIdentifier(final String catalog,
 			final String schema, final String table, final int scope,
 			final boolean nullable) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		return new EmptyResultSet(new String[] { "SCOPE", "COLUMN_NAME",
+				"DATA_TYPE", "TYPE_NAME", "COLUMN_SIZE", "BUFFER_LENGTH",
+				"DECIMAL_DIGITS", "PSEUDO_COLUMN" });
 	}
 
 	@Override
@@ -823,8 +999,12 @@ public class TidaDatabaseMetaData extends BaseWrapper implements
 
 	@Override
 	public ResultSet getTypeInfo() throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		return new EmptyResultSet(new String[] { "TYPE_NAME", "DATA_TYPE",
+				"PRECISION", "LITERAL_PREFIX", "LITERAL_SUFFIX",
+				"CREATE_PARAMS", "NULLABLE", "CASE_SENSITIVE", "SEARCHABLE",
+				"UNSIGNED_ATTRIBUTE", "FIXED_PREC_SCALE", "AUTO_INCREMENT",
+				"LOCAL_TYPE_NAME", "MINIMUM_SCALE", "MAXIMUM_SCALE",
+				"SQL_DATA_TYPE", "SQL_DATETIME_SUB", "NUM_PREC_RADIX" });
 	}
 
 	@Override
@@ -1031,8 +1211,18 @@ public class TidaDatabaseMetaData extends BaseWrapper implements
 
 	@Override
 	public ResultSet getClientInfoProperties() throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		final DriverProperties props = this.connection.getDriverProperties();
+
+		final List<Object[]> rows = new ArrayList<Object[]>();
+		for (final DriverPropertyInfo info : props.getDriverPropertyInfo()) {
+			final Object[] row = new Object[] { info.name, Integer.MAX_VALUE,
+					info.value, info.description };
+			rows.add(row);
+		}
+
+		return new ObjectArrayResultSet(new String[] { "NAME", "MAX_LEN",
+				"DEFAULT_VALUE", "DESCRIPTION" },
+				rows.toArray(new Object[][] {}));
 	}
 
 	@Override

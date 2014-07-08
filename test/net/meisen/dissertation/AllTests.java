@@ -3,6 +3,7 @@ package net.meisen.dissertation;
 import net.meisen.dissertation.jdbc.TestObjectArrayResultSet;
 import net.meisen.dissertation.jdbc.TestQueryResponseHandler;
 import net.meisen.dissertation.jdbc.TestTidaConnection;
+import net.meisen.dissertation.jdbc.TestTidaDatabaseMetaData;
 import net.meisen.dissertation.jdbc.TestTidaDriver;
 import net.meisen.dissertation.jdbc.TestTidaResultSet;
 import net.meisen.dissertation.jdbc.TestTidaStatement;
@@ -20,7 +21,7 @@ import org.junit.runners.Suite;
 @Suite.SuiteClasses({ TestQueryResponseHandler.class, TestProtocol.class,
 		TestTidaDriver.class, TestTidaConnection.class,
 		TestObjectArrayResultSet.class, TestTidaStatement.class,
-		TestTidaResultSet.class })
+		TestTidaResultSet.class, TestTidaDatabaseMetaData.class })
 public class AllTests {
 	// nothing more to do here
 }

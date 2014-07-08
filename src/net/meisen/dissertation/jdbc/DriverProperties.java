@@ -206,23 +206,23 @@ public class DriverProperties {
 
 		final DriverPropertyInfo userProp = new DriverPropertyInfo(
 				DriverProperties.PROPERTY_USER, getUser());
-		portProp.required = true;
-		portProp.description = "the user used to connect to the tida-server";
+		userProp.required = true;
+		userProp.description = "the user used to connect to the tida-server";
 
 		final DriverPropertyInfo passwordProp = new DriverPropertyInfo(
 				DriverProperties.PROPERTY_PASSWORD, getPassword());
-		portProp.required = true;
-		portProp.description = "the password used to connect to the tida-server";
+		passwordProp.required = true;
+		passwordProp.description = "the password used to connect to the tida-server";
 
 		final DriverPropertyInfo timeoutProp = new DriverPropertyInfo(
 				DriverProperties.PROPERTY_TIMEOUT, "" + getTimeout());
-		portProp.required = false;
-		portProp.description = "the timeout of the client-connection in milliseconds";
+		timeoutProp.required = false;
+		timeoutProp.description = "the timeout of the client-connection in milliseconds";
 
 		final DriverPropertyInfo handlerProp = new DriverPropertyInfo(
 				DriverProperties.PROPERTY_HANDLERCLASS, getHandlerClass());
-		portProp.required = false;
-		portProp.description = "handler class used to handle resource requests";
+		handlerProp.required = false;
+		handlerProp.description = "handler class used to handle resource requests";
 
 		// create the array and return it
 		return new DriverPropertyInfo[] { hostProp, portProp, userProp,
@@ -248,7 +248,7 @@ public class DriverProperties {
 		} else if (PROPERTY_RAWURL.equals(name)) {
 			return getRawJdbc();
 		} else if (PROPERTY_PASSWORD.equals(name)) {
-			return "*";
+			return null;
 		} else if (PROPERTY_TIMEOUT.equals(name)) {
 			return "" + getTimeout();
 		} else if (PROPERTY_HANDLERCLASS.equals(name)) {

@@ -27,6 +27,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+/**
+ * A {@code ResultSet} for {@code Object[][]} instances.
+ * 
+ * @author pmeisen
+ * 
+ */
 public class ObjectArrayResultSet extends BaseWrapper implements ResultSet {
 
 	private final Object[][] data;
@@ -35,16 +41,50 @@ public class ObjectArrayResultSet extends BaseWrapper implements ResultSet {
 	private boolean closed;
 	private int curPosition;
 
-	public ObjectArrayResultSet(final String[] names, final Object[][] data) {
-		this(names, data, null);
+	/**
+	 * Constructor to create a {@code ResultSet} with the specified
+	 * {@code labels} and the specified {@code data}.
+	 * 
+	 * @param labels
+	 *            the labels of the columns
+	 * @param data
+	 *            the rows
+	 */
+	public ObjectArrayResultSet(final String[] labels, final Object[][] data) {
+		this(labels, data, null);
 	}
 
-	public ObjectArrayResultSet(final String[] names, final Object[][] data,
+	/**
+	 * Constructor to create a {@code ResultSet} with the specified
+	 * {@code labels} and the specified {@code data}.
+	 * 
+	 * @param labels
+	 *            the labels of the columns
+	 * @param data
+	 *            the rows
+	 * @param column
+	 *            the column to be filtered
+	 * @param filterPattern
+	 *            the {@code LIKE} expression to filter the rows
+	 */
+	public ObjectArrayResultSet(final String[] labels, final Object[][] data,
 			final String column, final String filterPattern) {
-		this(names, data, createMap(column, filterPattern));
+		this(labels, data, createMap(column, filterPattern));
 	}
 
-	public ObjectArrayResultSet(final String[] names, final Object[][] data,
+	/**
+	 * Constructor to create a {@code ResultSet} with the specified
+	 * {@code labels} and the specified {@code data}.
+	 * 
+	 * @param labels
+	 *            the labels of the columns
+	 * @param data
+	 *            the rows
+	 * @param filterPatterns
+	 *            a {@code Collection} of patterns specifying the columns and
+	 *            the pattern for the column (as {@code LIKE} expression)
+	 */
+	public ObjectArrayResultSet(final String[] labels, final Object[][] data,
 			final Map<String, String> filterPatterns) {
 
 		if (filterPatterns == null) {
@@ -53,7 +93,11 @@ public class ObjectArrayResultSet extends BaseWrapper implements ResultSet {
 			final List<Object[]> filteredData = new ArrayList<Object[]>();
 			final Map<String, String> regEx = new HashMap<String, String>();
 			for (final Entry<String, String> e : filterPatterns.entrySet()) {
-				regEx.put(e.getKey(), createRegEx(e.getValue()));
+				final String pattern = e.getValue();
+
+				if (pattern != null) {
+					regEx.put(e.getKey(), createRegEx(e.getValue()));
+				}
 			}
 
 			for (final Object[] row : data) {
@@ -61,7 +105,7 @@ public class ObjectArrayResultSet extends BaseWrapper implements ResultSet {
 
 				// check the filters on the row
 				for (final Entry<String, String> e : regEx.entrySet()) {
-					final int pos = findPos(names, e.getKey());
+					final int pos = findPos(labels, e.getKey());
 					if (pos == -1) {
 						continue;
 					}
@@ -87,7 +131,7 @@ public class ObjectArrayResultSet extends BaseWrapper implements ResultSet {
 			this.data = filteredData.toArray(new Object[][] {});
 		}
 
-		this.names = names;
+		this.names = labels;
 
 		this.closed = false;
 		this.curPosition = -1;
@@ -170,6 +214,16 @@ public class ObjectArrayResultSet extends BaseWrapper implements ResultSet {
 		return sb.toString();
 	}
 
+	/**
+	 * Creates a map of patterns with a single entry.
+	 * 
+	 * @param column
+	 *            the column to be filtered
+	 * @param filterPattern
+	 *            the pattern to be applied
+	 * 
+	 * @return the map with the specified entry
+	 */
 	protected static Map<String, String> createMap(final String column,
 			final String filterPattern) {
 		final Map<String, String> pattern = new HashMap<String, String>(1);
@@ -178,6 +232,17 @@ public class ObjectArrayResultSet extends BaseWrapper implements ResultSet {
 		return pattern;
 	}
 
+	/**
+	 * Method to find a position of a value within a string-array.
+	 * 
+	 * @param names
+	 *            the array to search in
+	 * @param label
+	 *            the value to be found
+	 * 
+	 * @return the position within the array of {@code label}, {@code -1} if
+	 *         nothing was found
+	 */
 	protected static int findPos(final String[] names, final String label) {
 		for (int i = 0; i < names.length; i++) {
 			final String name = names[i];
@@ -584,8 +649,7 @@ public class ObjectArrayResultSet extends BaseWrapper implements ResultSet {
 
 	@Override
 	public ResultSetMetaData getMetaData() throws SQLException {
-		// TODO
-		return null;
+		return new ObjectArrayResultSetMeta(names);
 	}
 
 	@Override
@@ -1782,5 +1846,19 @@ public class ObjectArrayResultSet extends BaseWrapper implements ResultSet {
 		checkColumnLabel(columnLabel);
 
 		throw TidaSqlExceptions.createNotSupportedException(8004);
+	}
+
+	@Override
+	public String toString() {
+		if (curPosition < 0 || curPosition >= data.length) {
+			return "reached end";
+		} else {
+			try {
+				return Arrays.asList(getCurrentRow()).toString();
+			} catch (final SQLException e) {
+				// should never happen
+				return null;
+			}
+		}
 	}
 }

@@ -384,7 +384,7 @@ public class TidaConnection extends BaseConnectionWrapper implements Connection 
 	public Properties getClientInfo() throws SQLException {
 		checkClosed();
 
-		return new Properties();
+		return getDriverProperties().getProperties();
 	}
 
 	@Override
