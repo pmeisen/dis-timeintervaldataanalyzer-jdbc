@@ -60,7 +60,11 @@ public enum ResponseType {
 	/**
 	 * A {@code ResponseType} which marks the end of meta-data.
 	 */
-	EOM((byte) 12, false, false);
+	EOM((byte) 12, false, false),
+	/**
+	 * A {@code ResponseType} which defines credentials to be read.
+	 */
+	CREDENTIALS((byte) 13, true, true);
 
 	private final byte id;
 	private final boolean hasData;

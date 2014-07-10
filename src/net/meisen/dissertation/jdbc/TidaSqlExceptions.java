@@ -376,7 +376,9 @@ public class TidaSqlExceptions {
 			return "Unable to retrieve a result, exception: " + parameter[0];
 		case 9008:
 			return "Cannot retrieve any connection to query '" + parameter[0]
-					+ "' to the server: " + parameter[1];
+					+ "' from the server: " + parameter[1];
+		case 9009:
+			return "Unable to send credentials.";
 		default:
 			return "Unknown exception.";
 		}

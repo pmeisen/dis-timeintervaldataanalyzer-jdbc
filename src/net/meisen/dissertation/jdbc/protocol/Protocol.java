@@ -319,6 +319,26 @@ public class Protocol implements Closeable {
 	}
 
 	/**
+	 * Writes the specified {@code credential} to the socket.
+	 * 
+	 * @param username
+	 *            the user part of the credential
+	 * @param password
+	 *            the password part of the credential
+	 * 
+	 * @throws IOException
+	 *             if the credential cannot be written
+	 */
+	public void writeCredential(final String username, final String password)
+			throws IOException {
+		os.writeByte(ResponseType.CREDENTIALS.getId());
+		os.writeInt(2);
+		writeString(username);
+		writeString(password);
+		os.flush();
+	}
+
+	/**
 	 * Writes the specified {@code value} to the socket.
 	 * 
 	 * @param value
@@ -386,6 +406,25 @@ public class Protocol implements Closeable {
 		checkException(value);
 
 		return value;
+	}
+
+	/**
+	 * Reads the credential.
+	 * 
+	 * @return the read credential
+	 * @throws IOException
+	 *             if an error occurred on client- or server-side, or if the
+	 *             retrieved value is not a credential
+	 */
+	public String[] readCredential() throws IOException {
+		final RetrievedValue value = _read();
+		checkException(value);
+
+		if (value instanceof ChunkedRetrievedValue) {
+			return ((ChunkedRetrievedValue) value).getCredentials();
+		} else {
+			return new String[] { value.getString(), "" };
+		}
 	}
 
 	/**
@@ -812,6 +851,9 @@ public class Protocol implements Closeable {
 				if (handler != null) {
 					read = handler.handleResult(value.getType(), null);
 				}
+			} else if (value.is(ResponseType.CREDENTIALS)) {
+				throw new IllegalStateException(
+						"Credentials cannot be part of a response.");
 			} else {
 				throw new IllegalStateException("Cannot handle the result '"
 						+ value + "'.");

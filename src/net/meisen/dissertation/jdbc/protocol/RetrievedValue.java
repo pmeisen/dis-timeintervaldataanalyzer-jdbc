@@ -121,7 +121,7 @@ public class RetrievedValue {
 
 		return dts;
 	}
-
+	
 	/**
 	 * Interprets {@code this} as a message and returns the value.
 	 * 

@@ -255,6 +255,14 @@ public class ProtocolManager {
 					getDriverProperties().getRawJdbc());
 		}
 
+		// send the credentials to authenticate on the new socket
+		try {
+			protocol.writeCredential(driverProperties.getUser(),
+					driverProperties.getPassword());
+		} catch (final IOException e) {
+			throw TidaSqlExceptions.createException(9009, e);
+		}
+
 		owners.put(protocol, owner);
 		protocols.put(protocol, socket);
 

@@ -69,6 +69,28 @@ public class ChunkedRetrievedValue extends RetrievedValue {
 	}
 
 	/**
+	 * Gets the credentials defined by {@code this}.
+	 * 
+	 * @return the read credentials
+	 * 
+	 * @throws IOException
+	 *             if the string cannot be interpreted
+	 * @throws IllegalStateException
+	 *             if the type is unequal to {@link ResponseType#CREDENTIALS}
+	 */
+	public String[] getCredentials() throws IOException {
+		checkType(ResponseType.CREDENTIALS);
+
+		final String[] credentials = new String[chunks.length];
+		for (int i = 0; i < chunks.length; i++) {
+			final String val = new String(chunks[i], "UTF8");
+			credentials[i] = val;
+		}
+
+		return credentials;
+	}
+
+	/**
 	 * Gets the header-names defined by {@code this}.
 	 * 
 	 * @return the read names
