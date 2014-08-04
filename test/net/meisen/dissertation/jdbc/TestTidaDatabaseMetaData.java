@@ -4,12 +4,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
@@ -199,7 +196,7 @@ public class TestTidaDatabaseMetaData {
 		}
 
 		@Test
-		public void testGet() throws SQLException {
+		public void testGetPermissions() throws SQLException {
 			final TidaDatabaseMetaData meta = new TidaDatabaseMetaData(conn);
 			ResultSet res;
 
