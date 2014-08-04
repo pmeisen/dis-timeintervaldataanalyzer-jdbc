@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+
+<config xmlns="http://dev.meisen.net/xsd/dissertation/config"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://dev.meisen.net/xsd/dissertation/config http://dev.meisen.net/xsd/dissertation/tidaConfig.xsd">
+  
+  <location folder="${tida.config.test.location}" />
+
+  <auth>
+    <manager implementation="net.meisen.dissertation.impl.auth.shiro.ShiroAuthManager" />
+  </auth>
+</config>

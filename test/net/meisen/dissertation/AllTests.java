@@ -21,7 +21,8 @@ import org.junit.runners.Suite;
 @Suite.SuiteClasses({ TestQueryResponseHandler.class, TestProtocol.class,
 		TestTidaDriver.class, TestTidaConnection.class,
 		TestObjectArrayResultSet.class, TestTidaStatement.class,
-		TestTidaResultSet.class, TestTidaDatabaseMetaData.class })
+		TestTidaResultSet.class,
+		TestTidaDatabaseMetaData.TestTidaDatabaseMetaDataSuite.class })
 public class AllTests {
 	// nothing more to do here
 }

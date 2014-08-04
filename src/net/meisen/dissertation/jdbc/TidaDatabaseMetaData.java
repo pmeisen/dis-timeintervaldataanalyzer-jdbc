@@ -24,8 +24,6 @@ public class TidaDatabaseMetaData extends BaseWrapper implements
 		DatabaseMetaData {
 	private TidaConnection connection;
 
-	private boolean todoMarker;
-
 	/**
 	 * The default constructor retrieves the meta-data for the specified
 	 * {@code connection}.
@@ -875,23 +873,30 @@ public class TidaDatabaseMetaData extends BaseWrapper implements
 				"TABLE_NAME", "COLUMN_NAME", "GRANTOR", "GRANTEE", "PRIVILEGE",
 				"IS_GRANTABLE" };
 
-		if (columnNamePattern == null || "".equals(columnNamePattern)) {
+		if ((catalog == null || "".equals(catalog))
+				&& (schema == null || "".equals(schema))
+				&& (columnNamePattern == null || "".equals(columnNamePattern) || "DYNAMIC"
+						.equals(columnNamePattern))) {
+
 			final TidaStatement statement = connection.createStatement();
-			final TidaResultSet res = statement.executeQuery("GET MODELS");
+			final TidaResultSet res = statement.executeQuery("GET PERMISSIONS");
 			final List<Object[]> rows = new ArrayList<Object[]>();
 			while (res.next()) {
-				// TODO add the privs
-				final Object[] row = new Object[] { "", // TABLE_CAT
-						"", // TABLE_SCHEM
-						res.getString(1), // TABLE_NAME
-						"DYNAMIC", // COLUMN_NAME
-						"", // GRANTOR
-						"", // GRANTEE
-						"", // PRIVILEGE
-						"" // IS_GRANTABLE
-				};
 
-				rows.add(row);
+				// check if the table is valid
+				if (table != null && table.equals(res.getString(2))) {
+					final Object[] row = new Object[] { "", // TABLE_CAT
+							"", // TABLE_SCHEM
+							res.getString(2), // TABLE_NAME
+							"DYNAMIC", // COLUMN_NAME
+							"UNKNOWN", // GRANTOR
+							res.getString(1), // GRANTEE
+							res.getString(3), // PRIVILEGE
+							null // IS_GRANTABLE
+					};
+
+					rows.add(row);
+				}
 			}
 			res.close();
 			statement.close();
@@ -916,17 +921,16 @@ public class TidaDatabaseMetaData extends BaseWrapper implements
 			patterns.put("TABLE_NAME", tableNamePattern);
 
 			final TidaStatement statement = connection.createStatement();
-			final TidaResultSet res = statement.executeQuery("GET MODELS");
+			final TidaResultSet res = statement.executeQuery("GET PERMISSIONS");
 			final List<Object[]> rows = new ArrayList<Object[]>();
 			while (res.next()) {
-				// TODO add the privs
 				final Object[] row = new Object[] { "", // TABLE_CAT
 						"", // TABLE_SCHEM
-						res.getString(1), // TABLE_NAME
-						"", // GRANTOR
-						"", // GRANTEE
-						"", // PRIVILEGE
-						"" // IS_GRANTABLE
+						res.getString(2), // TABLE_NAME
+						"UNKNOWN", // GRANTOR
+						res.getString(1), // GRANTEE
+						res.getString(3), // PRIVILEGE
+						null // IS_GRANTABLE
 				};
 
 				rows.add(row);
@@ -935,7 +939,7 @@ public class TidaDatabaseMetaData extends BaseWrapper implements
 			statement.close();
 
 			return new ObjectArrayResultSet(cols,
-					rows.toArray(new Object[][] {}));
+					rows.toArray(new Object[][] {}), patterns);
 		} else {
 			return new EmptyResultSet(cols);
 		}
