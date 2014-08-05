@@ -4,6 +4,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.TimeZone;
 
 import net.meisen.dissertation.jdbc.protocol.DataType;
 import net.meisen.dissertation.jdbc.protocol.IResponseHandler;
@@ -403,6 +407,35 @@ public class QueryResponseHandler implements IResponseHandler {
 		}
 
 		return (T) res;
+	}
+
+	/**
+	 * Creates a string for the value at the specified zero-based position.
+	 * 
+	 * @param pos
+	 *            the zero-based position to get the string for
+	 * 
+	 * @return the value as string representation
+	 */
+	public String toString(final int pos) {
+
+		// check the position
+		if (pos < 0 || pos >= header.length) {
+			throw new IllegalArgumentException("Invalid position used.");
+		}
+
+		final Object value = lastResult[pos];
+		if (value == null) {
+			return null;
+		} else if (value instanceof Date) {
+			final DateFormat formatter = new SimpleDateFormat(
+					"dd.MM.yyyy HH:mm:ss,SSS");
+			formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+			
+			return formatter.format((Date) value);
+		} else {
+			return value.toString();
+		}
 	}
 
 	/**
