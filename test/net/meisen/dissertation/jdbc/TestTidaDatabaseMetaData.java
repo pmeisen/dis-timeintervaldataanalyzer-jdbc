@@ -200,6 +200,8 @@ public class TestTidaDatabaseMetaData {
 			final TidaDatabaseMetaData meta = new TidaDatabaseMetaData(conn);
 			ResultSet res;
 
+			// TODO make this test right
+			
 			// check an empty server
 			res = meta.getTablePrivileges(null, null, null);
 			while(res.next()) {

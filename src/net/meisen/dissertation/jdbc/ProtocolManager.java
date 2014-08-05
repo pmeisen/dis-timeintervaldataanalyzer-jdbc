@@ -180,13 +180,7 @@ public class ProtocolManager {
 
 		// if there was a socket bound close it as well
 		final Socket socket = this.protocols.remove(protocol);
-		if (socket != null) {
-			try {
-				socket.close();
-			} catch (final IOException e) {
-				exception = true;
-			}
-		}
+		exception = closeSocket(socket);
 
 		// get the scope the protocol belongs to and remove it from there
 		for (final Entry<BaseConnectionWrapper, Set<Protocol>> entry : this.scopes
@@ -209,6 +203,29 @@ public class ProtocolManager {
 
 		if (exception) {
 			throw TidaSqlExceptions.createException(2004);
+		}
+	}
+
+	/**
+	 * Method used to close the specified {@code socket}.
+	 * 
+	 * @param socket
+	 *            the socket to be closed
+	 * 
+	 * @return {@code true} if the socket was closed without any exception,
+	 *         otherwise {@code false}
+	 */
+	protected boolean closeSocket(final Socket socket) {
+		if (socket == null) {
+			return true;
+		}
+
+		try {
+			socket.close();
+
+			return false;
+		} catch (final IOException e) {
+			return true;
 		}
 	}
 
@@ -240,8 +257,22 @@ public class ProtocolManager {
 			socket.connect(
 					new InetSocketAddress("localhost", driverProperties
 							.getPort()), driverProperties.getTimeout());
-			socket.setSoTimeout(driverProperties.getTimeout());
 		} catch (final IOException e) {
+			throw TidaSqlExceptions.createException(9001, e,
+					getDriverProperties().getRawJdbc());
+		}
+
+		// set the timeout and the linger of the socket
+		try {
+			socket.setSoTimeout(driverProperties.getTimeout());
+
+			if (driverProperties.disableLinger()) {
+				socket.setSoLinger(true, 0);
+			} else if (driverProperties.getLingerInSeconds() > 0) {
+				socket.setSoLinger(true, driverProperties.getLingerInSeconds());
+			}
+		} catch (final IOException e) {
+			closeSocket(socket);
 			throw TidaSqlExceptions.createException(9001, e,
 					getDriverProperties().getRawJdbc());
 		}
@@ -251,6 +282,7 @@ public class ProtocolManager {
 		try {
 			protocol = new Protocol(socket);
 		} catch (final IOException e) {
+			closeSocket(socket);
 			throw TidaSqlExceptions.createException(9003, e,
 					getDriverProperties().getRawJdbc());
 		}
@@ -260,17 +292,23 @@ public class ProtocolManager {
 			protocol.writeCredential(driverProperties.getUser(),
 					driverProperties.getPassword());
 		} catch (final IOException e) {
+			try {
+				protocol.close();
+			} catch (final IOException ex) {
+				// ignore
+			}
+			closeSocket(socket);
 			throw TidaSqlExceptions.createException(9009, e);
 		}
 
-		owners.put(protocol, owner);
-		protocols.put(protocol, socket);
+		this.owners.put(protocol, owner);
+		this.protocols.put(protocol, socket);
 
 		// add the scope
 		Set<Protocol> protocols = scopes.get(scope);
 		if (protocols == null) {
 			protocols = new HashSet<Protocol>();
-			scopes.put(scope, protocols);
+			this.scopes.put(scope, protocols);
 		}
 		protocols.add(protocol);
 

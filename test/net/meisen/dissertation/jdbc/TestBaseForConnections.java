@@ -66,6 +66,7 @@ public abstract class TestBaseForConnections {
 	 */
 	@After
 	public void shutdownServer() {
+				
 		if (server != null) {
 			server.shutdown(true);
 		}

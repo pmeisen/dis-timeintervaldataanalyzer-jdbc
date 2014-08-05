@@ -16,6 +16,14 @@ public class DriverProperties {
 	 */
 	public static final String PROPERTY_TIMEOUT = "timeout";
 	/**
+	 * Property to specify the amount of seconds to linger after a close.
+	 */
+	public static final String PROPERTY_LINGER = "lingerseconds";
+	/**
+	 * Property to disable the linger after close completely.
+	 */
+	public static final String PROPERTY_DISABLELINGER = "disablelinger";
+	/**
 	 * Property to specify the handler class used to handle resource requests.
 	 */
 	public static final String PROPERTY_HANDLERCLASS = "handlerclass";
@@ -49,6 +57,8 @@ public class DriverProperties {
 
 	private String handlerClass = QueryResponseHandler.class.getName();
 	private int timeout = 0;
+	private int lingerInSeconds = -1;
+	private boolean disableLinger = false;
 
 	/**
 	 * Constructor defining the port and host of the server.
@@ -159,6 +169,48 @@ public class DriverProperties {
 	}
 
 	/**
+	 * Check if lingering is disabled.
+	 * 
+	 * @return {@code true} if disabled, otherwise {@code false}
+	 */
+	public boolean disableLinger() {
+		return disableLinger;
+	}
+
+	/**
+	 * Disables lingering after close.
+	 * 
+	 * @param disableLinger
+	 *            {@code true} to disable, otherwise {@code false}
+	 * 
+	 */
+	public void setDisableLinger(final boolean disableLinger) {
+		this.disableLinger = disableLinger;
+	}
+
+	/**
+	 * Gets the amount of seconds to linger after a close. The default value of
+	 * the OS is used if a negative value is returned.
+	 * 
+	 * @return the amount of seconds to linger after a close.
+	 */
+	public int getLingerInSeconds() {
+		return this.lingerInSeconds;
+	}
+
+	/**
+	 * Sets the amount of seconds to linger after a close. The default value of
+	 * the OS is used if a negative value is passed. A value of 0 disables
+	 * lingering.
+	 * 
+	 * @param lingerInSeconds
+	 *            the value in seconds
+	 */
+	public void setLingerInSeconds(final int lingerInSeconds) {
+		this.lingerInSeconds = lingerInSeconds < 0 ? -1 : lingerInSeconds;
+	}
+
+	/**
 	 * Gets the class of the {@code QueryResponseHandler} to be used.
 	 * 
 	 * @return the class of the {@code QueryResponseHandler} to be used
@@ -195,29 +247,39 @@ public class DriverProperties {
 	 */
 	public DriverPropertyInfo[] getDriverPropertyInfo() {
 		final DriverPropertyInfo hostProp = new DriverPropertyInfo(
-				DriverProperties.PROPERTY_HOST, getHost());
+				PROPERTY_HOST, getHost());
 		hostProp.required = true;
 		hostProp.description = "the host of the tida-server to connect to";
 
 		final DriverPropertyInfo portProp = new DriverPropertyInfo(
-				DriverProperties.PROPERTY_PORT, "" + getPort());
+				PROPERTY_PORT, "" + getPort());
 		portProp.required = true;
 		portProp.description = "the port of the tida-server to connect to";
 
 		final DriverPropertyInfo userProp = new DriverPropertyInfo(
-				DriverProperties.PROPERTY_USER, getUser());
+				PROPERTY_USER, getUser());
 		userProp.required = true;
 		userProp.description = "the user used to connect to the tida-server";
 
 		final DriverPropertyInfo passwordProp = new DriverPropertyInfo(
-				DriverProperties.PROPERTY_PASSWORD, getPassword());
+				PROPERTY_PASSWORD, getPassword());
 		passwordProp.required = true;
 		passwordProp.description = "the password used to connect to the tida-server";
 
 		final DriverPropertyInfo timeoutProp = new DriverPropertyInfo(
-				DriverProperties.PROPERTY_TIMEOUT, "" + getTimeout());
+				PROPERTY_TIMEOUT, "" + getTimeout());
 		timeoutProp.required = false;
 		timeoutProp.description = "the timeout of the client-connection in milliseconds";
+
+		final DriverPropertyInfo disableLingerProp = new DriverPropertyInfo(
+				PROPERTY_DISABLELINGER, "" + disableLinger());
+		disableLingerProp.required = false;
+		disableLingerProp.description = "disables the time-wait of the tcp stack, i.e. the socket does not wait after closing";
+
+		final DriverPropertyInfo lingerProp = new DriverPropertyInfo(
+				PROPERTY_LINGER, "" + getLingerInSeconds());
+		lingerProp.required = false;
+		lingerProp.description = "the amount of seconds to be waited after a close, if a negative value is specified the default value of the OS is used";
 
 		final DriverPropertyInfo handlerProp = new DriverPropertyInfo(
 				DriverProperties.PROPERTY_HANDLERCLASS, getHandlerClass());
@@ -253,6 +315,10 @@ public class DriverProperties {
 			return "" + getTimeout();
 		} else if (PROPERTY_HANDLERCLASS.equals(name)) {
 			return getHandlerClass();
+		} else if (PROPERTY_DISABLELINGER.equals(name)) {
+			return "" + disableLinger();
+		} else if (PROPERTY_LINGER.equals(name)) {
+			return "" + getLingerInSeconds();
 		} else {
 			return null;
 		}
@@ -273,6 +339,8 @@ public class DriverProperties {
 		prop.setProperty(PROPERTY_PASSWORD, get(PROPERTY_PASSWORD));
 		prop.setProperty(PROPERTY_RAWURL, getRawJdbc());
 		prop.setProperty(PROPERTY_TIMEOUT, "" + getTimeout());
+		prop.setProperty(PROPERTY_DISABLELINGER, "" + disableLinger());
+		prop.setProperty(PROPERTY_LINGER, "" + getLingerInSeconds());
 		prop.setProperty(PROPERTY_HANDLERCLASS, getHandlerClass());
 
 		return prop;
@@ -294,6 +362,27 @@ public class DriverProperties {
 		if (defTimeout != null) {
 			try {
 				this.setTimeout(Integer.parseInt(defTimeout));
+			} catch (final NumberFormatException e) {
+				// ignore the value
+			}
+		}
+
+		// get the disableLInger
+		final String defLinger = defaults.getProperty(PROPERTY_LINGER);
+		if (defLinger != null) {
+			try {
+				this.setLingerInSeconds(Integer.parseInt(defLinger));
+			} catch (final NumberFormatException e) {
+				// ignore the value
+			}
+		}
+
+		// get the disableLinger
+		final String defDisableLinger = defaults
+				.getProperty(PROPERTY_DISABLELINGER);
+		if (defDisableLinger != null) {
+			try {
+				this.setDisableLinger("true".equalsIgnoreCase(defDisableLinger));
 			} catch (final NumberFormatException e) {
 				// ignore the value
 			}

@@ -37,26 +37,27 @@ public class TestTidaConnection extends TestBaseForConnections {
 		// just create several connections and close those
 		final Properties properties = new Properties();
 		properties.setProperty(DriverProperties.PROPERTY_TIMEOUT, "1000");
+		properties.setProperty(DriverProperties.PROPERTY_DISABLELINGER, "true");
 		for (int i = 0; i < 1000; i++) {
 			conn = DriverManager.getConnection(getJdbc(), properties);
 
+			final TidaConnection tc = (TidaConnection) conn;
+			assertEquals(1000, tc.getDriverProperties().getTimeout());
+
 			// check the validity, must be true
-			assertTrue(conn.isValid(100));
-			assertTrue(conn.isValid(0));
+			assertTrue("Failed in Run " + i, conn.isValid(500));
+			assertTrue("Failed in Run " + i, conn.isValid(0));
 
 			// check the type and special attributes
 			assertEquals(TidaConnection.class, conn.getClass());
-
-			final TidaConnection tc = (TidaConnection) conn;
-			assertEquals(1000, tc.getDriverProperties().getTimeout());
 			assertEquals(1, tc.getManager().sizeOfProtocols(tc));
 			assertEquals(1, tc.getManager().sizeOfScopes());
 			assertEquals(1, tc.getManager().sizeOfOwners());
 
 			// close the connection, the answer must be false
 			conn.close();
-			assertFalse(conn.isValid(0));
-			assertTrue(conn.isClosed());
+			assertFalse("Failed in Run " + i, conn.isValid(0));
+			assertTrue("Failed in Run " + i, conn.isClosed());
 			assertTrue(((TidaConnection) conn).getManager().isClosed());
 			assertEquals(0, tc.getManager().sizeOfProtocols(tc));
 			assertEquals(0, tc.getManager().sizeOfScopes());
@@ -86,13 +87,14 @@ public class TestTidaConnection extends TestBaseForConnections {
 		// just create several connections and close those
 		final Properties properties = new Properties();
 		properties.setProperty(DriverProperties.PROPERTY_TIMEOUT, "0");
+		properties.setProperty(DriverProperties.PROPERTY_DISABLELINGER, "true");
 		for (int i = 0; i < 1000; i++) {
 			final Connection conn = DriverManager.getConnection(getJdbc(),
 					properties);
 
 			// check the validity, must be true
-			assertTrue(conn.isValid(100));
-			assertTrue(conn.isValid(0));
+			assertTrue("Failed in Run " + i, conn.isValid(500));
+			assertTrue("Failed in Run " + i, conn.isValid(0));
 
 			// check the type and special attributes
 			final TidaConnection tc = (TidaConnection) conn;
@@ -103,7 +105,7 @@ public class TestTidaConnection extends TestBaseForConnections {
 
 			// close the connection, the answer must be false
 			conn.close();
-			assertFalse(conn.isValid(0));
+			assertFalse("Failed in Run " + i, conn.isValid(0));
 
 			// add the connection
 			conns.add(conn);
