@@ -882,12 +882,13 @@ public class TidaDatabaseMetaData extends BaseWrapper implements
 			final TidaResultSet res = statement.executeQuery("GET PERMISSIONS");
 			final List<Object[]> rows = new ArrayList<Object[]>();
 			while (res.next()) {
+				final String model = res.getString(2);
 
 				// check if the table is valid
-				if (table != null && table.equals(res.getString(2))) {
+				if (table != null && table.equals(model)) {
 					final Object[] row = new Object[] { "", // TABLE_CAT
 							"", // TABLE_SCHEM
-							res.getString(2), // TABLE_NAME
+							model == null ? "" : model, // TABLE_NAME
 							"DYNAMIC", // COLUMN_NAME
 							"UNKNOWN", // GRANTOR
 							res.getString(1), // GRANTEE
@@ -924,9 +925,11 @@ public class TidaDatabaseMetaData extends BaseWrapper implements
 			final TidaResultSet res = statement.executeQuery("GET PERMISSIONS");
 			final List<Object[]> rows = new ArrayList<Object[]>();
 			while (res.next()) {
+				final String model = res.getString(2);
+
 				final Object[] row = new Object[] { "", // TABLE_CAT
 						"", // TABLE_SCHEM
-						res.getString(2), // TABLE_NAME
+						model == null ? "" : model, // TABLE_NAME
 						"UNKNOWN", // GRANTOR
 						res.getString(1), // GRANTEE
 						res.getString(3), // PRIVILEGE
