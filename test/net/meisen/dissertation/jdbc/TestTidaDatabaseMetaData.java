@@ -22,6 +22,13 @@ import org.junit.runners.Suite;
  */
 public class TestTidaDatabaseMetaData {
 
+	/**
+	 * Test some simple implementations considering the
+	 * {@code TidaDatabaseMetaData}.
+	 * 
+	 * @author pmeisen
+	 * 
+	 */
 	public static class TestSimple extends TestBaseWithConnection {
 
 		@Override

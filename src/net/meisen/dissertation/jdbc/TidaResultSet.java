@@ -1653,7 +1653,11 @@ public class TidaResultSet extends BaseConnectionWrapper implements ResultSet {
 
 	@Override
 	public String toString() {
-		return "[" + getClass().getSimpleName() + "] " + sql;
+		final Object[] curRow = handler.getLastResult();
+		final String row = curRow == null ? null : Arrays.asList(curRow)
+				.toString();
+
+		return "[" + getClass().getSimpleName() + "] " + row + " from " + sql;
 	}
 
 	/**
