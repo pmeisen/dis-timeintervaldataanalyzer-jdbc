@@ -7,6 +7,7 @@ import net.meisen.dissertation.jdbc.TestTidaDatabaseMetaData;
 import net.meisen.dissertation.jdbc.TestTidaDriver;
 import net.meisen.dissertation.jdbc.TestTidaResultSet;
 import net.meisen.dissertation.jdbc.TestTidaStatement;
+import net.meisen.dissertation.jdbc.version.TestVersion;
 
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
@@ -18,11 +19,10 @@ import org.junit.runners.Suite;
  * 
  */
 @RunWith(Suite.class)
-@Suite.SuiteClasses({
-
-TestQueryResponseHandler.class, TestProtocol.class, TestTidaDriver.class,
-		TestTidaConnection.class, TestObjectArrayResultSet.class,
-		TestTidaStatement.class, TestTidaResultSet.class,
+@Suite.SuiteClasses({ TestVersion.class, TestQueryResponseHandler.class,
+		TestProtocol.class, TestTidaDriver.class, TestTidaConnection.class,
+		TestObjectArrayResultSet.class, TestTidaStatement.class,
+		TestTidaResultSet.class,
 		TestTidaDatabaseMetaData.TestTidaDatabaseMetaDataSuite.class,
 		TestProtocol.class })
 public class AllTests {

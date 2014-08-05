@@ -19,9 +19,9 @@ public class Version implements Serializable, Cloneable, Comparable<Version> {
 	 * MAJOR.MINOR.BUILD.REVISION.
 	 */
 	private static final Pattern STD_VERSION_PATT = Pattern
-			.compile("^([^\\d]*?)(\\d+)(?:\\.(\\d+))?(?:\\.(\\d+))?(?:\\.(\\d+))?(.*)$");
-	private static final Pattern SNAPSHOT_ID_PATT = Pattern.compile("^"
-			+ Pattern.quote("-SNAPSHOT") + "$");
+			.compile("^([^\\d\\-]*)(\\d+)?(?:\\.(\\d+))?(?:\\.(\\d+))?(?:\\.(\\d+))?(.*)$");
+	private static final Pattern SNAPSHOT_ID_PATT = Pattern.compile(Pattern
+			.quote("-SNAPSHOT") + "$");
 
 	/**
 	 * Everything before the version in the string that was parsed.
@@ -60,7 +60,7 @@ public class Version implements Serializable, Cloneable, Comparable<Version> {
 	 */
 	public Version() {
 	}
-	
+
 	/**
 	 * Gets the string that was parsed to create this Version object. This
 	 * string may not accurately reflect the current values of the Version's
@@ -109,37 +109,37 @@ public class Version implements Serializable, Cloneable, Comparable<Version> {
 					"Error parsing version from null String");
 		}
 
-		final Matcher m = STD_VERSION_PATT.matcher(toParse);
-		if (!m.find()) {
+		final Matcher stdMatcher = STD_VERSION_PATT.matcher(toParse);
+		if (!stdMatcher.find()) {
 			throw new IllegalArgumentException(String.format(
 					"Error parsing version from '%s'", toParse));
 		}
 
 		Version v = new Version();
 		v.rawVersion = toParse;
-		v.prefix = m.group(1);
+		v.prefix = stdMatcher.group(1);
 
-		final String major = m.group(2);
+		final String major = stdMatcher.group(2);
 		if (major != null && !major.equals("")) {
 			v.setMajor(major);
 		}
 
-		final String minor = m.group(3);
+		final String minor = stdMatcher.group(3);
 		if (minor != null && !minor.equals("")) {
 			v.setMinor(minor);
 		}
 
-		final String build = m.group(4);
+		final String build = stdMatcher.group(4);
 		if (build != null && !build.equals("")) {
 			v.setBuild(build);
 		}
 
-		final String revision = m.group(5);
+		final String revision = stdMatcher.group(5);
 		if (revision != null && !revision.equals("")) {
-			v.setRevision(m.group(5));
+			v.setRevision(stdMatcher.group(5));
 		}
 
-		v.suffix = m.group(6);
+		v.suffix = stdMatcher.group(6);
 
 		return v;
 	}
@@ -427,12 +427,12 @@ public class Version implements Serializable, Cloneable, Comparable<Version> {
 
 	@Override
 	public String toString() {
-		final String version = String.format("%s.%s.%s.%s", this.major,
-				this.minor, this.build, this.revision);
-
 		if (isSnapshot()) {
-			return version + suffix;
+			return rawVersion;
 		} else {
+			final String version = String.format("%s%s.%s.%s.%s", this.prefix,
+					this.major, this.minor, this.build, this.revision);
+
 			return version;
 		}
 	}
@@ -651,7 +651,10 @@ public class Version implements Serializable, Cloneable, Comparable<Version> {
 	 *         otherwise <code>false</code>
 	 */
 	public boolean isSnapshot() {
-		final Matcher m = SNAPSHOT_ID_PATT.matcher(suffix);
-		return m.find();
+		final Matcher mPrefix = SNAPSHOT_ID_PATT.matcher(prefix);
+		final Matcher mSuffix = SNAPSHOT_ID_PATT.matcher(suffix);
+
+		return (mPrefix.find() && (suffix == null || suffix.isEmpty()))
+				|| mSuffix.find();
 	}
 }
