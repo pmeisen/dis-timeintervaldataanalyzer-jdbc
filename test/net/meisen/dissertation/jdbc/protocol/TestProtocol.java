@@ -5,180 +5,545 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.Date;
+import java.util.Random;
+import java.util.UUID;
 
-import net.meisen.dissertation.jdbc.TestBaseWithConnection;
+import net.meisen.dissertation.jdbc.protocol.DataType;
+import net.meisen.dissertation.jdbc.protocol.IResponseHandler;
+import net.meisen.dissertation.jdbc.protocol.Protocol;
+import net.meisen.dissertation.jdbc.protocol.QueryStatus;
+import net.meisen.dissertation.jdbc.protocol.QueryType;
+import net.meisen.dissertation.jdbc.protocol.ResponseType;
+import net.meisen.dissertation.jdbc.protocol.RetrievedValue;
+import net.meisen.dissertation.jdbc.protocol.WrappedException;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 /**
- * Tests the {@code Protocol} implemenation.
+ * Tests the implemented {@code Protocol}.
  * 
  * @author pmeisen
  * 
  */
-public class TestProtocol extends TestBaseWithConnection {
-
-	@Override
-	public String getConfig() {
-		return "net/meisen/dissertation/model/testShiroAuthConfig.xml";
+public class TestProtocol {
+	private static interface ITestHandler {
+		public void answer(final int msgNr, final RetrievedValue val,
+				final Protocol serverSideProtocol) throws IOException;
 	}
 
-	@Override
-	public String getJdbc() {
-		return getJdbc("admin");
+	private static class TestResponseHandler implements IResponseHandler {
+
+		@Override
+		public InputStream getResourceStream(final String resource) {
+			fail("Not expected!");
+			return null;
+		}
+
+		@Override
+		public boolean handleResult(final ResponseType type,
+				final Object[] result) {
+			fail("Not expected!");
+
+			return false;
+		}
+
+		@Override
+		public DataType[] getHeader() {
+			fail("Not expected!");
+			return null;
+		}
+
+		@Override
+		public void signalEORReached() {
+			// nothing to do
+		}
+
+		@Override
+		public QueryStatus doHandleQueryType(final QueryType queryType) {
+			return QueryStatus.PROCESS;
+		}
+
+		@Override
+		public void resetHandler() {
+			// nothing to be reseted
+		}
 	}
+
+	private Thread serverThread;
+	private Socket clientSideSocket;
+	private Protocol clientSideProtocol;
+
+	private ITestHandler serverHandler;
+	private int testCounter = 0;
 
 	/**
-	 * Method to create a JDBC for a specific user.
+	 * Initializes an infrastructure for testing the communication.
 	 * 
-	 * @param username
-	 *            the name of the user to create the JDBC for
-	 * 
-	 * @return the created JDBC-URL
+	 * @throws Exception
+	 *             if an unexpected problem occurs
 	 */
-	public String getJdbc(final String username) {
-		return "jdbc:tida://" + username + ":password@localhost:" + getPort();
+	@Before
+	public void init() throws Exception {
+
+		serverThread = new Thread() {
+
+			@Override
+			public void run() {
+				try {
+					final ServerSocket serverSocket = new ServerSocket(6060);
+					final Socket serverSideSocket = serverSocket.accept();
+					final Protocol serverSideProtocol = new Protocol(
+							serverSideSocket);
+
+					int nr = 0;
+					while (!isInterrupted()) {
+
+						// get the message to be handled
+						final RetrievedValue val = serverSideProtocol.read();
+						if (val.is(ResponseType.MESSAGE)
+								&& "END".equals(val.getMessage())) {
+							continue;
+						}
+
+						// tell the client what type of message was send
+						serverSideProtocol.writeQueryType(QueryType.QUERY);
+
+						// read the status if we should proceed
+						final QueryStatus status = serverSideProtocol
+								.readQueryStatus();
+						assertNotNull(status);
+
+						// decide
+						if (QueryStatus.PROCESS.equals(status)) {
+							serverHandler.answer(nr, val, serverSideProtocol);
+						} else {
+							serverSideProtocol.writeEndOfResponse();
+						}
+						nr++;
+					}
+
+					serverSideProtocol.close();
+					serverSideSocket.close();
+					serverSocket.close();
+				} catch (final IOException e) {
+					e.printStackTrace();
+					fail(e.getMessage());
+				}
+			}
+		};
+		serverThread.start();
+
+		clientSideSocket = new Socket("localhost", 6060);
+		clientSideProtocol = new Protocol(clientSideSocket);
 	}
 
 	/**
-	 * Tests the usage of the protocol with an {@code AuthManager}.
+	 * Tests the sending and receiving of the header-schema.
 	 * 
-	 * @throws SQLException
-	 *             if an unexpected exception is thrown
+	 * @throws Exception
+	 *             if an unexpected problem occurs
 	 */
 	@Test
-	public void testProtocolUsage() throws SQLException {
-		int counter;
-		Exception exception;
-		Statement stmt;
-		ResultSet res;
+	public void testProtocolHeader() throws Exception {
+		serverHandler = new ITestHandler() {
 
-		// add some users and roles
-		stmt = conn.createStatement();
-		stmt.executeUpdate("ADD USER 'eddie'   WITH PASSWORD 'password'");
-		stmt.executeUpdate("ADD USER 'philipp' WITH PASSWORD 'password' WITH ROLES 'connect', 'superuser' WITH PERMISSIONS 'MODEL.testNumberModel.modify'");
-		stmt.executeUpdate("ADD USER 'tobias'  WITH PASSWORD 'password' WITH ROLES 'readOnlyNumberModel', 'connect'");
+			@Override
+			public void answer(final int msgNr, final RetrievedValue val,
+					final Protocol serverSideProtocol) throws IOException {
+				final Class<?>[] c;
 
-		stmt.executeUpdate("ADD ROLE 'readOnlyNumberModel' WITH PERMISSIONS 'MODEL.testNumberModel.query'");
-		stmt.executeUpdate("ADD ROLE 'connect'             WITH PERMISSIONS 'GLOBAL.connectTSQL'");
-		stmt.executeUpdate("ADD ROLE 'superuser'           WITH PERMISSIONS 'GLOBAL.load', 'GLOBAL.get', 'GLOBAL.queryAll', 'GLOBAL.modifyAll'");
-		stmt.close();
+				switch (msgNr) {
+				case 0:
+					c = new Class<?>[] { int.class };
+					break;
+				case 1:
+					c = new Class<?>[] { Byte.class, byte.class, Short.class,
+							short.class, Integer.class, int.class, Long.class,
+							long.class, String.class, Date.class, double.class,
+							Double.class };
+					break;
+				case 2:
+					c = new Class<?>[] { UUID.class };
+					break;
+				default:
+					fail("Unexpected message");
+					return;
+				}
 
-		// connect as the new users
-		final Connection eddieConn = DriverManager
-				.getConnection(getJdbc("eddie"));
-		final Connection philippConn = DriverManager
-				.getConnection(getJdbc("philipp"));
-		final Connection tobiasConn = DriverManager
-				.getConnection(getJdbc("tobias"));
-
-		// check if eddie tries to load a model - the account cannot connect
-		stmt = eddieConn.createStatement();
-		try {
-			exception = null;
-			stmt.executeUpdate("LOAD FROM 'classpath:/net/meisen/dissertation/model/testNumberModel.xml'");
-		} catch (final SQLException e) {
-			exception = e;
-		} finally {
-			stmt.close();
-		}
-		assertNotNull(exception);
-		assertTrue(exception.getMessage().contains("PermissionException"));
-		assertTrue(exception.getMessage().contains("GLOBAL.connectTSQL"));
-
-		// check if tobias tries to load a model - the account cannot load
-		stmt = tobiasConn.createStatement();
-		try {
-			exception = null;
-			stmt.executeUpdate("LOAD FROM 'classpath:/net/meisen/dissertation/model/testNumberModel.xml'");
-		} catch (final SQLException e) {
-			exception = e;
-		} finally {
-			stmt.close();
-		}
-		assertNotNull(exception);
-		assertTrue(exception.getMessage().contains("PermissionException"));
-		assertTrue(exception.getMessage().contains("GLOBAL.load"));
-
-		// load the model using philipp - it's a superuser
-		stmt = philippConn.createStatement();
-		stmt.executeUpdate("LOAD FROM 'classpath:/net/meisen/dissertation/model/testNumberModel.xml'");
-		stmt.close();
-
-		// let's try to add some data with tobias (the account cannot modify)
-		stmt = tobiasConn.createStatement();
-		try {
-			exception = null;
-			stmt.executeUpdate("INSERT INTO testNumberModel ([START], [END], NUMBER) VALUES (2, 3, '100'), (1, 5, '100')");
-		} catch (final SQLException e) {
-			exception = e;
-		} finally {
-			stmt.close();
-		}
-		assertNotNull(exception);
-		assertTrue(exception.getMessage().contains("PermissionException"));
-		assertTrue(exception.getMessage().contains(
-				"MODEL.testNumberModel.modify"));
-		assertTrue(exception.getMessage().contains("GLOBAL.modifyAll"));
-
-		// use philipp to insert data
-		stmt = philippConn.createStatement();
-		stmt.executeUpdate("INSERT INTO testNumberModel ([START], [END], NUMBER) VALUES (2, 3, '100'), (1, 5, '100')");
-		stmt.close();
-
-		// get some data as tobias - the account is allowed to query
-		stmt = tobiasConn.createStatement();
-		res = stmt
-				.executeQuery("SELECT TRANSPOSE(TIMESERIES) OF COUNT(NUMBER) AS \"COUNT_ALIAS\" FROM testNumberModel IN [2, 5) FILTER BY NUMBER='100'");
-		counter = 0;
-		while (res.next()) {
-			counter++;
-
-			// check the general values
-			assertEquals("COUNT_ALIAS", res.getString(1));
-			assertEquals("" + (counter + 1), res.getString(3));
-			assertEquals(counter + 1, res.getInt(4));
-
-			// check the fact
-			if (counter == 1 || counter == 2) {
-				assertEquals(2.0, res.getDouble(2), 0.0);
-			} else if (counter == 3) {
-				assertEquals(1.0, res.getDouble(2), 0.0);
-			} else {
-				fail("Unexpected counter value '" + counter + "'");
+				try {
+					serverSideProtocol.writeHeader(c);
+				} catch (final Exception e) {
+					serverSideProtocol.writeException(e);
+				}
+				serverSideProtocol.writeEndOfResponse();
 			}
-		}
-		res.close();
-		stmt.close();
-		assertEquals(3, counter);
+		};
 
-		// use philipp to unload the model - the account is not allowed
-		stmt = philippConn.createStatement();
-		try {
-			exception = null;
-			stmt.executeUpdate("UNLOAD testNumberModel");
-		} catch (final SQLException e) {
-			exception = e;
-		} finally {
-			stmt.close();
-		}
-		assertNotNull(exception);
-		assertTrue(exception.getMessage().contains("PermissionException"));
-		assertTrue(exception.getMessage().contains("GLOBAL.unload"));
+		// let's read some headers
+		final IResponseHandler clientHandler = new TestResponseHandler() {
 
-		// use the admin to unload
-		stmt = conn.createStatement();
-		stmt.executeUpdate("UNLOAD testNumberModel");
-		stmt.close();
+			@Override
+			public boolean handleResult(final ResponseType type,
+					final Object[] result) {
+				assertEquals(ResponseType.HEADER, type);
+				final DataType[] header = (DataType[]) result;
+
+				switch (testCounter) {
+				case 0:
+					assertEquals(1, header.length);
+					assertEquals(Integer.class, header[0].getRepresentorClass());
+					break;
+				case 1:
+					assertEquals(12, header.length);
+					assertEquals(Byte.class, header[0].getRepresentorClass());
+					assertEquals(Byte.class, header[1].getRepresentorClass());
+					assertEquals(Short.class, header[2].getRepresentorClass());
+					assertEquals(Short.class, header[3].getRepresentorClass());
+					assertEquals(Integer.class, header[4].getRepresentorClass());
+					assertEquals(Integer.class, header[5].getRepresentorClass());
+					assertEquals(Long.class, header[6].getRepresentorClass());
+					assertEquals(Long.class, header[7].getRepresentorClass());
+					assertEquals(String.class, header[8].getRepresentorClass());
+					assertEquals(Date.class, header[9].getRepresentorClass());
+					assertEquals(Double.class, header[10].getRepresentorClass());
+					assertEquals(Double.class, header[11].getRepresentorClass());
+					break;
+				default:
+					fail("No test result defined for test: " + testCounter);
+				}
+
+				return true;
+			}
+		};
+
+		// simple one class
+		{
+			clientSideProtocol.writeAndHandle("0", clientHandler);
+			testCounter++;
+		}
+
+		// all available classes
+		{
+			clientSideProtocol.writeAndHandle("1", clientHandler);
+			testCounter++;
+		}
+
+		// exception with unsupported type
+		{
+			boolean exception = false;
+			try {
+				clientSideProtocol.writeAndHandle("2", clientHandler);
+			} catch (final Exception e) {
+				exception = true;
+				assertEquals(WrappedException.class, e.getClass());
+				assertTrue(
+						e.getMessage(),
+						e.getMessage().contains(
+								"Unsupported header-type '"
+										+ UUID.class.getName() + "'"));
+			}
+			assertTrue(exception);
+			testCounter++;
+		}
+	}
+
+	/**
+	 * Tests the sending and receiving of the int-values.
+	 * 
+	 * @throws Exception
+	 *             if an unexpected problem occurs
+	 */
+	@Test
+	public void testProtocolInt() throws Exception {
+		serverHandler = new ITestHandler() {
+
+			@Override
+			public void answer(final int msgNr, final RetrievedValue val,
+					final Protocol serverSideProtocol) throws IOException {
+
+				for (int i = 0; i < 1000; i++) {
+					serverSideProtocol.writeInt(i);
+				}
+				serverSideProtocol.writeEndOfResponse();
+			}
+		};
+
+		// let's read some headers
+		final IResponseHandler clientHandler = new TestResponseHandler() {
+
+			int nr = 0;
+
+			@Override
+			public boolean handleResult(final ResponseType type,
+					final Object[] result) {
+
+				assertTrue(ResponseType.INT.equals(type));
+				assertEquals(1, result.length);
+				assertTrue(result[0] instanceof Integer);
+				assertEquals(nr, result[0]);
+
+				testCounter = nr;
+				nr++;
+
+				// keep reading
+				return true;
+			}
+		};
+
+		clientSideProtocol.writeAndHandle("0", clientHandler);
+		assertEquals(999, testCounter);
+	}
+
+	/**
+	 * Tests the sending of integers.
+	 * 
+	 * @throws Exception
+	 *             if an unexpected exception occurrs
+	 */
+	@Test
+	public void testProtocolInts() throws Exception {
+		serverHandler = new ITestHandler() {
+
+			@Override
+			public void answer(final int msgNr, final RetrievedValue val,
+					final Protocol serverSideProtocol) throws IOException {
+
+				final Random rnd = new Random();
+
+				for (int i = 0; i < 1000; i++) {
+					final int[] values = new int[i];
+					for (int k = 0; k < i; k++) {
+						values[k] = rnd.nextInt();
+					}
+					serverSideProtocol.writeInts(values);
+				}
+				serverSideProtocol.writeEndOfResponse();
+			}
+		};
+
+		// let's read some headers
+		final IResponseHandler clientHandler = new TestResponseHandler() {
+
+			int nr = 0;
+
+			@Override
+			public boolean handleResult(final ResponseType type,
+					final Object[] result) {
+
+				assertTrue(ResponseType.INT_ARRAY.equals(type));
+				assertEquals(nr, result.length);
+
+				testCounter = nr;
+				nr++;
+
+				// keep reading
+				return true;
+			}
+		};
+
+		clientSideProtocol.writeAndHandle("0", clientHandler);
+		assertEquals(999, testCounter);
+	}
+
+	/**
+	 * Tests the implementation of the protocol to send and receive
+	 * header-names.
+	 * 
+	 * @throws Exception
+	 *             if an unexpected problem occurs
+	 */
+	@Test
+	public void testProtocolHeaderNames() throws Exception {
+		serverHandler = new ITestHandler() {
+
+			@Override
+			public void answer(final int msgNr, final RetrievedValue val,
+					final Protocol serverSideProtocol) throws IOException {
+				final String[] headerNames;
+
+				switch (msgNr) {
+				case 0:
+					headerNames = new String[] {};
+					break;
+				case 1:
+					headerNames = new String[] { "First", "Änother",
+							"What so ever" };
+					break;
+				default:
+					fail("Unexpected message");
+					return;
+				}
+
+				serverSideProtocol.writeHeaderNames(headerNames);
+				serverSideProtocol.writeEndOfResponse();
+			}
+		};
+
+		final IResponseHandler clientHandler = new TestResponseHandler() {
+
+			@Override
+			public boolean handleResult(final ResponseType type,
+					final Object[] result) {
+				assertEquals(ResponseType.HEADERNAMES, type);
+				final String[] headerNames = (String[]) result;
+
+				switch (testCounter) {
+				case 0:
+					assertEquals(0, headerNames.length);
+					break;
+				case 1:
+					assertEquals(3, headerNames.length);
+					assertEquals("First", headerNames[0]);
+					assertEquals("Änother", headerNames[1]);
+					assertEquals("What so ever", headerNames[2]);
+					break;
+				default:
+					fail("No test result defined for test: " + testCounter);
+				}
+
+				return true;
+			}
+		};
+
+		// no names
+		{
+			clientSideProtocol.writeAndHandle("0", clientHandler);
+			testCounter++;
+		}
+
+		// several names
+		{
+			clientSideProtocol.writeAndHandle("1", clientHandler);
+			testCounter++;
+		}
+	}
+
+	/**
+	 * Tests the stepwise reading of data.
+	 * 
+	 * @throws Exception
+	 *             if an unexpected problem occurs
+	 */
+	@Test
+	public void testDrippinRead() throws Exception {
+
+		serverHandler = new ITestHandler() {
+
+			@Override
+			public void answer(final int msgNr, final RetrievedValue val,
+					final Protocol serverSideProtocol) throws IOException {
+
+				for (int i = 0; i < 1000; i++) {
+					serverSideProtocol.writeResult(
+							new DataType[] { DataType.STRING },
+							new Object[] { (msgNr + "-" + i) });
+				}
+				serverSideProtocol.writeEndOfResponse();
+			}
+		};
+
+		final IResponseHandler clientHandler = new TestResponseHandler() {
+
+			@Override
+			public boolean handleResult(final ResponseType type,
+					final Object[] result) {
+
+				final String msg = (String) result[0];
+				assertNotNull(msg);
+				assertEquals("0-" + testCounter, msg);
+
+				// do not read the next result
+				return false;
+			}
+
+			@Override
+			public DataType[] getHeader() {
+				return new DataType[] { DataType.STRING };
+			}
+		};
+
+		assertTrue(clientSideProtocol.initializeCommunication("0",
+				clientHandler));
+		for (int i = 0; i < 1000; i++) {
+			testCounter = i;
+			clientSideProtocol.handleResponse(clientHandler);
+		}
+	}
+
+	/**
+	 * Tests the reading and writing of results.
+	 * 
+	 * @throws Exception
+	 *             if an unexpected exception occurrs
+	 */
+	@Test
+	public void testReadAndWriteResults() throws Exception {
+		serverHandler = new ITestHandler() {
+
+			@Override
+			public void answer(final int msgNr, final RetrievedValue val,
+					final Protocol serverSideProtocol) throws IOException {
+
+				for (int i = 0; i < 1000; i++) {
+					serverSideProtocol.writeResult(
+							new DataType[] { DataType.STRING },
+							new Object[] { (msgNr + "-" + i) });
+				}
+				serverSideProtocol.writeEndOfResponse();
+			}
+		};
+
+		final IResponseHandler clientHandler = new TestResponseHandler() {
+
+			@Override
+			public boolean handleResult(final ResponseType type,
+					final Object[] result) {
+
+				final String msg = (String) result[0];
+				assertNotNull(msg);
+				assertEquals("0-" + testCounter, msg);
+
+				// do not read the next result
+				return false;
+			}
+
+			@Override
+			public DataType[] getHeader() {
+				return new DataType[] { DataType.STRING };
+			}
+		};
+
+		assertTrue(clientSideProtocol.initializeCommunication("0",
+				clientHandler));
+		for (int i = 0; i < 1000; i++) {
+			testCounter = i;
+			clientSideProtocol.handleResponse(clientHandler);
+		}
+	}
+
+	/**
+	 * Cleans up behind the test.
+	 * 
+	 * @throws Exception
+	 *             if an unexpected problem occurs
+	 */
+	@After
+	public void cleanUp() throws Exception {
+
+		// finish the server thread
+		serverThread.interrupt();
+		clientSideProtocol.writeMessage("END");
+		serverThread.join();
 
 		// cleanUp
-		eddieConn.close();
-		philippConn.close();
-		tobiasConn.close();
+		clientSideProtocol.close();
+		clientSideSocket.close();
 	}
 }
