@@ -32,7 +32,7 @@
       <groupId>net.meisen.general</groupId>
       <artifactId>net-meisen-general-gen-misc</artifactId>
       <version>TRUNK-SNAPSHOT</version>
-	  <scope>test</scope>
+      <scope>test</scope>
     </dependency>
     
     <dependency>
