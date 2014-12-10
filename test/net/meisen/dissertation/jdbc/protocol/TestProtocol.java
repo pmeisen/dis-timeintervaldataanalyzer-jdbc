@@ -352,6 +352,12 @@ public class TestProtocol {
 		assertEquals(999, testCounter);
 	}
 
+	/**
+	 * Tests to validate the sending of strings.
+	 * 
+	 * @throws Exception
+	 *             if an unexpected exception is thrown
+	 */
 	@Test
 	public void testProtocolWithStringResults() throws Exception {
 		final String[] responses = { "TEST", "Ä", "ß", "ÄÜÖ" };
