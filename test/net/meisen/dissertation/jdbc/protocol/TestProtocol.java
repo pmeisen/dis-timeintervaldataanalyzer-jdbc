@@ -352,6 +352,53 @@ public class TestProtocol {
 		assertEquals(999, testCounter);
 	}
 
+	@Test
+	public void testProtocolWithStringResults() throws Exception {
+		final String[] responses = { "TEST", "Ä", "ß", "ÄÜÖ" };
+
+		serverHandler = new ITestHandler() {
+
+			@Override
+			public void answer(final int msgNr, final RetrievedValue val,
+					final Protocol serverSideProtocol) throws IOException {
+				serverSideProtocol.writeResult(new DataType[] { DataType.INT,
+						DataType.STRING }, new Object[] { msgNr,
+						responses[msgNr] });
+				serverSideProtocol.writeEndOfResponse();
+			}
+		};
+
+		// let's read some headers
+		final IResponseHandler clientHandler = new TestResponseHandler() {
+
+			int nr = 0;
+
+			@Override
+			public DataType[] getHeader() {
+				return new DataType[] { DataType.INT, DataType.STRING };
+			}
+
+			@Override
+			public boolean handleResult(final ResponseType type,
+					final Object[] result) {
+
+				assertEquals(ResponseType.RESULT, type);
+				assertEquals(nr, result[0]);
+				assertEquals(responses[nr], result[1]);
+
+				testCounter = nr;
+				nr++;
+
+				// keep reading
+				return true;
+			}
+		};
+
+		for (int i = 0; i < responses.length; i++) {
+			clientSideProtocol.writeAndHandle("" + i, clientHandler);
+		}
+	}
+
 	/**
 	 * Tests the implementation of the protocol to send and receive
 	 * header-names.

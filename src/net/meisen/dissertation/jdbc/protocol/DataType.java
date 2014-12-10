@@ -222,8 +222,9 @@ public enum DataType {
 				out.writeDouble((Double) object);
 			} else if (STRING.equals(this)) {
 				final String s = (String) object;
-				out.writeInt(s.length());
-				out.write(s.getBytes("UTF8"));
+				final byte[] b = s.getBytes("UTF8");
+				out.writeInt(b.length);
+				out.write(b);
 			} else {
 				throw new IllegalStateException(
 						"The write-method of dataType '" + this

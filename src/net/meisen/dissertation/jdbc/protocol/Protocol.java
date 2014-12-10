@@ -142,7 +142,7 @@ public class Protocol implements Closeable {
 	 * Writes a result, i.e. the {@code values}.
 	 * 
 	 * @param header
-	 *            the header's types to of the values to be written
+	 *            the header's types of the values to be written
 	 * @param values
 	 *            the values to be written
 	 * 
