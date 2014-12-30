@@ -232,7 +232,7 @@ public abstract class BaseConnectionWrapper extends BaseWrapper {
 		try {
 			getProtocol().handleResponse(handler);
 		} catch (final IOException e) {
-			throw TidaSqlExceptions.createException(9008, e.getMessage());
+			throw TidaSqlExceptions.createException(9007, e.getMessage());
 		} catch (final WrappedException e) {
 			throw TidaSqlExceptions.createException(9007, e.getMessage());
 		}

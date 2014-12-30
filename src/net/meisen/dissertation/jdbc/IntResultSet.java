@@ -81,6 +81,9 @@ public class IntResultSet extends BaseWrapper implements ResultSet {
 			this.ints = new Integer[0];
 		} else {
 			this.ints = new Integer[ints.length];
+			for (int i = 0; i < ints.length; i++) {
+				this.ints[i] = ints[i];
+			}
 		}
 
 		this.closed = false;
@@ -162,6 +165,7 @@ public class IntResultSet extends BaseWrapper implements ResultSet {
 			throw TidaSqlExceptions.createException(5001, "" + curPosition, ""
 					+ ints.length);
 		}
+
 		return ints[curPosition];
 	}
 
@@ -170,7 +174,6 @@ public class IntResultSet extends BaseWrapper implements ResultSet {
 		checkClosed();
 
 		curPosition++;
-
 		return curPosition < ints.length;
 	}
 

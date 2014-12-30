@@ -378,4 +378,49 @@ public class TestTidaResultSet extends TestBaseForConnections {
 		// close everything
 		conn.close();
 	}
+
+	/**
+	 * Tests the retrieval of the generated keys.
+	 * 
+	 * @throws SQLException
+	 *             if an unexpected error occurred
+	 */
+	@Test
+	public void testGeneratedKeys() throws SQLException {
+		final Connection conn = DriverManager.getConnection(getJdbc());
+		final Statement stmt = conn.createStatement();
+		ResultSet res;
+
+		stmt.executeUpdate("LOAD FROM 'classpath:/net/meisen/dissertation/model/testNumberModel.xml'");
+
+		assertFalse(stmt
+				.execute(
+						"INSERT INTO testNumberModel ([START], [END], NUMBER) VALUES (2, 3, '100')",
+						Statement.NO_GENERATED_KEYS));
+		assertNotNull(stmt.getGeneratedKeys());
+		assertFalse(stmt.getGeneratedKeys().next());
+
+		assertFalse(stmt
+				.execute(
+						"INSERT INTO testNumberModel ([START], [END], NUMBER) VALUES (2, 3, '200')",
+						Statement.RETURN_GENERATED_KEYS));
+		assertNotNull(stmt.getGeneratedKeys());
+		res = stmt.getGeneratedKeys();
+		assertTrue(res.next());
+		assertEquals(1, res.getInt(1));
+		res.close();
+
+		assertFalse(stmt
+				.execute(
+						"INSERT INTO testNumberModel ([START], [END], NUMBER) VALUES (2, 3, '200')",
+						Statement.RETURN_GENERATED_KEYS));
+		assertNotNull(stmt.getGeneratedKeys());
+		res = stmt.getGeneratedKeys();
+		assertTrue(res.next());
+		assertEquals(2, res.getInt(1));
+		res.close();
+
+		stmt.close();
+		conn.close();
+	}
 }

@@ -88,8 +88,10 @@ public class QueryResponseHandler implements IResponseHandler {
 		} else if (TidaResultSetType.QUERY.equals(expectedResultSetType)) {
 			if (QueryType.QUERY.equals(queryType)) {
 
-				// impossible to retrieve processed identifiers when we query
-				// data
+				/*
+				 * impossible to retrieve processed identifiers when we query
+				 * data
+				 */
 				if (QueryStatus.PROCESSANDGETIDS.equals(queryStatus)) {
 					status = QueryStatus.CANCEL;
 				} else {
@@ -431,7 +433,7 @@ public class QueryResponseHandler implements IResponseHandler {
 			final DateFormat formatter = new SimpleDateFormat(
 					"dd.MM.yyyy HH:mm:ss,SSS");
 			formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
-			
+
 			return formatter.format((Date) value);
 		} else {
 			return value.toString();
@@ -523,10 +525,12 @@ public class QueryResponseHandler implements IResponseHandler {
 
 	@Override
 	public void resetHandler() {
+		expectedResultSetType = expectedResultSetType == null ? TidaResultSetType.UNKNOWN
+				: expectedResultSetType;
+		queryStatus = queryStatus == null ? QueryStatus.PROCESS : queryStatus;
+		
 		eor = false;
-		expectedResultSetType = TidaResultSetType.UNKNOWN;
 		resultSetType = null;
-		queryStatus = QueryStatus.PROCESS;
 		header = null;
 		headerNames = null;
 		generatedIds = null;
