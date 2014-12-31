@@ -423,4 +423,59 @@ public class TestTidaResultSet extends TestBaseForConnections {
 		stmt.close();
 		conn.close();
 	}
+
+	/**
+	 * Tests the usage of multiply selects on one statement, without retrieving
+	 * the results of the statement.
+	 * 
+	 * @throws SQLException
+	 *             an unexpected exception
+	 */
+	@Test
+	public void testMultipleTimeseriesSelectsOnOneStatement()
+			throws SQLException {
+		final Connection conn = DriverManager.getConnection(getJdbc());
+		final Statement stmt = conn.createStatement();
+		ResultSet res;
+
+		stmt.executeUpdate("LOAD FROM 'classpath:/net/meisen/dissertation/model/testNumberModel.xml'");
+
+		for (int i = 0; i < 1000; i++) {
+			res = stmt
+					.executeQuery("SELECT TIMESERIES OF MIN(NUMBER) AS \"MIN\", SUM(NUMBER) AS \"SUM\" FROM testNumberModel");
+			res.close();
+		}
+
+		stmt.close();
+		conn.close();
+	}
+
+	/**
+	 * Tests the usage of multiply selects on one statement, without retrieving
+	 * the results of the statement.
+	 * 
+	 * @throws SQLException
+	 *             an unexpected exception
+	 */
+	@Test
+	public void testMultipleRecordsSelectsOnOneStatement() throws SQLException {
+		final Connection conn = DriverManager.getConnection(getJdbc());
+		final Statement stmt = conn.createStatement();
+		ResultSet res;
+
+		stmt.executeUpdate("LOAD FROM 'classpath:/net/meisen/dissertation/model/testNumberModel.xml'");
+
+		for (int i = 0; i < 1000; i++) {
+			res = stmt
+					.executeQuery("SELECT RECORDS FROM testNumberModel WITHIN [1,3]");
+			res.close();
+		}
+
+		res = stmt
+				.executeQuery("SELECT RECORDS FROM testNumberModel WITHIN [2,3]");
+		res.close();
+
+		stmt.close();
+		conn.close();
+	}
 }

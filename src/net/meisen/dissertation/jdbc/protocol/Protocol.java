@@ -503,6 +503,7 @@ public class Protocol implements Closeable {
 	 */
 	public QueryType readQueryType() throws IOException {
 		final byte marker = is.readByte();
+
 		final QueryType queryType = QueryType.find(marker);
 
 		// check if we got an exception
@@ -621,17 +622,40 @@ public class Protocol implements Closeable {
 	 */
 	public boolean initializeCommunication(final String msg,
 			final IResponseHandler handler) throws IOException {
-
 		// finish any old communication
 		if (inCommunication) {
-			while (true) {
-				final int available = is.available();
-				if (available < 1) {
-					break;
-				}
 
-				final byte[] buffer = new byte[Math.min(1024, available)];
-				is.read(buffer);
+			try {
+				// write a cancellation
+				this.writeCancellation();
+
+				// wait until the cancellation is handled
+				boolean cancellationHandled = false;
+				while (!cancellationHandled) {
+					final byte[] buffer = new byte[Math.max(1, is.available())];
+					final int read = is.read(buffer);
+					if (read == -1) {
+						break;
+					} else if (ResponseType.EOR.getId() == buffer[read - 1]) {
+						try {
+							/*
+							 * TODO: This is quiet unsatisfying... we should try
+							 * to find a better solution to know if the server
+							 * finally accepted a cancellation.
+							 */
+							Thread.sleep(1);
+						} catch (final InterruptedException e) {
+							// ignore
+						}
+
+						// check if more arrived
+						if (is.available() < 1) {
+							cancellationHandled = true;
+						}
+					}
+				}
+			} catch (final IOException e) {
+				// do nothing we just keep on going
 			}
 		}
 
