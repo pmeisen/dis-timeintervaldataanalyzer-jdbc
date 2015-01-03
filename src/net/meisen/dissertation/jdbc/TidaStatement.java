@@ -500,6 +500,16 @@ public class TidaStatement extends BaseConnectionWrapper implements Statement,
 			currentResultSet.close();
 		}
 
+		// shutdown the executor service
+		executor.shutdown();
+		try {
+			if (!executor.awaitTermination(500, TimeUnit.MILLISECONDS)) {
+				executor.shutdownNow();
+			}
+		} catch (final InterruptedException e) {
+			// nothing to do
+		}
+
 		// close the rest
 		super.close();
 	}
