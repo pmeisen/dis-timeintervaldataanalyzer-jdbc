@@ -254,9 +254,8 @@ public class ProtocolManager {
 
 		final Socket socket = new Socket();
 		try {
-			socket.connect(
-					new InetSocketAddress("localhost", driverProperties
-							.getPort()), driverProperties.getTimeout());
+			socket.connect(new InetSocketAddress(driverProperties.getHost(),
+					driverProperties.getPort()), driverProperties.getTimeout());
 		} catch (final IOException e) {
 			throw TidaSqlExceptions.createException(9001, e,
 					getDriverProperties().getRawJdbc());

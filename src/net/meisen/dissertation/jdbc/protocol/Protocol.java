@@ -15,8 +15,6 @@ import java.net.Socket;
 import java.util.HashSet;
 import java.util.Set;
 
-import net.meisen.dissertation.jdbc.QueryResponseHandler;
-
 /**
  * A {@code Protocol} to communicate with the server.
  * 
