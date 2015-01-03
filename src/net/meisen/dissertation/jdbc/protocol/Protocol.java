@@ -15,6 +15,8 @@ import java.net.Socket;
 import java.util.HashSet;
 import java.util.Set;
 
+import net.meisen.dissertation.jdbc.QueryResponseHandler;
+
 /**
  * A {@code Protocol} to communicate with the server.
  * 
@@ -41,7 +43,7 @@ public class Protocol implements Closeable {
 		}
 	}
 
-	private boolean inCommunication = false;
+	private boolean inCommunication;
 
 	private final DataInputStream is;
 	private final DataOutputStream os;
@@ -74,6 +76,8 @@ public class Protocol implements Closeable {
 	public Protocol(final InputStream is, final OutputStream os) {
 		this.is = new DataInputStream(new BufferedInputStream(is));
 		this.os = new DataOutputStream(new BufferedOutputStream(os));
+
+		markCommunicationAsFinal(null);
 	}
 
 	/**
@@ -622,41 +626,11 @@ public class Protocol implements Closeable {
 	 */
 	public boolean initializeCommunication(final String msg,
 			final IResponseHandler handler) throws IOException {
+
 		// finish any old communication
 		if (inCommunication) {
-
-			try {
-				// write a cancellation
-				this.writeCancellation();
-
-				// wait until the cancellation is handled
-				boolean cancellationHandled = false;
-				while (!cancellationHandled) {
-					final byte[] buffer = new byte[Math.max(1, is.available())];
-					final int read = is.read(buffer);
-					if (read == -1) {
-						break;
-					} else if (ResponseType.EOR.getId() == buffer[read - 1]) {
-						try {
-							/*
-							 * TODO: This is quiet unsatisfying... we should try
-							 * to find a better solution to know if the server
-							 * finally accepted a cancellation.
-							 */
-							Thread.sleep(1);
-						} catch (final InterruptedException e) {
-							// ignore
-						}
-
-						// check if more arrived
-						if (is.available() < 1) {
-							cancellationHandled = true;
-						}
-					}
-				}
-			} catch (final IOException e) {
-				// do nothing we just keep on going
-			}
+			throw new IllegalStateException(
+					"Cannot initialize any new connection, while another communication is running, make sure the connection is closed correctly.");
 		}
 
 		// start the new communication
@@ -694,6 +668,22 @@ public class Protocol implements Closeable {
 		} else {
 			return true;
 		}
+	}
+
+	/**
+	 * Marks any currently communication as finalized. This method should only
+	 * be called by an external method, if an exception occurred, which leads to
+	 * the end of the communication. The next method of the server should be a
+	 * response to a new communication.
+	 * 
+	 * @param handler
+	 */
+	public void markCommunicationAsFinal(final IResponseHandler handler) {
+		if (handler != null) {
+			handler.signalEORReached();
+		}
+
+		inCommunication = false;
 	}
 
 	/**
@@ -826,9 +816,6 @@ public class Protocol implements Closeable {
 			}
 
 			if (value.isEOR()) {
-				if (handler != null) {
-					handler.signalEORReached();
-				}
 				read = false;
 				eorReached = true;
 			} else if (value.isCancel()) {
@@ -885,7 +872,7 @@ public class Protocol implements Closeable {
 		}
 
 		if (eorReached) {
-			inCommunication = false;
+			markCommunicationAsFinal(handler);
 		}
 
 		return eorReached;
@@ -990,7 +977,7 @@ public class Protocol implements Closeable {
 
 	@Override
 	public void close() throws IOException {
-		inCommunication = false;
+		markCommunicationAsFinal(null);
 
 		this.is.close();
 		this.os.close();

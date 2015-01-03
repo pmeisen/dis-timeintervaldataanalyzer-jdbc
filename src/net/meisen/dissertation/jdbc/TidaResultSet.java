@@ -24,6 +24,7 @@ import java.util.Calendar;
 import java.util.Map;
 
 import net.meisen.dissertation.jdbc.protocol.DataType;
+import net.meisen.dissertation.jdbc.protocol.Protocol;
 import net.meisen.dissertation.jdbc.protocol.QueryStatus;
 
 /**
@@ -162,12 +163,50 @@ public class TidaResultSet extends BaseConnectionWrapper implements ResultSet {
 			initialize(sql);
 		} catch (final SQLException e) {
 
+			// finalize anything
+			getProtocol().markCommunicationAsFinal(handler);
+
 			// close the connection in the case of an exception
 			close();
 
 			// keep the exception to be thrown
 			throw e;
 		}
+	}
+
+	@Override
+	public void close() throws SQLException {
+		if (isClosed()) {
+			return;
+		}
+
+		/*
+		 * If we expect data on the handler, we have to wait until an EOR was
+		 * send.
+		 */
+		if (TidaResultSetType.QUERY.equals(handler.getResultSetType())
+				&& !handler.isEOR()) {
+
+			// make sure that the protocol cancels if needed
+			Thread.currentThread().interrupt();
+
+			// wait until the protocol tells the system that the connection is
+			// closed
+			final Protocol protocol = getProtocol();
+			try {
+				while (!protocol.handleResponse(handler)) {
+					// just read the next one, the end must be reached
+				}
+			} catch (final Exception e) {
+				/*
+				 * Ignore it, the connection is closed from server side, or an
+				 * exception was thrown from server side. In both cases
+				 * everything should be fine and handled later on.
+				 */
+			}
+		}
+
+		super.close();
 	}
 
 	/**
@@ -320,9 +359,9 @@ public class TidaResultSet extends BaseConnectionWrapper implements ResultSet {
 		} else if (Number.class.isAssignableFrom(clazz)
 				&& handler.isInteger(pos)) {
 			return (T) handler.toInteger(pos, (Class<? extends Number>) clazz);
-		} else if (String.class.equals(clazz)) {			
+		} else if (String.class.equals(clazz)) {
 			return (T) handler.toString(pos);
-		}else {
+		} else {
 			throw TidaSqlExceptions.createException(4022, "" + columnIndex,
 					clazz.getName());
 		}

@@ -180,9 +180,11 @@ public abstract class BaseConnectionWrapper extends BaseWrapper {
 			close();
 			return refireQuery(sql, handler);
 		} catch (final IOException e) {
-			throw TidaSqlExceptions.createException(9008, sql, e.getMessage());
+			throw TidaSqlExceptions.createException(9008, e, sql,
+					e.getMessage());
 		} catch (final WrappedException e) {
-			throw TidaSqlExceptions.createException(9006, sql, e.getMessage());
+			throw TidaSqlExceptions.createException(9006, e, sql,
+					e.getMessage());
 		}
 	}
 
