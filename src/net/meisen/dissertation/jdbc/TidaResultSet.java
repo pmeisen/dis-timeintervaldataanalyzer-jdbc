@@ -361,6 +361,8 @@ public class TidaResultSet extends BaseConnectionWrapper implements ResultSet {
 			return (T) handler.toInteger(pos, (Class<? extends Number>) clazz);
 		} else if (String.class.equals(clazz)) {
 			return (T) handler.toString(pos);
+		} else if (Object.class.equals(clazz)) {
+			return (T) handler.cast(pos, clazz);
 		} else {
 			throw TidaSqlExceptions.createException(4022, "" + columnIndex,
 					clazz.getName());
