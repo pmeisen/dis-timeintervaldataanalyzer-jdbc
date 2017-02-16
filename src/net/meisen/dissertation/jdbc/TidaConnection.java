@@ -18,6 +18,7 @@ import java.sql.Struct;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.Executor;
 
 /**
  * A {@code Connection} instance, used to establish connections with a server
@@ -246,7 +247,7 @@ public class TidaConnection extends BaseConnectionWrapper implements Connection 
 	public Map<String, Class<?>> getTypeMap() throws SQLException {
 		checkClosed();
 
-		return Collections.<String, Class<?>> emptyMap();
+		return Collections.emptyMap();
 	}
 
 	@Override
@@ -388,19 +389,43 @@ public class TidaConnection extends BaseConnectionWrapper implements Connection 
 	}
 
 	@Override
-	public Array createArrayOf(final String typeName, final Object[] elements)
-			throws SQLException {
+	public Array createArrayOf(final String typeName, final Object[] elements) throws SQLException {
 		checkClosed();
 
 		throw TidaSqlExceptions.createNotSupportedException(1008);
 	}
 
 	@Override
-	public Struct createStruct(final String typeName, final Object[] attributes)
-			throws SQLException {
+	public Struct createStruct(final String typeName, final Object[] attributes) throws SQLException {
 		checkClosed();
 
 		throw TidaSqlExceptions.createNotSupportedException(1009);
+	}
+
+	@Override
+	public void setSchema(final String schema) throws SQLException {
+		// silently ignored
+	}
+
+	@Override
+	public String getSchema() throws SQLException {
+		return null;
+	}
+
+	@Override
+	public void abort(final Executor executor) throws SQLException {
+		// we just ignore the call :(
+	}
+
+	@Override
+	public void setNetworkTimeout(final Executor executor,
+								  final int milliseconds) throws SQLException {
+		throw TidaSqlExceptions.createNotSupportedException(1013);
+	}
+
+	@Override
+	public int getNetworkTimeout() throws SQLException {
+		throw TidaSqlExceptions.createNotSupportedException(1014);
 	}
 
 	@Override

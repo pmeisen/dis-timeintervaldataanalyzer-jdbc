@@ -1,24 +1,23 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 
-<!-- 
-  This project uses the ant-processenabler to build, deploy, assemble, ...
-  The ant-processenabler can be found under:
-  - https://github.com/pmeisen/ant-processenabler
-  - git://github.com/pmeisen/ant-processenabler.git
-  The fully packed 'application' is available here;
-  - http://ant-processenabler.meisen.net/downloads/ant-processenabler-TRUNK-SNAPSHOT.zip
-  -->
-<project name="dis-timeintervaldataanalyzer-jdbc">	
-  <import file="${ant.home}\resources\ant\library_main.xml"/>
-  
-  <macrodef name="resourceMapper">
-    <attribute name="resourceFolder" />
-    <attribute name="resourceFileName" />
-    <attribute name="resource" />
-    <attribute name="resourceType" />
-    
-    <sequential>
-      <!-- to be done -->
-    </sequential>
-  </macrodef>
+<project name="dis-timeintervaldataanalyzer-jdbc">
+  <include file="../tida-workspace/common-libs/ant-util/util-ant.xml"/>
+
+  <property name="testSuite" value="net.meisen.dissertation.AllTests"/>
+
+  <target name="01-resolve-dependencies">
+    <resolve-dependencies/>
+  </target>
+
+  <target name="02-compile-sources" depends="01-resolve-dependencies">
+    <do-compile-java-default/>
+  </target>
+
+  <target name="03-run-test-suite" depends="02-compile-sources">
+    <do-run-test-suite testSuite="${testSuite}"/>
+  </target>
+
+  <target name="04-deploy" depends="02-compile-sources">
+    <build-jar />
+  </target>
 </project>

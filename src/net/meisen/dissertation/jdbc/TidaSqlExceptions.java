@@ -45,8 +45,8 @@ public class TidaSqlExceptions {
 	 * 
 	 * @return the created exception
 	 */
-	public static SQLFeatureNotSupportedException createNotSupportedException(
-			final int number, final String... parameter) {
+	public static SQLFeatureNotSupportedException createNotSupportedException(final int number,
+																			  final String... parameter) {
 		return createNotSupportedException(number, null, parameter);
 	}
 
@@ -64,16 +64,15 @@ public class TidaSqlExceptions {
 	 * 
 	 * @return the created exception
 	 */
-	public static SQLFeatureNotSupportedException createNotSupportedException(
-			final int number, final Exception reason, final String... parameter) {
-		final String msg = "[" + number + "] "
-				+ createMessage(number, parameter);
+	public static SQLFeatureNotSupportedException createNotSupportedException(final int number,
+																			  final Exception reason,
+																			  final String... parameter) {
+		final String msg = "[" + number + "] " + createMessage(number, parameter);
 
 		if (reason == null) {
 			return new SQLFeatureNotSupportedException(msg, null, number);
 		} else {
-			return new SQLFeatureNotSupportedException(msg, null, number,
-					reason);
+			return new SQLFeatureNotSupportedException(msg, null, number, reason);
 		}
 	}
 

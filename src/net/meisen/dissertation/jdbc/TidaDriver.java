@@ -4,7 +4,9 @@ import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.DriverPropertyInfo;
 import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
 import java.util.Properties;
+import java.util.logging.Logger;
 
 /**
  * The driver of a JDBC for a tida-server.
@@ -67,6 +69,11 @@ public class TidaDriver implements Driver {
 		return false;
 	}
 
+	@Override
+	public Logger getParentLogger() throws SQLFeatureNotSupportedException {
+		throw TidaSqlExceptions.createNotSupportedException(2003);
+	}
+
 	/**
 	 * Method used to parse the {@code url} into the different
 	 * {@code DriverProperties}. The additional {@code defaults} can be used to
@@ -83,10 +90,9 @@ public class TidaDriver implements Driver {
 	 *         implementation (i.e. if the protocol is not equal to
 	 *         {@link Constants#URL_PREFIX}).
 	 * 
-	 * @throws SQLException
+	 * @throws SQLException if an exception occurs
 	 */
-	protected DriverProperties parseURL(final String rawUrl,
-			final Properties defaults) throws SQLException {
+	protected DriverProperties parseURL(final String rawUrl, final Properties defaults) throws SQLException {
 		final StringBuilder sb = new StringBuilder(rawUrl);
 
 		// make sure we have the correct prefix
