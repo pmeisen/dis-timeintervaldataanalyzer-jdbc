@@ -1061,8 +1061,7 @@ public class TidaStatement extends BaseConnectionWrapper implements Statement, P
         final int pos = checkParameter(parameterIndex);
 
         // get the date's timeZone
-        final TimeZone srcTz = cal == null ? TimeZone.getDefault() : cal
-                .getTimeZone();
+        final TimeZone srcTz = cal == null ? TimeZone.getDefault() : cal.getTimeZone();
 
         final TimeZone trgtTz = TimeZone.getTimeZone("UTC");
 

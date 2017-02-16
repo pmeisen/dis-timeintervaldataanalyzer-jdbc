@@ -204,15 +204,17 @@ public class TestTidaStatement {
 
 		final String sql = "INSERT INTO MyModel ([START], [END-], NAME, PRIORITY) VALUES (20.01.1981, 20.02.2004, ?, ?)";
 		final TidaStatement s = new TidaStatement(conn, sql);
-		s.setTimestamp(1, new Timestamp(0));
 
-		final Calendar cal = Calendar.getInstance();
-		cal.setTimeZone(TimeZone.getTimeZone("UTC"));
-		s.setTimestamp(2, new Timestamp(0), cal);
+		final Calendar cal1 = Calendar.getInstance();
+		cal1.setTimeZone(TimeZone.getTimeZone("Europe/Berlin"));
+		s.setTimestamp(1, new Timestamp(0), cal1);
+
+		final Calendar cal2 = Calendar.getInstance();
+		cal2.setTimeZone(TimeZone.getTimeZone("UTC"));
+		s.setTimestamp(2, new Timestamp(0), cal2);
 
 		assertEquals(2, s.getPlaceholders().size());
-		assertEquals(
-				"INSERT INTO MyModel ([START], [END-], NAME, PRIORITY) VALUES (20.01.1981, 20.02.2004, '01.01.1970 01:00:00', '01.01.1970 00:00:00')",
+		assertEquals("INSERT INTO MyModel ([START], [END-], NAME, PRIORITY) VALUES (20.01.1981, 20.02.2004, '01.01.1970 01:00:00', '01.01.1970 00:00:00')",
 				s.replacePlaceholder());
 	}
 
