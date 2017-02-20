@@ -186,7 +186,7 @@ public class TidaResultSet extends BaseConnectionWrapper implements ResultSet {
                     // just read the next one, the end must be reached
                 }
             } catch (final Exception e) {
-				/*
+                /*
 				 * Ignore it, the connection is closed from server side, or an
 				 * exception was thrown from server side. In both cases
 				 * everything should be fine and handled later on.
@@ -420,8 +420,7 @@ public class TidaResultSet extends BaseConnectionWrapper implements ResultSet {
     }
 
     @Override
-    public InputStream getAsciiStream(final int columnIndex)
-            throws SQLException {
+    public InputStream getAsciiStream(final int columnIndex) throws SQLException {
         return getValue(columnIndex, InputStream.class);
     }
 
@@ -1232,14 +1231,12 @@ public class TidaResultSet extends BaseConnectionWrapper implements ResultSet {
     }
 
     @Override
-    public Time getTime(final String columnLabel, final Calendar cal)
-            throws SQLException {
+    public Time getTime(final String columnLabel, final Calendar cal) throws SQLException {
         return getTime(findColumn(columnLabel), cal);
     }
 
     @Override
-    public Timestamp getTimestamp(final int columnIndex, final Calendar cal)
-            throws SQLException {
+    public Timestamp getTimestamp(final int columnIndex, final Calendar cal) throws SQLException {
         if (cal == null) {
             final java.util.Date d = getValue(columnIndex, java.util.Date.class);
             return new Timestamp(d.getTime());
@@ -1267,40 +1264,35 @@ public class TidaResultSet extends BaseConnectionWrapper implements ResultSet {
     }
 
     @Override
-    public void updateRef(final int columnIndex, final Ref x)
-            throws SQLException {
+    public void updateRef(final int columnIndex, final Ref x) throws SQLException {
         checkClosed();
 
         throw TidaSqlExceptions.createException(4009);
     }
 
     @Override
-    public void updateRef(final String columnLabel, final Ref x)
-            throws SQLException {
+    public void updateRef(final String columnLabel, final Ref x) throws SQLException {
         checkClosed();
 
         throw TidaSqlExceptions.createException(4009);
     }
 
     @Override
-    public void updateBlob(final int columnIndex, final Blob x)
-            throws SQLException {
+    public void updateBlob(final int columnIndex, final Blob x) throws SQLException {
         checkClosed();
 
         throw TidaSqlExceptions.createException(4009);
     }
 
     @Override
-    public void updateBlob(final String columnLabel, final Blob x)
-            throws SQLException {
+    public void updateBlob(final String columnLabel, final Blob x) throws SQLException {
         checkClosed();
 
         throw TidaSqlExceptions.createException(4009);
     }
 
     @Override
-    public void updateClob(final int columnIndex, final Clob x)
-            throws SQLException {
+    public void updateClob(final int columnIndex, final Clob x) throws SQLException {
         checkClosed();
 
         throw TidaSqlExceptions.createException(4009);
@@ -1315,16 +1307,14 @@ public class TidaResultSet extends BaseConnectionWrapper implements ResultSet {
     }
 
     @Override
-    public void updateArray(final int columnIndex, final Array x)
-            throws SQLException {
+    public void updateArray(final int columnIndex, final Array x) throws SQLException {
         checkClosed();
 
         throw TidaSqlExceptions.createException(4009);
     }
 
     @Override
-    public void updateArray(final String columnLabel, final Array x)
-            throws SQLException {
+    public void updateArray(final String columnLabel, final Array x) throws SQLException {
         checkClosed();
 
         throw TidaSqlExceptions.createException(4009);
@@ -1345,16 +1335,14 @@ public class TidaResultSet extends BaseConnectionWrapper implements ResultSet {
     }
 
     @Override
-    public void updateRowId(final int columnIndex, final RowId x)
-            throws SQLException {
+    public void updateRowId(final int columnIndex, final RowId x) throws SQLException {
         checkClosed();
 
         throw TidaSqlExceptions.createException(4009);
     }
 
     @Override
-    public void updateRowId(final String columnLabel, final RowId x)
-            throws SQLException {
+    public void updateRowId(final String columnLabel, final RowId x) throws SQLException {
         checkClosed();
 
         throw TidaSqlExceptions.createException(4009);
@@ -1368,16 +1356,14 @@ public class TidaResultSet extends BaseConnectionWrapper implements ResultSet {
     }
 
     @Override
-    public void updateNString(int columnIndex, String nString)
-            throws SQLException {
+    public void updateNString(int columnIndex, String nString) throws SQLException {
         checkClosed();
 
         throw TidaSqlExceptions.createException(4009);
     }
 
     @Override
-    public void updateNString(String columnLabel, String nString)
-            throws SQLException {
+    public void updateNString(String columnLabel, String nString) throws SQLException {
         checkClosed();
 
         throw TidaSqlExceptions.createException(4009);
@@ -1453,7 +1439,8 @@ public class TidaResultSet extends BaseConnectionWrapper implements ResultSet {
     }
 
     @Override
-    public void updateNCharacterStream(final int columnIndex, final Reader x,
+    public void updateNCharacterStream(final int columnIndex,
+                                       final Reader x,
                                        final long length) throws SQLException {
         checkClosed();
 
@@ -1462,7 +1449,8 @@ public class TidaResultSet extends BaseConnectionWrapper implements ResultSet {
 
     @Override
     public void updateNCharacterStream(final String columnLabel,
-                                       final Reader reader, long length) throws SQLException {
+                                       final Reader reader,
+                                       final long length) throws SQLException {
         checkClosed();
 
         throw TidaSqlExceptions.createException(4009);
@@ -1477,7 +1465,8 @@ public class TidaResultSet extends BaseConnectionWrapper implements ResultSet {
     }
 
     @Override
-    public void updateBinaryStream(final int columnIndex, final InputStream x,
+    public void updateBinaryStream(final int columnIndex,
+                                   final InputStream x,
                                    final long length) throws SQLException {
         checkClosed();
 
@@ -1485,7 +1474,8 @@ public class TidaResultSet extends BaseConnectionWrapper implements ResultSet {
     }
 
     @Override
-    public void updateCharacterStream(final int columnIndex, final Reader x,
+    public void updateCharacterStream(final int columnIndex,
+                                      final Reader x,
                                       final long length) throws SQLException {
         checkClosed();
 
@@ -1494,7 +1484,8 @@ public class TidaResultSet extends BaseConnectionWrapper implements ResultSet {
 
     @Override
     public void updateAsciiStream(final String columnLabel,
-                                  final InputStream x, final long length) throws SQLException {
+                                  final InputStream x,
+                                  final long length) throws SQLException {
         checkClosed();
 
         throw TidaSqlExceptions.createException(4009);
@@ -1502,7 +1493,8 @@ public class TidaResultSet extends BaseConnectionWrapper implements ResultSet {
 
     @Override
     public void updateBinaryStream(final String columnLabel,
-                                   final InputStream x, long length) throws SQLException {
+                                   final InputStream x,
+                                   final long length) throws SQLException {
         checkClosed();
 
         throw TidaSqlExceptions.createException(4009);
@@ -1510,7 +1502,8 @@ public class TidaResultSet extends BaseConnectionWrapper implements ResultSet {
 
     @Override
     public void updateCharacterStream(final String columnLabel,
-                                      final Reader reader, final long length) throws SQLException {
+                                      final Reader reader,
+                                      final long length) throws SQLException {
         checkClosed();
 
         throw TidaSqlExceptions.createException(4009);
@@ -1518,8 +1511,8 @@ public class TidaResultSet extends BaseConnectionWrapper implements ResultSet {
 
     @Override
     public void updateBlob(final int columnIndex,
-                           final InputStream inputStream, final long length)
-            throws SQLException {
+                           final InputStream inputStream,
+                           final long length) throws SQLException {
         checkClosed();
 
         throw TidaSqlExceptions.createException(4009);
@@ -1527,14 +1520,7 @@ public class TidaResultSet extends BaseConnectionWrapper implements ResultSet {
 
     @Override
     public void updateBlob(final String columnLabel,
-                           final InputStream inputStream, long length) throws SQLException {
-        checkClosed();
-
-        throw TidaSqlExceptions.createException(4009);
-    }
-
-    @Override
-    public void updateClob(final int columnIndex, final Reader reader,
+                           final InputStream inputStream,
                            final long length) throws SQLException {
         checkClosed();
 
@@ -1542,7 +1528,8 @@ public class TidaResultSet extends BaseConnectionWrapper implements ResultSet {
     }
 
     @Override
-    public void updateClob(final String columnLabel, final Reader reader,
+    public void updateClob(final int columnIndex,
+                           final Reader reader,
                            final long length) throws SQLException {
         checkClosed();
 
@@ -1550,7 +1537,17 @@ public class TidaResultSet extends BaseConnectionWrapper implements ResultSet {
     }
 
     @Override
-    public void updateNClob(final int columnIndex, final Reader reader,
+    public void updateClob(final String columnLabel,
+                           final Reader reader,
+                           final long length) throws SQLException {
+        checkClosed();
+
+        throw TidaSqlExceptions.createException(4009);
+    }
+
+    @Override
+    public void updateNClob(final int columnIndex,
+                            final Reader reader,
                             final long length) throws SQLException {
         checkClosed();
 
