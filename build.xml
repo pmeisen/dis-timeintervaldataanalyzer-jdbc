@@ -17,6 +17,7 @@
     <do-run-test-suite testSuite="${testSuite}"/>
   </target>
 
+
   <target name="04-deploy" depends="02-compile-sources">
     <build-jar />
   </target>
