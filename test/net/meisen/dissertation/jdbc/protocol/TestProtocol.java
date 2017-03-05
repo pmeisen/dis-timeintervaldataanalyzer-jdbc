@@ -37,8 +37,7 @@ public class TestProtocol {
         }
 
         @Override
-        public boolean handleResult(final ResponseType type,
-                                    final Object[] result) {
+        public boolean handleResult(final ResponseType type, final Object[] result) {
             fail("Not expected!");
 
             return false;
