@@ -23,9 +23,9 @@ import static org.junit.Assert.fail;
  * @author pmeisen
  */
 public class TestProtocol {
-    private static interface ITestHandler {
-        public void answer(final int msgNr, final RetrievedValue val,
-                           final Protocol serverSideProtocol) throws IOException;
+    private interface ITestHandler {
+        void answer(final int msgNr, final RetrievedValue val,
+                    final Protocol serverSideProtocol) throws IOException;
     }
 
     private static class TestResponseHandler implements IResponseHandler {
@@ -88,16 +88,14 @@ public class TestProtocol {
                 try {
                     final ServerSocket serverSocket = new ServerSocket(6060);
                     final Socket serverSideSocket = serverSocket.accept();
-                    final Protocol serverSideProtocol = new Protocol(
-                            serverSideSocket);
+                    final Protocol serverSideProtocol = new Protocol(serverSideSocket);
 
                     int nr = 0;
                     while (!isInterrupted()) {
 
                         // get the message to be handled
                         final RetrievedValue val = serverSideProtocol.read();
-                        if (val.is(ResponseType.MESSAGE)
-                                && "END".equals(val.getMessage())) {
+                        if (val.is(ResponseType.MESSAGE) && "END".equals(val.getMessage())) {
                             continue;
                         }
 
@@ -537,12 +535,22 @@ public class TestProtocol {
     public void cleanUp() throws Exception {
 
         // finish the server thread
-        serverThread.interrupt();
-        clientSideProtocol.writeMessage("END");
-        serverThread.join();
+        if (serverThread != null) {
+            serverThread.interrupt();
+        }
+        if (clientSideProtocol != null) {
+            clientSideProtocol.writeMessage("END");
+        }
+        if (serverThread != null) {
+            serverThread.join();
+        }
 
         // cleanUp
-        clientSideProtocol.close();
-        clientSideSocket.close();
+        if (clientSideProtocol != null) {
+            clientSideProtocol.close();
+        }
+        if (clientSideSocket != null) {
+            clientSideSocket.close();
+        }
     }
 }
